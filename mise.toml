@@ -1,0 +1,32 @@
+# Task runner for desert-ant-cli, mirroring the layout desert-ant-core uses.
+
+[tools]
+swift = "6"
+
+[tasks.build]
+description = "Build the CLI."
+run = "swift build"
+
+[tasks.test]
+description = "Run this package's tests."
+run = "swift test --filter DesertAntCLITests"
+
+[tasks.run]
+description = "Run the CLI, e.g. mise run run -- models."
+run = "swift run desertant"
+
+[tasks.check]
+description = "The commit gate, which CI runs: embed current, build, tests, manifest in sync, no dashes."
+run = "Tools/check"
+
+[tasks."sync-manifest"]
+description = "Refresh the vendored manifest from desert-ant-core."
+run = "Tools/sync-manifest"
+
+[tasks.install]
+description = "Build in release and install desertant with a da alias into ~/.local/bin."
+run = "Tools/install"
+
+[tasks.release]
+description = "Cut a release: mise run release -- 0.2.0, then git push --follow-tags."
+run = "Tools/release"

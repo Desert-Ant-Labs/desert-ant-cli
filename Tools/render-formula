@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Render Formula/desertant.rb with the version and the checksums of the built
+# assets, for the Homebrew tap.
+#
+#   Tools/render-formula dist/checksums.txt > desertant.rb
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+checksums="${1:?usage: Tools/render-formula <checksums.txt>}"
+version="$(tr -d '[:space:]' < "$here/VERSION")"
+
+sha() { grep " desertant-$1.tar.gz\$" "$checksums" | cut -d' ' -f1; }
+
+sed \
+  -e "s/^  version \".*\"/  version \"$version\"/" \
+  -e "s/SHA256_DARWIN_ARM64/$(sha darwin-arm64)/" \
+  -e "s/SHA256_LINUX_ARM64/$(sha linux-arm64)/" \
+  -e "s/SHA256_LINUX_X86_64/$(sha linux-x86_64)/" \
+  "$here/Formula/desertant.rb"

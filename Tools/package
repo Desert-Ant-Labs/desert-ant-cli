@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Build a release binary on this machine and tar it as a release asset,
+# dist/desertant-<target>.tar.gz: `desertant` plus mlx.metallib on macOS or
+# libLiteRt.so on Linux. The release workflow runs this on each platform.
+#
+#   Tools/package <darwin-arm64|linux-x86_64|linux-arm64>
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$here"
+target="${1:?usage: Tools/package <darwin-arm64|linux-x86_64|linux-arm64>}"
+core="${DESERT_ANT_CORE:-$here/../desert-ant-core}"
+
+linker=()
+litert=""
+if [[ "$(uname -s)" == "Linux" ]]; then
+  # dal.sh changes directory when sourced, so it only runs inside the subshell. The
+  # $ORIGIN rpath lets the binary find libLiteRt.so beside itself without setup.
+  litert="$(cd "$core" && source Tools/dal.sh && dal_vendor_litert >&2 && echo "$core/$(dal_litert_dir)")"
+  linker=(-Xlinker "-L$litert" -Xlinker -rpath -Xlinker '$ORIGIN')
+fi
+# Title (MLX) is part of the macOS build; see Package.swift.
+[[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
+
+[[ "$(uname -s)" == "Darwin" ]] && linker+=(--build-system swiftbuild --arch arm64)
+swift build -c release ${linker[@]+"${linker[@]}"}
+binary="$(swift build -c release --show-bin-path ${linker[@]+"${linker[@]}"})/desertant"
+
+stage="dist/stage-$target"
+rm -rf "$stage" && mkdir -p "$stage" dist
+install -m 755 "$binary" "$stage/desertant"
+if [[ -n "$litert" ]]; then
+  install -m 644 "$litert/libLiteRt.so" "$stage/libLiteRt.so"
+fi
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  # MLX looks for mlx.metallib next to the binary.
+  install -m 644 "$(dirname "$binary")/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$stage/mlx.metallib"
+fi
+
+tar -czf "dist/desertant-$target.tar.gz" -C "$stage" .
+rm -rf "$stage"
+echo "dist/desertant-$target.tar.gz"

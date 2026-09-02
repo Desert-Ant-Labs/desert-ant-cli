@@ -1,0 +1,97 @@
+# Build and publish a release when a v* tag is pushed (Tools/release makes the tag):
+# one tarball per platform, checksums.txt, and desertant.rb rendered with the real
+# checksums, attached to the GitHub release. Tools/publish-formula puts the formula
+# in the tap afterwards, from a maintainer's machine.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  darwin:
+    name: darwin-arm64
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: desert-ant-cli
+      - name: Core ref
+        id: core
+        run: echo "ref=$(desert-ant-cli/Tools/core-ref)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: Desert-Ant-Labs/desert-ant-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: desert-ant-core
+      - name: Package
+        working-directory: desert-ant-cli
+        run: Tools/package darwin-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-arm64
+          path: desert-ant-cli/dist/*.tar.gz
+
+  # The official Swift image is multi-arch; setup-swift has no arm64 toolchain.
+  # Core's dal.sh vendors LiteRT with uv.
+  linux:
+    name: linux-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    container: swift:6.2-jammy
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86_64, runner: ubuntu-22.04 }
+          - { arch: arm64, runner: ubuntu-22.04-arm }
+    steps:
+      - name: Build dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends git curl ca-certificates python3 \
+            libcurl4-openssl-dev libxml2-dev zlib1g-dev
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - uses: actions/checkout@v4
+        with:
+          path: desert-ant-cli
+      - name: Core ref
+        id: core
+        run: echo "ref=$(desert-ant-cli/Tools/core-ref)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: Desert-Ant-Labs/desert-ant-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: desert-ant-core
+      - name: Package
+        working-directory: desert-ant-cli
+        run: Tools/package linux-${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: desert-ant-cli/dist/*.tar.gz
+
+  publish:
+    needs: [darwin, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums and formula
+        run: |
+          (cd dist && sha256sum *.tar.gz > checksums.txt)
+          Tools/render-formula dist/checksums.txt > dist/desertant.rb
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+

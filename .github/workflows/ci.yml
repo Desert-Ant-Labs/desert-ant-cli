@@ -1,0 +1,66 @@
+# Run Tools/check on macOS and Linux for every push and pull request, with
+# desert-ant-core checked out beside the CLI at the ref CORE_REF names. The Linux job
+# also packages the binary and runs it with libLiteRt.so beside it.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: desert-ant-cli
+      - name: Core ref
+        id: core
+        run: echo "ref=$(desert-ant-cli/Tools/core-ref)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: Desert-Ant-Labs/desert-ant-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: desert-ant-core
+      - name: Check
+        working-directory: desert-ant-cli
+        run: Tools/check
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: desert-ant-cli
+      - name: Core ref
+        id: core
+        run: echo "ref=$(desert-ant-cli/Tools/core-ref)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: Desert-Ant-Labs/desert-ant-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: desert-ant-core
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+      # Core's dal.sh vendors LiteRT with uv.
+      - uses: astral-sh/setup-uv@v5
+      - name: Build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends libcurl4-openssl-dev libxml2-dev zlib1g-dev
+      - name: Check
+        working-directory: desert-ant-cli
+        run: Tools/check
+      - name: Package and run the binary
+        working-directory: desert-ant-cli
+        run: |
+          Tools/package linux-x86_64
+          mkdir -p /tmp/da && tar -xzf dist/desertant-linux-x86_64.tar.gz -C /tmp/da
+          cd /tmp
+          da/desertant --version
+          da/desertant doctor --json
+          da/desertant models --json | python3 -c "import json,sys; assert len(json.load(sys.stdin)) > 0"
+          da/desertant schema --json | python3 -c "import json,sys; d=json.load(sys.stdin); print('runnable on linux:', [m['id'] for m in d['models'] if m['runnableHere']])"
+          da/desertant docs agents | head -3

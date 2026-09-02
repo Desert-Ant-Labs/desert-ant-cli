@@ -1,0 +1,6 @@
+{
+  "name": "desertant",
+  "description": "Run Desert Ant Labs on-device models from Claude Code through the desertant CLI: transcription, clips, speech enhancement, filler words, spoken language, PII redaction, emoji, topic tags, titles, and catalog discovery, all local with JSON output.",
+  "version": "0.1.0",
+  "author": "Desert Ant Labs"
+}

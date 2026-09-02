@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Print the desert-ant-core git ref this CLI follows: CORE_REF at the repo root
+# (`main` to track core, a tag such as `v3.1.0` or a commit to pin a release). An
+# empty or missing file means the release whose manifest is vendored.
+#
+#   Tools/core-ref
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+ref="$(tr -d '[:space:]' < "$here/CORE_REF" 2>/dev/null || true)"
+if [[ -n "$ref" ]]; then
+  echo "$ref"
+else
+  python3 -c "import json; print('v' + json.load(open('$here/manifest.json'))['sdkVersion'])"
+fi

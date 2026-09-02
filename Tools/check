@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# The commit gate: the embedded catalog and docs are current, the package builds,
+# this package's tests pass, the vendored manifest matches core at Tools/core-ref,
+# and the copy has no em or en dashes.
+#
+#   Tools/check
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$here"
+fail=0
+core="${DESERT_ANT_CORE:-$here/../desert-ant-core}"
+
+generated=Sources/DesertAntCLI/Generated/Embedded.swift
+before="$(mktemp)"; cp "$generated" "$before" 2>/dev/null || true
+Tools/embed >/dev/null
+if ! cmp -s "$before" "$generated"; then
+  echo "$generated was stale and has been regenerated. Commit it." >&2
+  fail=1
+else
+  echo "Embedded.swift is up to date."
+fi
+rm -f "$before"
+
+# dal.sh changes directory when sourced, so it only runs inside the subshell.
+linker=()
+if [[ "$(uname -s)" == "Linux" ]]; then
+  litert="$(cd "$core" && source Tools/dal.sh && dal_vendor_litert >&2 && echo "$core/$(dal_litert_dir)")"
+  linker=(-Xlinker "-L$litert")
+  export LD_LIBRARY_PATH="$litert${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+# Title (MLX) is part of the macOS build; see Package.swift.
+[[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
+
+echo "Building."
+swift build ${linker[@]+"${linker[@]}"} 2>&1 | grep -E "error:|Build complete" || true
+
+# desert-ant-core is a path dependency, so an unfiltered swift test would run its
+# tests too, and those need core's own setup.
+echo "Testing."
+swift test --filter DesertAntCLITests ${linker[@]+"${linker[@]}"} 2>&1 | grep -E "error:|Executed .* tests" | tail -1
+
+if [[ -f "$core/manifest.json" ]]; then
+  if ! cmp -s <(DESERT_ANT_CORE="$core" Tools/core-manifest 2>/dev/null) manifest.json; then
+    echo "The vendored manifest differs from core at $(Tools/core-ref). Run Tools/sync-manifest." >&2
+    fail=1
+  else
+    echo "The manifest is in sync with core at $(Tools/core-ref)."
+  fi
+fi
+
+if grep -rn $'—\|–' Sources README.md AGENTS.md RELEASING.md llms.txt docs integrations install.sh 2>/dev/null; then
+  echo "An em or en dash was found above. Use a comma, colon, or period." >&2
+  fail=1
+else
+  echo "No dashes in the copy."
+fi
+
+exit $fail

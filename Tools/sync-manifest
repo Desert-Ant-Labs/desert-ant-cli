@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Refresh the vendored manifest from desert-ant-core at the ref Tools/core-ref
+# names, then re-embed it.
+#
+#   Tools/sync-manifest [path-to-desert-ant-core]
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+export DESERT_ANT_CORE="${1:-${DESERT_ANT_CORE:-$here/../desert-ant-core}}"
+
+if [[ ! -f "$DESERT_ANT_CORE/manifest.json" ]]; then
+  echo "No manifest at $DESERT_ANT_CORE." >&2
+  echo "Pass the path to a desert-ant-core checkout: Tools/sync-manifest <path>" >&2
+  exit 1
+fi
+
+"$here/Tools/core-manifest" > "$here/manifest.json"
+count="$(python3 -c "import json; print(len(json.load(open('$here/manifest.json'))['models']))")"
+echo "Synced the manifest: $count models."
+"$here/Tools/embed"

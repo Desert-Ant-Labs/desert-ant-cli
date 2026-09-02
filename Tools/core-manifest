@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Print desert-ant-core's manifest.json at the ref Tools/core-ref names, from the
+# sibling checkout's git history.
+#
+#   Tools/core-manifest
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+core="${DESERT_ANT_CORE:-$here/../desert-ant-core}"
+ref="$("$here/Tools/core-ref")"
+
+# A branch is read as origin/<branch> after a fetch, so an unpushed local edit does
+# not leak into the CLI.
+resolved="$ref"
+if git -C "$core" show-ref -q --verify "refs/heads/$ref" 2>/dev/null; then
+  git -C "$core" fetch -q origin "$ref" 2>/dev/null || true
+  git -C "$core" rev-parse -q --verify "origin/$ref^{commit}" >/dev/null 2>&1 && resolved="origin/$ref"
+fi
+
+# A shallow CI checkout can sit at the ref without being able to name it.
+if git -C "$core" rev-parse -q --verify "$resolved^{commit}" >/dev/null 2>&1; then
+  git -C "$core" show "$resolved:manifest.json"
+else
+  echo "The core checkout at $core has no ref $ref. Using its working tree." >&2
+  cat "$core/manifest.json"
+fi

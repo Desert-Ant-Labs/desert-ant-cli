@@ -1,0 +1,13 @@
+{
+  "name": "@desert-ant-labs/pi-desertant",
+  "version": "0.1.0",
+  "description": "Run Desert Ant Labs on-device models from the Pi coding agent through the desertant CLI: transcription, clips, speech enhancement, filler words, spoken language, PII redaction, emoji, topic tags, and titles, all local with JSON output.",
+  "type": "module",
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  },
+  "author": "Desert Ant Labs",
+  "license": "MIT"
+}

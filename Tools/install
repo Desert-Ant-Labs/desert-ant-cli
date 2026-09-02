@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Build in release and install desertant, with a `da` alias, for this user: the
+# binary and its companions in DESERTANT_HOME (~/.local/share/desertant), symlinks
+# in ~/.local/bin or the directory passed.
+#
+#   Tools/install [bin-directory]
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")/.." && pwd)"
+bindir="${1:-$HOME/.local/bin}"
+home="${DESERTANT_HOME:-$HOME/.local/share/desertant}"
+# Title (MLX) is part of the macOS build; see Package.swift.
+[[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
+
+build_system=(); [[ "$(uname -s)" == "Darwin" ]] && build_system=(--build-system swiftbuild --arch arm64)
+swift build -c release ${build_system[@]+"${build_system[@]}"} --package-path "$here"
+products="$(swift build -c release ${build_system[@]+"${build_system[@]}"} --package-path "$here" --show-bin-path)"
+
+mkdir -p "$home" "$bindir"
+install -m 755 "$products/desertant" "$home/desertant"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  # MLX looks for mlx.metallib next to the binary.
+  install -m 644 "$products/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$home/mlx.metallib"
+fi
+ln -sf "$home/desertant" "$bindir/desertant"
+ln -sf "$home/desertant" "$bindir/da"
+
+echo "Installed desertant and da into $bindir."
+echo "Make sure $bindir is on your PATH."

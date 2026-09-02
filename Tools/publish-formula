@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Publish a release's Homebrew formula to the tap, the way the Clipper cask is
+# published: from this machine, with your git credentials. Run it after the release
+# workflow has finished.
+#
+#   Tools/publish-formula            # the version in VERSION
+#   Tools/publish-formula 0.2.0
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+version="${1:-$(tr -d '[:space:]' < "$here/VERSION")}"
+tap="${DESERTANT_TAP:-$(brew --repository desert-ant-labs/tap 2>/dev/null || true)}"
+
+if [[ -z "$tap" || ! -d "$tap/.git" ]]; then
+  echo "The tap is not checked out. Run: brew tap desert-ant-labs/tap" >&2
+  exit 1
+fi
+
+git -C "$tap" pull -q --ff-only
+mkdir -p "$tap/Formula"
+gh release download "v$version" -R Desert-Ant-Labs/desert-ant-cli -p desertant.rb -O "$tap/Formula/desertant.rb" --clobber
+if git -C "$tap" diff --quiet -- Formula/desertant.rb; then
+  echo "The tap already has desertant $version."
+  exit 0
+fi
+git -C "$tap" add Formula/desertant.rb
+git -C "$tap" commit -q -m "desertant $version"
+git -C "$tap" push -q
+echo "Published desertant $version to the tap."

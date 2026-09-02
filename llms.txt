@@ -1,0 +1,46 @@
+# desertant
+
+> desertant runs Desert Ant Labs on-device models from the terminal: transcribe a
+> recording, cut short clips from a talk, clean up the audio, find filler words, name
+> the spoken language, redact personal data, suggest emoji, tag a text's topic, and
+> write a title. Weights download once and cache; nothing leaves the device when a
+> model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
+
+Start with `desertant schema --json`: it lists every runnable model, its input, and
+its options, and it's generated from the same code the commands run, so it can't be
+stale. `desertant models --json` lists the models that run on this machine, and
+`--all` lists the full catalog. Every page below is also inside the binary:
+`desertant docs` prints this index, `desertant docs agents` a page, and `--json`
+gives either as data, all offline.
+
+## Docs
+
+- [Using desertant from an agent](docs/agents.md): the machine surface, what to
+  call, what to expect on stdout and stderr, and what never to do.
+- [JSON contracts](docs/json.md): the exact shape every command emits under --json,
+  with real examples.
+- [Files and the cache](docs/files.md): outputs never replace files, where the
+  weights live, and what is shared with other Desert Ant apps.
+- [Transcripts and captions](docs/voz.md): voz, timestamps, SRT, VTT, and text files,
+  and how captions are cut.
+- [Clips](docs/clips.md): cutting clips from a recording, transcript formats, output
+  names, and the report.
+- [Pipelines](docs/pipelines.md): composing commands, piping JSON not media, and
+  rendering once.
+- [Performance](docs/performance.md): what to expect on first and later runs, and
+  why a debug build tells you nothing.
+
+## Install
+
+- `curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh`
+- `brew install desert-ant-labs/tap/desertant`
+- `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[exe=desertant]"`
+
+`desertant update` brings any of those to the latest release.
+
+## Source
+
+- [README.md](README.md): the tool for people.
+- [AGENTS.md](AGENTS.md): working on this repo.
+- [RELEASING.md](RELEASING.md): cutting a release.
+- Adapters for coding agents live in `integrations/` (Claude Code, Codex, Pi).
