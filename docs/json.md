@@ -63,7 +63,7 @@ lists them.
 ```json
 {
   "tool": "desertant",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "coreVersion": "3.1.0",
   "invocation": "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
   "globalFlags": [{"flag": "--json", "help": "Machine-readable JSON output."}],
@@ -98,8 +98,8 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
   "cacheBytes": 1175608980,
   "downloaded": ["clear", "clips", "emo", "gist", "redact", "voz"],
   "runnable": ["clear", "clips", "emo", "gist", "redact"],
-  "version": "0.1.0", "coreVersion": "3.1.0",
-  "latest": "0.1.0", "updateAvailable": false, "updateCommand": "desertant update",
+  "version": "0.1.1", "coreVersion": "3.1.0",
+  "latest": "0.1.1", "updateAvailable": false, "updateCommand": "desertant update",
   "models": 18, "shipping": 12
 }
 ```

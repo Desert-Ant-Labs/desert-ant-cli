@@ -41,12 +41,13 @@ struct ClearRunner: ModelRunner {
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         let result = try await model.enhance(path: input, to: output) { p in
             switch p.phase {
-            case .loadingModel: progress.update(nil, label: "loading clear")
+            case .loadingModel: progress.update(nil, label: FirstLoad.label("clear"))
             case .analyzing: progress.update(p.fraction, label: "analyzing")
             case .enhancing: progress.update(p.fraction, label: "enhancing")
             }
         }
         progress.finish()
+        FirstLoad.done("clear")
 
         if out.isJSON {
             out.emit(Result(input: input, output: output,

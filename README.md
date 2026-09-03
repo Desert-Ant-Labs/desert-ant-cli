@@ -14,7 +14,7 @@ The command is `desertant`; `da` is the short alias.
 $ da voz talk.mp4 -t
 0:00  We build small models that run on the device.
 0:04  Nothing leaves the phone, and there is no cloud bill.
-48 minutes of audio in 9.7s, 296x realtime.
+Transcribed 48 minutes of audio in 9.7s, 296x realtime.
 
 $ da clips talk.mp4
  1  10:14 to 10:42  27s

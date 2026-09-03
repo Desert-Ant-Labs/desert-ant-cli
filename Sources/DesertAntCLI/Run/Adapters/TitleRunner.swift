@@ -21,12 +21,13 @@ struct TitleRunner: ModelRunner {
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
-        progress.update(nil, label: "loading title, slower the first time on this Mac")
+        progress.update(nil, label: FirstLoad.label("title"))
         let stored = try await TitleModel.resolve { _ in }
         let titles = try await Titles(directory: URL(fileURLWithPath: stored.rootPath))
         progress.update(nil, label: "writing")
         let card = try await titles.describe(input)
         progress.finish()
+        FirstLoad.done("title")
 
         if out.isJSON {
             out.emit(Document(title: card.title, description: card.description))

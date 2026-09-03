@@ -88,6 +88,9 @@ struct Palette: Sendable {
     func accent(_ s: String) -> String { paint(.sage, s) }
     /// Teal, bold: a model's name. Dark teal on a light terminal, where teal fades.
     func model(_ s: String) -> String { bold(paint(theme == .dark ? .teal : .darkTeal, s)) }
+
+    /// A timestamp beside a line: dark teal, quieter than the text it dates.
+    func time(_ s: String) -> String { paint(.darkTeal, s) }
     /// Muted: labels and notes.
     func dim(_ s: String) -> String { paint(theme.muted, s) }
     /// Faint: hints and placeholders.

@@ -2,7 +2,7 @@
 // edit by hand.
 
 enum Embedded {
-    static let version = "0.1.0"
+    static let version = "0.1.1"
 
     static let manifest = ###"""
 {
@@ -1054,7 +1054,7 @@ lists them.
 ```json
 {
   "tool": "desertant",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "coreVersion": "3.1.0",
   "invocation": "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
   "globalFlags": [{"flag": "--json", "help": "Machine-readable JSON output."}],
@@ -1089,8 +1089,8 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
   "cacheBytes": 1175608980,
   "downloaded": ["clear", "clips", "emo", "gist", "redact", "voz"],
   "runnable": ["clear", "clips", "emo", "gist", "redact"],
-  "version": "0.1.0", "coreVersion": "3.1.0",
-  "latest": "0.1.0", "updateAvailable": false, "updateCommand": "desertant update",
+  "version": "0.1.1", "coreVersion": "3.1.0",
+  "latest": "0.1.1", "updateAvailable": false, "updateCommand": "desertant update",
   "models": 18, "shipping": 12
 }
 ```
@@ -1341,8 +1341,8 @@ da voz talk.mp4
 ```
 
 Prints the transcript, one sentence per line, and ends with the measured line:
-"Loaded in 1.1s. 2 minutes of audio in 0.5s, 270x realtime". Loading is the model
-coming up; the second figure is the recognizer alone. Voz runs on Apple silicon; 25 languages.
+"Voz loaded in 1.1s. Transcribed 2 minutes of audio in 0.5s, 270x realtime". The first figure is
+the model coming up, once per run; the realtime factor is the recognizer alone. Voz runs on Apple silicon; 25 languages.
 
 ## Timestamps
 

@@ -8,8 +8,8 @@ da voz talk.mp4
 ```
 
 Prints the transcript, one sentence per line, and ends with the measured line:
-"Loaded in 1.1s. 2 minutes of audio in 0.5s, 270x realtime". Loading is the model
-coming up; the second figure is the recognizer alone. Voz runs on Apple silicon; 25 languages.
+"Voz loaded in 1.1s. Transcribed 2 minutes of audio in 0.5s, 270x realtime". The first figure is
+the model coming up, once per run; the realtime factor is the recognizer alone. Voz runs on Apple silicon; 25 languages.
 
 ## Timestamps
 

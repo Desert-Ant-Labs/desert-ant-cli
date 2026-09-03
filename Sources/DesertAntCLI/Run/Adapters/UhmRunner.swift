@@ -35,11 +35,12 @@ struct UhmRunner: ModelRunner {
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         progress.update(nil, label: "reading audio")
         let samples = try await AudioIO.decode(path: input, sampleRate: 16_000)
-        progress.update(nil, label: "loading uhm")
+        progress.update(nil, label: FirstLoad.label("uhm"))
         let result = try await model.analyze(samples: samples, sampleRate: 16_000) {
             progress.update($0, label: "listening")
         }
         progress.finish()
+        FirstLoad.done("uhm")
 
         if out.isJSON {
             out.emit(Document(input: input, durationSec: result.audioDuration, fillers: result.fillers.map {
@@ -50,7 +51,7 @@ struct UhmRunner: ModelRunner {
         }
         let p = out.palette
         for f in result.fillers {
-            out.line("\(p.accent(Format.stamp(f.start)))  \(f.type?.rawValue ?? "filler")  \(p.dim(Format.elapsed(f.duration)))")
+            out.line("\(p.time(Format.stamp(f.start)))  \(f.type?.rawValue ?? "filler")  \(p.dim(Format.elapsed(f.duration)))")
         }
         let count = result.fillers.count
         out.note("\n\(count == 0 ? "No fillers" : "\(count) filler\(count == 1 ? "" : "s")") in \(Format.spoken(result.audioDuration)) of audio.")

@@ -45,13 +45,14 @@ struct ClipsRunner: ModelRunner {
         let report = try await pipeline.run(request) { phase in
             switch phase {
             case .downloading(let model, let f): progress.update(f, label: "downloading \(model), first run only")
-            case .loading(let model): progress.update(nil, label: "loading \(model), slower the first time on this Mac")
+            case .loading(let model): progress.update(nil, label: FirstLoad.label(model))
             case .transcribing(let f): progress.update(f, label: "transcribing")
             case .selecting: progress.update(nil, label: "selecting")
             case .cutting(let done, let of): progress.update(Double(done) / Double(max(of, 1)), label: "cutting \(min(done + 1, of)) of \(of)")
             }
         }
         progress.finish()
+        for model in ["voz", "clips"] { FirstLoad.done(model) }
 
         if out.isJSON {
             out.emit(report)
@@ -64,7 +65,7 @@ struct ClipsRunner: ModelRunner {
             return
         }
         for pick in report.clips {
-            let span = "\(p.accent(Format.stamp(pick.start))) to \(p.accent(Format.stamp(pick.end)))"
+            let span = "\(p.time(Format.stamp(pick.start))) to \(p.time(Format.stamp(pick.end)))"
             out.line("\(p.accent(String(format: "%2d", pick.id)))  \(span)  \(p.dim(Format.elapsed(pick.durationSec)))")
             out.line("    \(truncate(pick.text, to: 88))")
             if let file = pick.file { out.line("    \(p.dim(file))") }

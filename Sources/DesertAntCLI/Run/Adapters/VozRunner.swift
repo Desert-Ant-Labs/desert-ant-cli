@@ -52,10 +52,11 @@ struct VozRunner: ModelRunner {
         let format = try kind(arguments["format"] ?? (out.isJSON ? "json" : "text"))
 
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
-        progress.update(nil, label: "loading voz, slower the first time on this Mac")
+        progress.update(nil, label: FirstLoad.label("voz"))
         let loading = Date()
         try await transcriber.prepare { _ in }
         let loadSec = Date().timeIntervalSince(loading)
+        FirstLoad.done("voz")
         let t = try await transcriber.transcription(of: URL(fileURLWithPath: input)) {
             progress.update($0, label: "transcribing")
         }
@@ -95,7 +96,7 @@ struct VozRunner: ModelRunner {
                 if show {
                     let stamp = Format.stamp(s.start)
                     for line in column(stamp, keyWidth: keyWidth, text: s.text, width: width, palette: out.palette,
-                                       keyStyle: { out.palette.accent($0) }) { out.line(line) }
+                                       keyStyle: { out.palette.time($0) }) { out.line(line) }
                 } else {
                     for line in wrap(s.text, width: width) { out.line(line) }
                 }
@@ -105,7 +106,7 @@ struct VozRunner: ModelRunner {
         }
         out.space()
         for (ext, path) in files.sorted(by: { $0.key < $1.key }) { out.note("\(ext)  \(path)") }
-        out.note("Loaded in \(Format.elapsed(loadSec)). \(Format.spoken(t.durationSec)) of audio in "
+        out.note("Voz loaded in \(Format.elapsed(loadSec)). Transcribed \(Format.spoken(t.durationSec)) of audio in "
                  + "\(Format.elapsed(t.processingSec)), \(Format.realtime(material: t.durationSec, elapsed: t.processingSec)).")
     }
 
