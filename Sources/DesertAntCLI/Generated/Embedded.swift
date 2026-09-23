@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "3.1.0",
+  "sdkVersion": "3.3.1",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -25,31 +25,36 @@ enum Embedded {
       "id": "align",
       "name": "Align",
       "tagline": "Accurate word timestamps for any transcript.",
-      "summary": "Word-timestamp refinement for Apple's SpeechAnalyzer pipeline.",
+      "summary": "Word-timestamp refinement for any transcript, on device.",
       "category": "Word timestamps",
       "lifecycle": "stable",
       "visibility": "public",
       "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "live", "package": "Align", "platforms": ["apple"] },
+        "swift": { "status": "live", "package": "Align", "platforms": ["apple", "linux", "windows"] },
         "kotlin": { "status": "none" },
-        "js": { "status": "none" }
+        "js": { "status": "live", "package": "@desert-ant-labs/align", "platforms": ["node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/align",
         "url": "https://huggingface.co/desert-ant-labs/align",
-        "revision": "main",
+        "revision": "v1.1.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
-      "runtime": ["coreml"],
+      "runtime": ["coreml", "litert"],
       "variants": [],
       "hub": {
-        "tags": ["speech", "word-timestamps", "forced-alignment", "speech-recognition", "on-device", "core-ml", "multilingual"],
+        "tags": ["speech", "word-timestamps", "forced-alignment", "speech-recognition", "on-device", "core-ml", "litert", "multilingual"],
         "pipelineTag": "automatic-speech-recognition",
         "libraryName": null
       },
-      "languages": null,
+      "languages": {
+        "count": 9,
+        "codes": ["de", "en", "es", "fr", "it", "ja", "ko", "pt", "zh"],
+        "basis": "declared",
+        "source": "https://huggingface.co/desert-ant-labs/align"
+      },
       "demo": null
     },
     {
@@ -73,13 +78,14 @@ enum Embedded {
         "revision": "v0.3.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
-      "runtime": ["coreml", "litert"],
+      "runtime": ["coreml", "coreai", "litert"],
       "variants": [
         { "id": "clear-studio", "default": true, "note": "Aggressive denoise and dereverb." },
         { "id": "clear-natural", "default": false, "note": "Lighter touch, keeps more of the room." }
       ],
       "hub": {
-        "tags": ["audio", "speech", "speech-enhancement", "speech-denoising", "noise-suppression", "dereverberation", "podcast", "on-device", "core-ml", "onnx", "ios", "android", "deepfilternet"],
+        "tags": ["audio", "speech", "speech-enhancement", "speech-denoising", "noise-suppression", "dereverberation", "podcast", "on-device", "core-ml",
+        "core-ai", "onnx", "ios", "android"],
         "pipelineTag": "audio-to-audio",
         "libraryName": null
       },
@@ -307,7 +313,7 @@ enum Embedded {
         { "id": "english", "default": false, "note": "Same 36 topics, English/Latin only, ~15 MB." }
       ],
       "hub": {
-        "tags": ["text", "topic-classification", "content-classification", "multi-label", "on-device", "core-ml", "tflite", "litert", "multilingual", "model2vec"],
+        "tags": ["text", "topic-classification", "content-classification", "multi-label", "on-device", "core-ml", "tflite", "litert", "multilingual"],
         "pipelineTag": "text-classification",
         "libraryName": "litert"
       },
@@ -607,7 +613,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/uhm",
         "url": "https://huggingface.co/desert-ant-labs/uhm",
-        "revision": "612592c10ad7b2a51f3237725448a1aad212480b",
+        "revision": "v1.1.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": ["coreml"],

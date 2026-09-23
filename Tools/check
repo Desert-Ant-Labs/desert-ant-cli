@@ -34,8 +34,7 @@ fi
 echo "Building."
 swift build ${linker[@]+"${linker[@]}"} 2>&1 | grep -E "error:|Build complete" || true
 
-# desert-ant-core is a path dependency, so an unfiltered swift test would run its
-# tests too, and those need core's own setup.
+# Only this package's tests: core's need core's own setup.
 echo "Testing."
 swift test --filter DesertAntCLITests ${linker[@]+"${linker[@]}"} 2>&1 | grep -E "error:|Executed .* tests" | tail -1
 

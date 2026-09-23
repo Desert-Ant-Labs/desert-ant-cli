@@ -15,7 +15,8 @@ import PackageDescription
 // and Tools/package set on macOS. The Title code sits behind `#if TITLE`.
 let mlx = ProcessInfo.processInfo.environment["DESERTANT_MLX"] != nil
 
-// desert-ant-core is always the sibling checkout; CORE_REF names the ref it is at.
+// desert-ant-core comes from GitHub, pinned to the release CORE_REF names. Move both
+// together: CORE_REF feeds the manifest sync and CI, this pin feeds the build.
 let core = "desert-ant-core"
 
 let package = Package(
@@ -28,7 +29,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", branch: "main", traits: mlx ? ["MLX"] : []),
+        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "3.3.1", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
         .executableTarget(
