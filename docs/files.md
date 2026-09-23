@@ -41,3 +41,16 @@ releases each keep their copy.
 
 Downloads are verified against the release's checksums, so an interrupted download is
 never mistaken for a complete one.
+
+## Where the binary is
+
+The install script puts the release in `~/.local/share/desertant`, with the files the
+binary needs beside it, and symlinks `desertant` and `da` into `~/.local/bin`.
+`DESERTANT_HOME` and `DESERTANT_BIN` change those two directories, and
+`DESERTANT_VERSION=v0.2.0` pins a release. The script checks every download against
+the release's checksums.
+
+`desertant update` runs the script again. A copy installed with Homebrew or mise
+belongs to that tool, so `update` names the command to run instead:
+`brew upgrade desertant` or `mise upgrade`. `desertant update --check` only reports
+whether a newer release exists.
