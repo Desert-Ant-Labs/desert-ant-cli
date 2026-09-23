@@ -21,6 +21,9 @@ first use with progress on stderr; stdout stays clean JSON.
   service.
 - `desertant emo "<text>" --json` suggests emoji.
 - `desertant gist "<text>" --json` tags the topic.
+- `desertant tongue "<text>" --json` names the language the text is written in.
+- `desertant moderator <image> --json` scores an image for nudity and says whether the
+  score crosses the threshold (Apple silicon).
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word;
   `--srt` or `--vtt` also writes captions beside the input
@@ -31,6 +34,11 @@ first use with progress on stderr; stdout stays clean JSON.
   output path.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
   each clip's start, end, text, and file; `--select-only` gives timestamps only.
+
+- A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
+  `--recursive` for its subfolders) and loads the model once. The result is then an
+  array with one entry per file. A file that fails is reported on stderr, and the exit
+  code is 1 after the rest have run.
 
 Commands chain through their JSON: `desertant voz talk.mp4 --json | desertant clips
 talk.mp4 --transcript -` transcribes once and cuts from that transcript.

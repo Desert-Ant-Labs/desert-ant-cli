@@ -23,7 +23,7 @@ struct Home: AsyncParsableCommand {
         DesertAnt.configuration.subcommands.compactMap { type in
             let c = type.configuration
             guard let name = c.commandName, let runner = Runners.runner(for: name) else { return nil }
-            return Entry(command: name, input: runner.inputKind == .file ? "<file>" : "\"<text>\"", does: c.abstract)
+            return Entry(command: name, input: runner.inputKind.placeholder, does: c.abstract)
         }
     }
 
@@ -50,9 +50,9 @@ struct Home: AsyncParsableCommand {
         let indent = "  "
 
         // Verbs grouped by what they take.
-        let groups: [(String, String)] = [("Text", "\"<text>\""), ("Recordings", "<file>")]
-        for (label, input) in groups {
-            let members = verbs.filter { $0.input == input }
+        let groups: [(String, RunInputKind)] = [("Text", .text), ("Recordings", .file), ("Images", .image)]
+        for (label, kind) in groups {
+            let members = verbs.filter { $0.input == kind.placeholder }
             guard !members.isEmpty else { continue }
             out.line(p.faint(label))
             for entry in members {

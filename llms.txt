@@ -2,8 +2,8 @@
 
 > desertant runs Desert Ant Labs on-device models from the terminal: transcribe a
 > recording, cut short clips from a talk, clean up the audio, find filler words, name
-> the spoken language, redact personal data, suggest emoji, tag a text's topic, and
-> write a title. Weights download once and cache; nothing leaves the device when a
+> the spoken language, redact personal data, suggest emoji, tag a text's topic, name
+> the language of a short text, flag nudity in an image, and write a title. Weights download once and cache; nothing leaves the device when a
 > model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
 Start with `desertant schema --json`: it lists every runnable model, its input, and

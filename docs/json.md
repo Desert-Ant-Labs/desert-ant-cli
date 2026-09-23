@@ -81,7 +81,8 @@ lists them.
 }
 ```
 
-`input` is `text` or `file`, or null when the model has no runner on this machine. Every
+`input` is `text`, `file` (a recording), or `image`, or null when the model has no
+runner on this machine. Every
 `options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option
 count=3`). Each entry also carries `emits` (the document kind its `--json` result is,
 or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's
@@ -146,8 +147,52 @@ Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`,
 [{"slug": "finance", "name": "Personal Finance & Investing", "score": 0.98}]
 ```
 
+`desertant tongue "<text>" --json`: the language the text is written in.
+
+```json
+{
+  "language": "de",
+  "reliability": "confident",
+  "tooCloseToCall": false,
+  "candidates": [{"language": "de", "probability": 0.99}]
+}
+```
+
+`language` is an ISO 639 code, and is left out when there was nothing to read. `reliability`
+is `confident`, `likely`, `tentative`, or `empty`, judged from the text's length and
+the lead over the runner-up rather than the probability alone. `tooCloseToCall` is
+true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
+
 `desertant title "<text>" --json`: `{"title", "description"}`, on Apple silicon
 builds.
+
+`desertant moderator <image> --json`: the nudity score, on Apple silicon builds.
+
+```json
+{
+  "input": "/work/photo.jpg",
+  "nsfw": false,
+  "score": 0.12,
+  "threshold": 0.5,
+  "policy": "standard",
+  "quality": "accurate",
+  "regions": {"nipples": 0.12, "genitals": 0.11, "buttocks": 0.06, "nude": 0.11, "sexAct": 0.05}
+}
+```
+
+`score` is the highest region the policy counts, and `nsfw` is whether that score reaches
+`threshold`. Under `allow-topless` a bare chest alone does not count. Regions are
+decision scores in 0...1, not calibrated probabilities.
+
+`voz`, `uhm`, `ear`, `clear`, `clips`, and `moderator` take several paths, or a
+folder, and `--recursive` looks inside its folders. One path returns the document
+below. Several paths or a folder return an array of those documents, in the order the
+files ran, each with its `input`. A file the model does not read is skipped, with a
+note on stderr. A file that fails is left out, with its message on stderr, and the
+exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name
+one file's document, so a batch refuses them. Each output lands beside its input, and
+a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files
+the first run wrote.
 
 `desertant voz <file> --json`: the transcript document. `clips --transcript` reads
 this file as is.

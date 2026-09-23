@@ -46,6 +46,41 @@ struct GistVerb: AsyncParsableCommand {
     }
 }
 
+struct TongueVerb: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "tongue", abstract: Manifest.summary("tongue"))
+    @Argument(help: "The text. Omit to read stdin.") var text: String?
+    @Option(help: "How many candidate languages to show.") var top: Int?
+    @OptionGroup var global: GlobalOptions
+
+    func run() async throws {
+        var args = RunArguments()
+        args.set("top", top)
+        try await Execute.run(id: "tongue", rawInput: text, arguments: args, out: Output(options: global))
+    }
+}
+
+#if canImport(ImageIO)
+struct ModeratorVerb: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "moderator", abstract: Manifest.summary("moderator"))
+    @Argument(help: "The image files, or a folder of them.") var files: [String]
+    @Option(help: "Score at or above which the image is flagged, 0...1.") var threshold: Double?
+    @Option(help: "standard, or allow-topless to let a bare chest through.") var policy: String?
+    @Option(help: "fast, balanced, or accurate: how many crops are scored.") var quality: String?
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
+    @OptionGroup var global: GlobalOptions
+
+    func run() async throws {
+        var args = RunArguments()
+        args.set("threshold", threshold)
+        args.set("policy", policy)
+        args.set("quality", quality)
+        try await Execute.run(id: "moderator", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
+    }
+}
+#endif
+
 #if TITLE
 struct TitleVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -62,7 +97,7 @@ struct TitleVerb: AsyncParsableCommand {
 struct VozVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "voz", abstract: Manifest.summary("voz"))
-    @Argument(help: "The audio or video file.") var file: String
+    @Argument(help: "The audio or video files, or a folder of them.") var files: [String]
     @Flag(name: [.short, .long], help: "A time before each sentence.") var timestamps = false
     @Flag(help: "Also write captions as <input>.srt beside the input.") var srt = false
     @Flag(help: "Also write captions as <input>.vtt beside the input.") var vtt = false
@@ -71,6 +106,7 @@ struct VozVerb: AsyncParsableCommand {
     var output: String?
     @Option(help: "What stdout carries: text, srt, vtt, txt, or json.") var format: String?
     @Flag(help: "Replace an existing file instead of stepping aside.") var force = false
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
@@ -82,32 +118,34 @@ struct VozVerb: AsyncParsableCommand {
         args.set("output", output)
         args.set("format", format)
         args.set("force", force ? "true" : nil)
-        try await Execute.run(id: "voz", rawInput: file, arguments: args, out: Output(options: global))
+        try await Execute.run(id: "voz", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
     }
 }
 
 struct UhmVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "uhm", abstract: Manifest.summary("uhm"))
-    @Argument(help: "The audio or video file.") var file: String
+    @Argument(help: "The audio or video files, or a folder of them.") var files: [String]
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
-        try await Execute.run(id: "uhm", rawInput: file, arguments: RunArguments(), out: Output(options: global))
+        try await Execute.run(id: "uhm", rawInputs: files, recursive: recursive, arguments: RunArguments(), out: Output(options: global))
     }
 }
 
 struct EarVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "ear", abstract: Manifest.summary("ear"))
-    @Argument(help: "The audio or video file.") var file: String
+    @Argument(help: "The audio or video files, or a folder of them.") var files: [String]
     @Option(help: "How many candidate languages to show.") var top: Int?
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
         var args = RunArguments()
         args.set("top", top)
-        try await Execute.run(id: "ear", rawInput: file, arguments: args, out: Output(options: global))
+        try await Execute.run(id: "ear", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
     }
 }
 
@@ -115,12 +153,13 @@ struct ClipsVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "clips", abstract: Manifest.summary("clips"),
         discussion: "Transcribes with Voz, picks the moments with Clips, and writes one file per clip beside the input. Pass a transcript to skip transcribing, or --select-only for timestamps alone.")
-    @Argument(help: "The video or audio file.") var file: String
+    @Argument(help: "The video or audio files, or a folder of them.") var files: [String]
     @Option(help: "How many clips to look for. Default: the model sizes it to the recording.") var count: Int?
     @Option(name: .customLong("output-dir"), help: "Where the clip files go. Default: beside the input.") var outputDir: String?
     @Option(help: "An .srt, .vtt, or .json transcript instead of transcribing; `-` reads one from stdin.") var transcript: String?
     @Flag(name: .customLong("select-only"), help: "Report the moments as timestamps without writing files.") var selectOnly = false
     @Flag(help: "Replace existing clip files instead of stepping aside to new names.") var force = false
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
@@ -130,22 +169,23 @@ struct ClipsVerb: AsyncParsableCommand {
         args.set("transcript", transcript)
         args.set("select-only", selectOnly ? "true" : nil)
         args.set("force", force ? "true" : nil)
-        try await Execute.run(id: "clips", rawInput: file, arguments: args, out: Output(options: global))
+        try await Execute.run(id: "clips", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
     }
 }
 
 struct ClearVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "clear", abstract: Manifest.summary("clear"))
-    @Argument(help: "The input file.") var file: String
+    @Argument(help: "The input files, or a folder of them.") var files: [String]
     @Option(help: "Where to write. Default: the input with a _clear suffix.") var output: String?
     @Flag(help: "Replace an existing output instead of stepping aside to a new name.") var force = false
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
         var args = RunArguments()
         args.set("output", output)
         args.set("force", force ? "true" : nil)
-        try await Execute.run(id: "clear", rawInput: file, arguments: args, out: Output(options: global))
+        try await Execute.run(id: "clear", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
     }
 }

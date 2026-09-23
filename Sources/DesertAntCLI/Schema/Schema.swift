@@ -18,6 +18,7 @@ struct Schema: ParsableCommand {
         let version: String
         let coreVersion: String
         let invocation: String
+        let folders: String
         let composition: String
         let globalFlags: [Flag]
         let exitCodes: [Code]
@@ -58,6 +59,7 @@ struct Schema: ParsableCommand {
             version: Version.cli,
             coreVersion: Version.core,
             invocation: "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
+            folders: "A file or image verb takes several paths, or a folder (--recursive walks its folders). The --json result is then an array of the single-file documents, in order. A file that fails is left out and its message goes to stderr. The exit code is 1 after the rest have run.",
             composition: "A command whose `emits` matches another's `accepts.kind` feeds it: pass the --json output as a file through that option, or `-` to read it from stdin. desertant docs pipelines explains the rest.",
             globalFlags: [
                 Flag(flag: "--json", help: "Machine-readable JSON output."),

@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "3.3.1",
+  "sdkVersion": "3.4.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -335,25 +335,25 @@ enum Embedded {
       "tagline": "Flag nudity before upload or display.",
       "summary": "On-device NSFW image detection, trained only on licensed and synthetic data.",
       "category": "Content moderation",
-      "lifecycle": "closed-beta",
+      "lifecycle": "beta",
       "visibility": "public",
-      "home": null,
+      "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "planned" },
-        "kotlin": { "status": "none" },
-        "js": { "status": "none" }
+        "swift": { "status": "live", "package": "Moderator", "platforms": ["apple", "linux", "windows"] },
+        "kotlin": { "status": "live", "package": "ai.desertant:moderator", "platforms": ["android"] },
+        "js": { "status": "live", "package": "@desert-ant-labs/moderator", "platforms": ["web", "node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/moderator",
         "url": "https://huggingface.co/desert-ant-labs/moderator",
-        "revision": "main",
+        "revision": "v1.0.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
-      "runtime": ["coreml"],
+      "runtime": ["coreml", "litert"],
       "variants": [],
       "hub": {
-        "tags": ["image", "image-classification", "content-moderation", "nsfw", "on-device", "core-ml", "onnx"],
+        "tags": ["image", "image-classification", "content-moderation", "nsfw", "on-device", "core-ml", "litert", "tflite"],
         "pipelineTag": "image-classification",
         "libraryName": null
       },
@@ -658,7 +658,12 @@ enum Embedded {
           "status": "none"
         },
         "js": {
-          "status": "none"
+          "status": "live",
+          "package": "@desert-ant-labs/voz",
+          "platforms": [
+            "web",
+            "node"
+          ]
         }
       },
       "weights": {
@@ -669,7 +674,8 @@ enum Embedded {
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": [
-        "coreml"
+        "coreml",
+        "onnx"
       ],
       "variants": [],
       "hub": {
@@ -766,8 +772,8 @@ enum Embedded {
 
 > desertant runs Desert Ant Labs on-device models from the terminal: transcribe a
 > recording, cut short clips from a talk, clean up the audio, find filler words, name
-> the spoken language, redact personal data, suggest emoji, tag a text's topic, and
-> write a title. Weights download once and cache; nothing leaves the device when a
+> the spoken language, redact personal data, suggest emoji, tag a text's topic, name
+> the language of a short text, flag nudity in an image, and write a title. Weights download once and cache; nothing leaves the device when a
 > model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
 Start with `desertant schema --json`: it lists every runnable model, its input, and
@@ -823,7 +829,7 @@ desertant schema --json
 ```
 
 The catalog of every shipping model: its id, whether it runs on this machine, whether
-it takes text or a file, and its options with a line of help each. The schema is
+it takes text, a recording, or an image, and its options with a line of help each. The schema is
 built from the same code the commands run, so a model, option, or exit code listed
 there exists. Read it once per session rather than guessing flags.
 
@@ -855,8 +861,11 @@ desertant run clear --file meeting.mp4 --option output=clean.mp4 --json
 ```
 
 A text model reads its text from the argument, or from stdin when no argument is
-given, so a long passage can be piped in. A file model takes a path and never reads
-media from stdin. `clips --transcript -` reads a transcript document from stdin, so
+given, so a long passage can be piped in. A file or image model takes a path, several
+paths, or a folder, with `--recursive` for the folders inside, and loads the model
+once for all of them. Media never comes from stdin. With more than one file the
+`--json` result is an array, one document per file in the order they ran. A file that
+fails is reported on stderr and the rest still run. The exit code is 1 at the end. `clips --transcript -` reads a transcript document from stdin, so
 `voz --json` pipes into `clips`; see [pipelines.md](pipelines.md).
 
 ## What comes back
@@ -1091,7 +1100,8 @@ lists them.
 }
 ```
 
-`input` is `text` or `file`, or null when the model has no runner on this machine. Every
+`input` is `text`, `file` (a recording), or `image`, or null when the model has no
+runner on this machine. Every
 `options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option
 count=3`). Each entry also carries `emits` (the document kind its `--json` result is,
 or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's
@@ -1156,8 +1166,52 @@ Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`,
 [{"slug": "finance", "name": "Personal Finance & Investing", "score": 0.98}]
 ```
 
+`desertant tongue "<text>" --json`: the language the text is written in.
+
+```json
+{
+  "language": "de",
+  "reliability": "confident",
+  "tooCloseToCall": false,
+  "candidates": [{"language": "de", "probability": 0.99}]
+}
+```
+
+`language` is an ISO 639 code, and is left out when there was nothing to read. `reliability`
+is `confident`, `likely`, `tentative`, or `empty`, judged from the text's length and
+the lead over the runner-up rather than the probability alone. `tooCloseToCall` is
+true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
+
 `desertant title "<text>" --json`: `{"title", "description"}`, on Apple silicon
 builds.
+
+`desertant moderator <image> --json`: the nudity score, on Apple silicon builds.
+
+```json
+{
+  "input": "/work/photo.jpg",
+  "nsfw": false,
+  "score": 0.12,
+  "threshold": 0.5,
+  "policy": "standard",
+  "quality": "accurate",
+  "regions": {"nipples": 0.12, "genitals": 0.11, "buttocks": 0.06, "nude": 0.11, "sexAct": 0.05}
+}
+```
+
+`score` is the highest region the policy counts, and `nsfw` is whether that score reaches
+`threshold`. Under `allow-topless` a bare chest alone does not count. Regions are
+decision scores in 0...1, not calibrated probabilities.
+
+`voz`, `uhm`, `ear`, `clear`, `clips`, and `moderator` take several paths, or a
+folder, and `--recursive` looks inside its folders. One path returns the document
+below. Several paths or a folder return an array of those documents, in the order the
+files ran, each with its `input`. A file the model does not read is skipped, with a
+note on stderr. A file that fails is left out, with its message on stderr, and the
+exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name
+one file's document, so a batch refuses them. Each output lands beside its input, and
+a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files
+the first run wrote.
 
 `desertant voz <file> --json`: the transcript document. `clips --transcript` reads
 this file as is.
@@ -1418,7 +1472,7 @@ The transcript (`--txt`, `--format txt`, and the screen) is sentences, not cues.
         (name: "skill", markdown: ###"""
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
 ---
 
 # desertant
@@ -1448,6 +1502,9 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
   reply.
 - Suggest emoji: `desertant emo "pay my bills" --json`
 - Tag what a text is about: `desertant gist "<article text>" --json`
+- Name the language a short text is written in: `desertant tongue "<text>" --json`
+- Flag nudity in a photo before upload or display: `desertant moderator photo.jpg --json`
+  scores the image 0...1 and says whether the score crosses the threshold (Apple silicon).
 - Write a title and description for a passage: `desertant title "<text>" --json`
   (Apple silicon)
 - Enhance an audio or video file: `desertant clear meeting.mp4 --json` writes an
@@ -1459,6 +1516,11 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
   timestamps without writing; `--transcript talk.srt` skips transcribing.
+
+- A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
+  `--recursive` for its subfolders) and loads the model once. The result is then an
+  array with one entry per file. A file that fails is reported on stderr, and the exit
+  code is 1 after the rest have run.
 
 A command that writes a file never replaces one: a taken name steps aside to
 `name-2.ext`, and the output can never be the input. Pass `--force` to overwrite.
@@ -1509,6 +1571,9 @@ first use with progress on stderr; stdout stays clean JSON.
   service.
 - `desertant emo "<text>" --json` suggests emoji.
 - `desertant gist "<text>" --json` tags the topic.
+- `desertant tongue "<text>" --json` names the language the text is written in.
+- `desertant moderator <image> --json` scores an image for nudity and says whether the
+  score crosses the threshold (Apple silicon).
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word;
   `--srt` or `--vtt` also writes captions beside the input
@@ -1519,6 +1584,11 @@ first use with progress on stderr; stdout stays clean JSON.
   output path.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
   each clip's start, end, text, and file; `--select-only` gives timestamps only.
+
+- A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
+  `--recursive` for its subfolders) and loads the model once. The result is then an
+  array with one entry per file. A file that fails is reported on stderr, and the exit
+  code is 1 after the rest have run.
 
 Commands chain through their JSON: `desertant voz talk.mp4 --json | desertant clips
 talk.mp4 --transcript -` transcribes once and cuts from that transcript.

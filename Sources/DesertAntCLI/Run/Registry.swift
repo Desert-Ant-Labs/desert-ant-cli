@@ -19,6 +19,7 @@ enum Runners {
         GistRunner(),
         ClearRunner(),
         EarRunner(),
+        TongueRunner(),
         // Selection is portable; transcribing and cutting gate themselves inside.
         ClipsRunner(),
     ]
@@ -31,6 +32,10 @@ enum Runners {
         #endif
         #if TITLE
         runners.append(TitleRunner())
+        #endif
+        // Reading an image file goes through ImageIO; see ModeratorRunner.
+        #if canImport(ImageIO)
+        runners.append(ModeratorRunner())
         #endif
         return runners
     }()

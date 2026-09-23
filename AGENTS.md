@@ -23,6 +23,9 @@ The binary is `desertant` (alias `da`).
   (Voz and AVFoundation behind them on Apple, a transcript file anywhere). The
   pipeline shares the CLI's `Output`, `Progress`, and `Destination` on purpose; if the
   pipeline ever moves to a package, those three are the only ties to cut.
+- `Sources/DesertAntCLI/IO/Inputs.swift` turns the paths a file verb was given, folders
+  included, into the files to run. `Execute` loops them with the model loaded once, and
+  `Output.batch` collects the JSON into one array. A runner never sees a folder.
 - `Sources/DesertAntCLI/IO/Destination.swift` is the one file-writing policy: never
   the input, never over an existing file unless `--force`, else step aside to
   `name-2.ext`. Every command that writes goes through it.
@@ -63,7 +66,8 @@ subshell that hands back a value (see how `Tools/check` finds LiteRT); sourcing
 ## Adding a model
 
 1. Add its product to `Package.swift` (gate Apple-only models behind `#if canImport`).
-2. Write `Run/Adapters/<Name>Runner.swift`: id, input kind, options, and a `run` that
+2. Write `Run/Adapters/<Name>Runner.swift`: id, input kind (text, file, or image),
+   options, and a `run` that
    emits a typed `Encodable` under `--json` and a plain line otherwise. Numbers stay
    numbers in JSON; never stringify a confidence.
 3. List it in `Registry.swift`, and add a verb in `Verbs.swift` if the model earns one.

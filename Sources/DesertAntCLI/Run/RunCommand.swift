@@ -16,8 +16,11 @@ struct Run: AsyncParsableCommand {
     @Option(name: .long, help: "Text input for a text model. Omit to read stdin.")
     var input: String?
 
-    @Option(name: .long, help: "File path for an audio or video model.")
-    var file: String?
+    @Option(name: .long, help: "A file for an audio, video, or image model, or a folder of them. Repeatable.")
+    var file: [String] = []
+
+    @Flag(help: "Also run the files in a folder's subfolders.")
+    var recursive = false
 
     @Option(name: .customLong("option"), help: "A k=v option, repeatable.")
     var options: [String] = []
@@ -25,8 +28,13 @@ struct Run: AsyncParsableCommand {
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
-        try await Execute.run(id: model, rawInput: input ?? file,
-                              arguments: RunArguments(options), out: Output(options: global))
+        if file.isEmpty {
+            try await Execute.run(id: model, rawInput: input,
+                                  arguments: RunArguments(options), out: Output(options: global))
+        } else {
+            try await Execute.run(id: model, rawInputs: file, recursive: recursive,
+                                  arguments: RunArguments(options), out: Output(options: global))
+        }
     }
 }
 

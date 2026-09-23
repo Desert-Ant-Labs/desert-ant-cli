@@ -5,8 +5,9 @@
 ![License](https://img.shields.io/badge/license-MIT-ADB49C)
 
 Transcribe a recording, cut the best moments into clips, clean up the audio, redact
-personal data from text, suggest emoji, or tag a topic, with [Desert Ant Labs](https://desertant.com)
-models running on your own machine. Weights download once. Nothing leaves the device.
+personal data from text, name the language of a line, flag nudity in a photo, or tag
+a topic, with [Desert Ant Labs](https://desertant.com) models running on your own
+machine. Weights download once. Nothing leaves the device.
 
 ```
 $ da voz talk.mp4 -t
@@ -56,11 +57,16 @@ numbers, its limits, and a live demo. `da info <model>` prints the same card.
   Suggest emoji for a word or a sentence.
 - **[Gist](https://desertant.com/models/gist/)** `da gist "<text>"`  
   Tag a post or article with topics, from a set of 36.
+- **[Tongue](https://desertant.com/models/tongue/)** `da tongue "<text>"`  
+  Name the language a short text is written in, from three words, in 84 languages.
+- **[Moderator](https://desertant.com/models/moderator/)** `da moderator photo.jpg`  
+  Flag nudity or sexual content before a photo is uploaded or shown.
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
-Redact, Emo, and Gist are multilingual. Voz, Uhm, and Title need Apple silicon, the
-rest run on macOS and Linux, and `da models` lists what runs on your machine.
+Redact, Emo, Gist, and Tongue are multilingual. Voz, Uhm, Title, and Moderator need
+Apple silicon, the rest run on macOS and Linux, and `da models` lists what runs on
+your machine.
 
 ## Transcripts and captions
 
@@ -88,6 +94,19 @@ da voz talk.mp4 --json | da clips talk.mp4 --transcript -
 `da schema --json` names which command's output feeds which, and `da docs pipelines`
 covers the rest. desertant never overwrites a file: a second run writes
 `talk_clear-2.mp4`, and `--force` is the only way around that.
+
+## Folders
+
+A file verb takes several files, or a folder, and loads the model once for all of
+them:
+
+```
+da moderator photos/ --json
+da ear interviews/ --recursive
+```
+
+Under `--json` the result is an array with one entry per file. A file that fails is
+reported on stderr and the rest still run. The exit code is 1 at the end.
 
 ## Coding agents
 

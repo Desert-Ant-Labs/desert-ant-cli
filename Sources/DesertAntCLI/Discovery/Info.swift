@@ -90,7 +90,7 @@ struct Info: ParsableCommand {
         if let runner {
             let state = downloaded == true ? p.accent("downloaded") : p.dim("not downloaded yet, fetched on first run")
             field("machine", state)
-            field("run", "desertant \(m.id) \(runner.inputKind == .file ? "<file>" : "\"<text>\"")")
+            field("run", "desertant \(m.id) \(runner.inputKind.placeholder)")
         } else if m.ships {
             field("machine", p.dim("no runner on this platform"))
         } else {

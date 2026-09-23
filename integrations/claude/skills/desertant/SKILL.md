@@ -1,6 +1,6 @@
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
 ---
 
 # desertant
@@ -30,6 +30,9 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
   reply.
 - Suggest emoji: `desertant emo "pay my bills" --json`
 - Tag what a text is about: `desertant gist "<article text>" --json`
+- Name the language a short text is written in: `desertant tongue "<text>" --json`
+- Flag nudity in a photo before upload or display: `desertant moderator photo.jpg --json`
+  scores the image 0...1 and says whether the score crosses the threshold (Apple silicon).
 - Write a title and description for a passage: `desertant title "<text>" --json`
   (Apple silicon)
 - Enhance an audio or video file: `desertant clear meeting.mp4 --json` writes an
@@ -41,6 +44,11 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
   timestamps without writing; `--transcript talk.srt` skips transcribing.
+
+- A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
+  `--recursive` for its subfolders) and loads the model once. The result is then an
+  array with one entry per file. A file that fails is reported on stderr, and the exit
+  code is 1 after the rest have run.
 
 A command that writes a file never replaces one: a taken name steps aside to
 `name-2.ext`, and the output can never be the input. Pass `--force` to overwrite.

@@ -10,6 +10,8 @@ enum RunInputKind: String, Sendable {
     case text
     /// A path to an audio or video file.
     case file
+    /// A path to an image file.
+    case image
 }
 
 /// One option a runner accepts, e.g. `limit`. Declared once on the runner so the verb,
@@ -42,6 +44,9 @@ protocol ModelRunner: Sendable {
     /// Documents this runner takes from another command. Empty by default.
     var accepts: [Intake] { get }
 
+    /// Reject bad options before any download or run. Nothing to check by default.
+    func validate(_ arguments: RunArguments) throws
+
     /// Whether the weights are on disk already.
     func isDownloaded() -> Bool
     /// Fetch and verify the weights, reporting progress 0...1.
@@ -53,6 +58,7 @@ protocol ModelRunner: Sendable {
 }
 
 extension ModelRunner {
+    func validate(_ arguments: RunArguments) throws {}
     var options: [RunOption] { [] }
     var emits: String? { nil }
     var accepts: [Intake] { [] }
@@ -84,4 +90,42 @@ struct RunArguments: Sendable {
 struct RunError: Error, CustomStringConvertible {
     let description: String
     init(_ m: String) { description = m }
+}
+
+extension RunInputKind {
+    /// How the input is shown in help and on the home screen.
+    var placeholder: String {
+        switch self {
+        case .text: "\"<text>\""
+        case .file: "<file>"
+        case .image: "<image>"
+        }
+    }
+
+    /// What a folder is filtered by, lowercase, no dot.
+    var extensions: Set<String> {
+        switch self {
+        case .text: []
+        case .file: ["mp3", "m4a", "aac", "wav", "aiff", "aif", "caf", "flac", "mp4", "mov", "m4v"]
+        case .image: ["jpg", "jpeg", "png", "heic", "heif", "gif", "tif", "tiff", "bmp", "webp"]
+        }
+    }
+
+    /// The files in a folder, in a message: "no audio or video files in ...".
+    var noun: String {
+        switch self {
+        case .text: "text"
+        case .file: "audio or video"
+        case .image: "image"
+        }
+    }
+
+    /// Why a file in a folder was skipped: "Skipped notes.txt, not an image."
+    var rejected: String {
+        switch self {
+        case .text: "not text"
+        case .file: "not audio or video"
+        case .image: "not an image"
+        }
+    }
 }

@@ -27,6 +27,23 @@ final class CatalogTests: XCTestCase {
         }
     }
 
+    func testEveryPortableModelHasARunner() {
+        // Tongue ships inside the SDK and Moderator reads its image through ImageIO.
+        XCTAssertEqual(Runners.runner(for: "tongue")?.inputKind, .text)
+        XCTAssertTrue(Runners.runner(for: "tongue")?.isDownloaded() ?? false, "tongue is bundled, never downloaded")
+        #if canImport(ImageIO)
+        XCTAssertEqual(Runners.runner(for: "moderator")?.inputKind, .image)
+        #else
+        XCTAssertNil(Runners.runner(for: "moderator"))
+        #endif
+    }
+
+    func testInputKindPlaceholders() {
+        XCTAssertEqual(RunInputKind.text.placeholder, "\"<text>\"")
+        XCTAssertEqual(RunInputKind.file.placeholder, "<file>")
+        XCTAssertEqual(RunInputKind.image.placeholder, "<image>")
+    }
+
     func testRunnerOptionNamesAreUnique() {
         for runner in Runners.all.values {
             let names = runner.options.map(\.name)

@@ -11,7 +11,7 @@ desertant schema --json
 ```
 
 The catalog of every shipping model: its id, whether it runs on this machine, whether
-it takes text or a file, and its options with a line of help each. The schema is
+it takes text, a recording, or an image, and its options with a line of help each. The schema is
 built from the same code the commands run, so a model, option, or exit code listed
 there exists. Read it once per session rather than guessing flags.
 
@@ -43,8 +43,11 @@ desertant run clear --file meeting.mp4 --option output=clean.mp4 --json
 ```
 
 A text model reads its text from the argument, or from stdin when no argument is
-given, so a long passage can be piped in. A file model takes a path and never reads
-media from stdin. `clips --transcript -` reads a transcript document from stdin, so
+given, so a long passage can be piped in. A file or image model takes a path, several
+paths, or a folder, with `--recursive` for the folders inside, and loads the model
+once for all of them. Media never comes from stdin. With more than one file the
+`--json` result is an array, one document per file in the order they ran. A file that
+fails is reported on stderr and the rest still run. The exit code is 1 at the end. `clips --transcript -` reads a transcript document from stdin, so
 `voz --json` pipes into `clips`; see [pipelines.md](pipelines.md).
 
 ## What comes back

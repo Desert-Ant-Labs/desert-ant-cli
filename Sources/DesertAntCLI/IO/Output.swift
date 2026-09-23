@@ -21,13 +21,24 @@ struct GlobalOptions: ParsableArguments {
 /// Where a command writes its result, with the flags that decide how.
 struct Output {
     let options: GlobalOptions
+    /// Set while several inputs run in one process: `emit` collects each result here
+    /// instead of printing, and the loop prints the list once at the end.
+    var batch: Batch? = nil
+    /// Put in front of every text line, so one input's lines sit under its name.
+    var indent = ""
     var palette: Palette { options.palette }
     var isJSON: Bool { options.json }
 
     /// A line of human text. Suppressed under --json.
     func line(_ s: String = "") {
         guard !isJSON else { return }
-        print(s)
+        print(s.isEmpty ? s : indent + s)
+    }
+
+    /// A message for the person on stderr, whatever stdout carries: a file that failed
+    /// in a batch. Printed under --quiet too, since an error is not a note.
+    func warn(_ s: String) {
+        FileHandle.standardError.write(Data((s + "\n").utf8))
     }
 
     /// A blank line on a terminal, so a result stands apart from the prompt and the
@@ -44,11 +55,16 @@ struct Output {
         if s.hasPrefix("\n") { print() }
         let text = s.trimmingCharacters(in: .newlines)
         guard !text.isEmpty else { return }
-        for line in wrap(text, width: min(Terminal.columns, 100)) { print(palette.dim(line)) }
+        for line in wrap(text, width: min(Terminal.columns, 100) - indent.count) { print(indent + palette.dim(line)) }
     }
 
-    /// Emit a JSON value. Used only under --json.
+    /// Emit a JSON value. Used only under --json. In a batch the value is collected
+    /// and printed with the others as one array.
     func emit<T: Encodable>(_ value: T) {
+        if let batch {
+            batch.append(value)
+            return
+        }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         guard let data = try? encoder.encode(value), let text = String(data: data, encoding: .utf8) else {
@@ -57,6 +73,31 @@ struct Output {
         }
         print(text)
     }
+}
+
+/// The results of a batch, in input order, printed as one JSON array at the end.
+final class Batch: @unchecked Sendable {
+    private let lock = NSLock()
+    private var items: [AnyEncodable] = []
+
+    func append<T: Encodable>(_ value: T) {
+        lock.lock()
+        items.append(AnyEncodable(value))
+        lock.unlock()
+    }
+
+    var all: [AnyEncodable] {
+        lock.lock()
+        defer { lock.unlock() }
+        return items
+    }
+}
+
+/// One runner's result with its type erased, so a batch can hold any of them.
+struct AnyEncodable: Encodable {
+    private let encodeInto: (Encoder) throws -> Void
+    init<T: Encodable>(_ value: T) { encodeInto = { try value.encode(to: $0) } }
+    func encode(to encoder: Encoder) throws { try encodeInto(encoder) }
 }
 
 /// Read all of stdin as text, or nil when stdin is a terminal (nothing piped).
