@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "3.4.0",
+  "sdkVersion": "3.5.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",

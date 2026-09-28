@@ -29,7 +29,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "3.4.0", traits: mlx ? ["MLX"] : []),
+        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "3.5.0", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
         .executableTarget(
