@@ -8,10 +8,13 @@ the guard that compares them never disagree. Set it to a tag before cutting a
 release. `Tools/embed` compiles the manifest, version, and docs into the binary.
 
 ```
+$EDITOR release-notes/0.2.0.md
 Tools/release 0.2.0
 git push --follow-tags
 Tools/publish-formula      # once the release workflow is green
 ```
+
+`release-notes/<version>.md` is the GitHub release body, and `Tools/release` refuses to tag without it. The first line names the desert-ant-core version the release follows, since the CLI keeps its own version numbers. Then list what changed for someone running the CLI, one line each, and end with how to update. Follow `brand/VOICE.md`.
 
 `Tools/release` syncs the manifest from the sibling `desert-ant-core` checkout, writes
 the version to `VERSION` and the formula, re-embeds, runs `Tools/check` (build, tests,

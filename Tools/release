@@ -2,7 +2,7 @@
 # Cut a release: sync the manifest, set the version, check, commit, tag. Pushing is
 # left to you; the tag triggers .github/workflows/release.yml.
 #
-#   Tools/release 0.2.0
+#   Tools/release 0.2.0      # needs release-notes/0.2.0.md
 #   git push --follow-tags
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,6 +13,13 @@ case "$version" in
   [0-9]*.[0-9]*.[0-9]*) ;;
   *) echo "The version must look like 0.2.0." >&2; exit 1 ;;
 esac
+
+# The release workflow publishes this file as the GitHub release body.
+notes="release-notes/$version.md"
+if [[ ! -s "$notes" ]]; then
+  echo "Write $notes first: what changed for the reader, and the core version it follows." >&2
+  exit 1
+fi
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Commit or stash your changes first." >&2

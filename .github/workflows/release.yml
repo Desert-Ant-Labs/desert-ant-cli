@@ -90,8 +90,13 @@ jobs:
           (cd dist && sha256sum *.tar.gz > checksums.txt)
           Tools/render-formula dist/checksums.txt > dist/desertant.rb
 
+      # The notes are written by hand before Tools/release tags; the tag is v<version>.
+      - name: Release notes
+        id: notes
+        run: echo "path=release-notes/${GITHUB_REF_NAME#v}.md" >> "$GITHUB_OUTPUT"
+
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          generate_release_notes: true
+          body_path: ${{ steps.notes.outputs.path }}
 

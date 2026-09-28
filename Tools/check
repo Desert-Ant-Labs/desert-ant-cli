@@ -47,7 +47,7 @@ if [[ -f "$core/manifest.json" ]]; then
   fi
 fi
 
-if grep -rn $'—\|–' Sources README.md AGENTS.md RELEASING.md llms.txt docs integrations install.sh 2>/dev/null; then
+if grep -rn $'—\|–' Sources README.md AGENTS.md RELEASING.md llms.txt docs integrations install.sh release-notes 2>/dev/null; then
   echo "An em or en dash was found above. Use a comma, colon, or period." >&2
   fail=1
 else
