@@ -14,8 +14,9 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 export NO_COLOR=1 DESERTANT_NO_UPDATE_CHECK=1
 
-# TFLite prints this once per process and exposes no level for it; it is an upstream
-# LiteRT issue. Every other runtime log line fails a check.
+# A command that succeeds prints its result on stdout and nothing on stderr, apart
+# from the CLI's own note about skipped files and this one TFLite line, which has no
+# switch upstream. A loader warning or a runtime log line fails the check.
 xnnpack="INFO: Created TensorFlow Lite XNNPACK delegate for CPU."
 
 passed=0 failed=0
@@ -33,8 +34,8 @@ check() {
     fail "$name: exit $code, expected $want" "$out"$'\n'"$err"
   elif [[ -n "$pattern" ]] && ! grep -qE -- "$pattern" <<<"$out"$'\n'"$err"; then
     fail "$name: no match for /$pattern/" "$out"$'\n'"$err"
-  elif grep -E '^(INFO|WARNING|VERBOSE): ' <<<"$err" | grep -qv "^$xnnpack"; then
-    fail "$name: runtime log lines on stderr" "$err"
+  elif [[ "$want" == 0 ]] && grep -v -e "^$xnnpack" -e "^Skipped " <<<"$err" | grep -q .; then
+    fail "$name: unexpected output on stderr" "$err"
   else
     ok "$name"
   fi
@@ -105,8 +106,8 @@ if [[ $has_ffmpeg == 1 ]]; then
   check "moderator jpg" 0 '"nsfw" : false' "$da" moderator photo.jpg --json
   check "moderator png" 0 "^safe" "$da" moderator photo.png
   check "moderator not an image" 1 "could not read folder/notes.txt as an image" "$da" moderator folder/notes.txt
-  [[ "$os" != Linux ]] && check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
   if [[ "$os" != Linux ]]; then
+    check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
     [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"
     check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts
     check "clips into an existing name" 0 'talk_clip-1-2\.mp4' "$da" clips talk.mp4 --transcript talk.srt --count 1

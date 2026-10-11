@@ -20,6 +20,13 @@ if [[ "$(uname -s)" == "Linux" ]]; then
   # The Swift runtime and Foundation go into the binary: a machine without a Swift
   # toolchain has no libswiftCore.so to load.
   linker=(--static-swift-stdlib -Xlinker "-L$litert" -Xlinker -rpath -Xlinker '$ORIGIN')
+  # Link against upstream curl, which has no versioned symbols (see
+  # Tools/linux.Dockerfile), so the binary loads any distribution's libcurl.so.4.
+  if [[ ! -d /opt/curl-link/lib ]]; then
+    echo "Package Linux builds in the build image: Tools/linux Tools/package $target" >&2
+    exit 1
+  fi
+  linker+=(-Xlinker -L/opt/curl-link/lib)
 fi
 # Title (MLX) is part of the macOS build; see Package.swift.
 [[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
@@ -36,6 +43,10 @@ if [[ -n "$litert" ]]; then
   install -m 644 THIRD_PARTY_NOTICES.md "$stage/THIRD_PARTY_NOTICES.md"
   # The static Swift runtime brings its debug info along; a download does not need it.
   strip "$stage/desertant"
+  if readelf -V -W "$stage/desertant" | grep -q CURL_; then
+    echo "desertant asks for a libcurl symbol version; it linked against Debian's libcurl." >&2
+    exit 1
+  fi
 fi
 if [[ "$(uname -s)" == "Darwin" ]]; then
   # MLX looks for mlx.metallib next to the binary.

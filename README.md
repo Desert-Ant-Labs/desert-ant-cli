@@ -37,9 +37,10 @@ Or `brew install desert-ant-labs/tap/desertant`, or
 `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`.
 
 On Linux, desertant runs on x86_64 and arm64 with glibc 2.35 or later, such as Ubuntu
-22.04, Debian 12, or Fedora 36, and needs libcurl, which the curl package installs.
-Text models and WAV audio need nothing else. Install ffmpeg to read other audio and
-video formats and images: `sudo apt install ffmpeg`, or your distribution's package.
+22.04, Debian 12, Fedora 41, or openSUSE Tumbleweed, and needs libcurl, which the curl
+package installs. Text models and WAV audio need nothing else. To read other audio,
+video, and images, install ffmpeg: `sudo apt install ffmpeg`, or your distribution's
+package.
 
 ## Models
 

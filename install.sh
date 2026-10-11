@@ -26,8 +26,9 @@ case "$(uname -m)" in
   *) echo "desertant has no build for $(uname -m)." >&2; exit 1 ;;
 esac
 
-# The Linux build links glibc and loads the system's libcurl. Alpine and other musl
-# systems have neither, and an older glibc stops the binary before it prints anything.
+# The Linux build links glibc 2.35 and loads the system's libcurl. Alpine and other
+# musl systems have neither, and an older glibc stops the binary before it prints
+# anything.
 glibc_floor="2.35"
 if [ "$os" = "linux" ]; then
   if ldd --version 2>&1 | grep -qi musl || ls /lib/ld-musl-* >/dev/null 2>&1; then
@@ -94,6 +95,8 @@ if ! installed="$("$tmp/new/desertant" --version 2>"$tmp/error")"; then
   sed 's/^/  /' "$tmp/error" >&2
   if grep -q "libcurl" "$tmp/error"; then
     echo "Install libcurl, which the curl package brings on most systems, and run this script again." >&2
+  elif grep -q "GLIBCXX" "$tmp/error"; then
+    echo "desertant needs libstdc++ from GCC 12 or later, and this system's is older." >&2
   fi
   exit 1
 fi
@@ -110,5 +113,5 @@ case ":$PATH:" in
   *) echo "Add $bin to your PATH to run it as desertant or da." ;;
 esac
 if [ "$os" = "linux" ] && ! command -v ffmpeg >/dev/null 2>&1; then
-  echo "Install ffmpeg to read audio other than WAV, read images, and cut clips. Text and WAV models run without it."
+  echo "Install ffmpeg to read audio other than WAV, video, and images. Text models and WAV audio run without it."
 fi

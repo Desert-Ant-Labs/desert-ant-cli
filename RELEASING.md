@@ -61,29 +61,40 @@ into `bin`.
 ## Linux
 
 The Linux binary links the Swift runtime and Foundation statically, so a machine needs
-no Swift toolchain. It loads glibc 2.35 or later, libcurl (which the curl package
-installs), and `libLiteRt.so` from beside itself through an rpath of `$ORIGIN`. The
-release builds in `swift:6.2-jammy`, which is where the glibc floor comes from, and
+no Swift toolchain. At run time it needs glibc 2.35 or later, libcurl, and
+`libLiteRt.so`, which it finds beside itself through an rpath of `$ORIGIN`. The glibc
+floor comes from the build image, `swift:6.2-jammy` (`Tools/linux.Dockerfile`).
 `install.sh` refuses an older glibc or a musl system with a message instead of
-installing a binary that cannot start. ffmpeg is optional: core reads and writes WAV
-in pure Swift, and ffmpeg reads other audio, video, and images and cuts clips.
+installing a binary that cannot start.
 
-To work on Linux from a Mac, `Tools/linux` runs any command in the same Swift image
-with this repo and core mounted, and keeps the build, SwiftPM, and model caches in
-Docker volumes:
+The binary links against upstream curl, built in the image for linking only. Debian's
+libcurl tags its symbols with versions that Fedora, openSUSE, and Arch don't have, and
+their loader would print a warning on every run.
+
+ffmpeg is optional. Core reads and writes WAV in Swift, and ffmpeg reads other audio,
+video, and images.
+
+An Amazon Linux 2 build image would lower the floor, and doesn't work. On arm64 the
+linker refuses LiteRT, which needs glibc 2.34. On x86_64 the binary stops with a
+libcurl error on Ubuntu 22.04 and Rocky 9, whose curl is older than the one that
+image's Foundation expects.
+
+`Tools/linux` runs any command in the build image, from a Mac or a Linux host, with
+this repo and core mounted. CI and the release workflow build through it too.
 
 ```
 Tools/linux Tools/check                    # the commit gate on Linux
 Tools/linux Tools/package linux-arm64      # dist/desertant-linux-arm64.tar.gz
-Tools/linux-matrix                         # install it into each distribution and smoke-test it
+Tools/linux-matrix                         # install that tarball into each distribution and smoke-test it
 Tools/linux-matrix --ffmpeg ubuntu:24.04   # the same, with ffmpeg installed
-Tools/smoke dist-extracted/desertant       # one binary, end to end
+Tools/smoke path/to/desertant              # one binary, end to end
 ```
 
-`--arch x86_64` builds and tests the other architecture under emulation. `Tools/smoke`
-runs every model the platform supports, the file handling, and the errors a person
-sees, and fails on any runtime log line on stderr except TFLite's one XNNPACK line, which has no switch. CI and the release workflow run the
-same scripts through `verify.yml`.
+`--arch x86_64` builds and tests the other architecture, under emulation on Apple
+silicon. `Tools/smoke` runs every model the platform supports, the file handling, and
+the errors a person sees. It fails on any log line on stderr except TFLite's
+"Created TensorFlow Lite XNNPACK delegate", which LiteRT has no setting to turn off.
+CI and the release workflow run the same scripts through `verify.yml`.
 
 A Windows build is not set up. The starting point is a `windows-latest` job modeled
 on core's, which vendors LiteRT from the win_amd64 wheel.
