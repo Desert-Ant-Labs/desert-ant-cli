@@ -1,6 +1,6 @@
-# Run Tools/check on macOS and Linux for every push and pull request, with
-# desert-ant-core checked out beside the CLI at the ref CORE_REF names. Both jobs also
-# package the binary and run it from the tarball, the way an install runs it.
+# Run Tools/check and package every target on each push and pull request, with
+# desert-ant-core checked out beside the CLI at the ref CORE_REF names, then hand the
+# tarballs to verify.yml, which installs them into clean systems and runs Tools/smoke.
 name: ci
 
 on:
@@ -9,7 +9,8 @@ on:
   pull_request:
 
 jobs:
-  macos:
+  darwin:
+    name: darwin-arm64
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -26,14 +27,25 @@ jobs:
       - name: Check
         working-directory: desert-ant-cli
         run: Tools/check
-      - name: Package and run the binary
+      - name: Package
         working-directory: desert-ant-cli
-        run: |
-          Tools/package darwin-arm64
-          Tools/run-package dist/desertant-darwin-arm64.tar.gz
+        run: Tools/package darwin-arm64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darwin-arm64
+          path: desert-ant-cli/dist/*.tar.gz
 
+  # Tools/linux builds the image from Tools/linux.Dockerfile and runs each step in it,
+  # the same way on a laptop, here, and in the release.
   linux:
-    runs-on: ubuntu-22.04
+    name: linux-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86_64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,27 +58,17 @@ jobs:
           repository: Desert-Ant-Labs/desert-ant-core
           ref: ${{ steps.core.outputs.ref }}
           path: desert-ant-core
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.2"
-      # Core's dal.sh vendors LiteRT with uv.
-      - uses: astral-sh/setup-uv@v5
-      - name: Build dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends libcurl4-openssl-dev libxml2-dev zlib1g-dev
       - name: Check
         working-directory: desert-ant-cli
-        run: Tools/check
-      - name: Package and run the binary
+        run: Tools/linux Tools/check
+      - name: Package
         working-directory: desert-ant-cli
-        run: |
-          Tools/package linux-x86_64
-          Tools/run-package dist/desertant-linux-x86_64.tar.gz
-          mkdir -p /tmp/da && tar -xzf dist/desertant-linux-x86_64.tar.gz -C /tmp/da
-          cd /tmp
-          da/desertant --version
-          da/desertant doctor --json
-          da/desertant models --json | python3 -c "import json,sys; assert len(json.load(sys.stdin)) > 0"
-          da/desertant schema --json | python3 -c "import json,sys; d=json.load(sys.stdin); print('runnable on linux:', [m['id'] for m in d['models'] if m['runnableHere']])"
-          da/desertant docs agents | head -3
+        run: Tools/linux Tools/package linux-${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: desert-ant-cli/dist/*.tar.gz
+
+  verify:
+    needs: [darwin, linux]
+    uses: ./.github/workflows/verify.yml

@@ -38,7 +38,7 @@ struct Models: ParsableCommand {
     private func tag(_ m: Model) -> String? {
         if Runners.runner(for: m.id) != nil { return nil }
         if !m.ships { return "closed beta" }
-        if let reason = Runners.excluded[m.id] { return reason }
+        if let reason = Runners.excluded[m.id] ?? Runners.unavailable[m.id] { return reason }
         return m.swiftPlatforms == [.apple] && !Doctor.hasCoreML ? "Apple platforms only" : "not in the CLI yet"
     }
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Build in release and install desertant, with a `da` alias, for this user: the
 # binary and its companions in DESERTANT_HOME (~/.local/share/desertant), symlinks
-# in ~/.local/bin or the directory passed.
+# in ~/.local/bin or the directory passed. It installs the same tarball
+# Tools/package makes for a release, so a local install and a released one hold
+# the same files.
 #
 #   Tools/install [bin-directory]
 set -euo pipefail
@@ -9,20 +11,14 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 bindir="${1:-$HOME/.local/bin}"
 home="${DESERTANT_HOME:-$HOME/.local/share/desertant}"
-# Title (MLX) is part of the macOS build; see Package.swift.
-[[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
 
-build_system=(); [[ "$(uname -s)" == "Darwin" ]] && build_system=(--build-system swiftbuild --arch arm64)
-swift build -c release ${build_system[@]+"${build_system[@]}"} --package-path "$here"
-products="$(swift build -c release ${build_system[@]+"${build_system[@]}"} --package-path "$here" --show-bin-path)"
+case "$(uname -s)" in Darwin) os=darwin ;; Linux) os=linux ;; *) echo "No build for $(uname -s)." >&2; exit 1 ;; esac
+case "$(uname -m)" in arm64 | aarch64) arch=arm64 ;; x86_64 | amd64) arch=x86_64 ;; *) echo "No build for $(uname -m)." >&2; exit 1 ;; esac
+
+tarball="$("$here/Tools/package" "$os-$arch" | tail -1)"
 
 mkdir -p "$home" "$bindir"
-install -m 755 "$products/desertant" "$home/desertant"
-if [[ "$(uname -s)" == "Darwin" ]]; then
-  # MLX looks for mlx.metallib next to the binary.
-  install -m 644 "$products/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$home/mlx.metallib"
-fi
-"$here/Tools/resources" "$products" "$home"
+tar -xzf "$here/$tarball" -C "$home"
 ln -sf "$home/desertant" "$bindir/desertant"
 ln -sf "$home/desertant" "$bindir/da"
 

@@ -39,13 +39,22 @@ struct ClearRunner: ModelRunner {
         )
 
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
-        let result = try await model.enhance(path: input, to: output) { p in
+        let report: Clear.ProgressHandler = { p in
             switch p.phase {
             case .loadingModel: progress.update(nil, label: FirstLoad.label("clear"))
             case .analyzing: progress.update(p.fraction, label: "analyzing")
             case .enhancing: progress.update(p.fraction, label: "enhancing")
             }
         }
+        #if canImport(AVFoundation)
+        let result = try await model.enhance(path: input, to: output, progress: report)
+        #else
+        try Media.requireWriter(for: output)
+        progress.update(nil, label: "reading audio")
+        let channels = try await Media.decodeChannels(input, sampleRate: 48_000)
+        let result = try await model.enhance(channels: channels, sampleRate: 48_000, progress: report)
+        try Media.write(result.channels, sampleRate: result.sampleRate, to: output)
+        #endif
         progress.finish()
         FirstLoad.done("clear")
 

@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# Run an installed or packaged desertant end to end: discovery, every model this
+# platform runs, file handling, and the errors a person sees. Model weights download
+# on the first run. Needs bash, grep, and the binary; with ffmpeg on PATH it also
+# covers compressed audio, video, images, and clip cutting, and without ffmpeg it
+# checks the messages that ask for it.
+#
+#   Tools/smoke [path-to-desertant]      default: desertant on PATH
+set -uo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+da="${1:-$(command -v desertant)}"
+fixtures="$here/Tests/Fixtures"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+export NO_COLOR=1 DESERTANT_NO_UPDATE_CHECK=1
+
+# A command that succeeds prints its result on stdout and nothing on stderr, apart
+# from the CLI's own note about skipped files and this one TFLite line, which has no
+# switch upstream. A loader warning or a runtime log line fails the check.
+xnnpack="INFO: Created TensorFlow Lite XNNPACK delegate for CPU."
+
+passed=0 failed=0
+ok() { echo "ok    $1"; passed=$((passed + 1)); }
+fail() { echo "FAIL  $1"; [[ -n "${2:-}" ]] && sed 's/^/      /' <<<"$2" | head -20; failed=$((failed + 1)); }
+
+# check <name> <expected exit> <pattern or ""> <command...>: runs the command with
+# stdout and stderr captured apart, then matches the pattern against both.
+out="" err="" code=0
+check() {
+  local name="$1" want="$2" pattern="$3"; shift 3
+  out="$("$@" 2>"$work/stderr")"; code=$?
+  err="$(cat "$work/stderr")"
+  if [[ "$code" != "$want" ]]; then
+    fail "$name: exit $code, expected $want" "$out"$'\n'"$err"
+  elif [[ -n "$pattern" ]] && ! grep -qE -- "$pattern" <<<"$out"$'\n'"$err"; then
+    fail "$name: no match for /$pattern/" "$out"$'\n'"$err"
+  elif [[ "$want" == 0 ]] && grep -v -e "^$xnnpack" -e "^Skipped " <<<"$err" | grep -q .; then
+    fail "$name: unexpected output on stderr" "$err"
+  else
+    ok "$name"
+  fi
+}
+
+cp "$fixtures"/talk.wav "$fixtures"/talk.srt "$work/"
+cd "$work"
+os="$(uname -s)"
+has_ffmpeg=0; command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null && has_ffmpeg=1
+echo "desertant: $da"
+echo "platform:  $os $(uname -m), ffmpeg $([[ $has_ffmpeg == 1 ]] && echo found || echo missing)"
+
+# Discovery.
+check "version" 0 "^[0-9]+\.[0-9]+\.[0-9]+ \(desert-ant-core [0-9.]+\)$" "$da" --version
+[[ -f "$here/VERSION" ]] && check "version matches VERSION" 0 "^$(cat "$here/VERSION") " "$da" --version
+check "doctor" 0 '"version"' "$da" doctor --json
+check "doctor reports ffmpeg" 0 "\"ffmpeg\" : $([[ $has_ffmpeg == 1 ]] && echo true || echo false)" "$da" doctor --json
+check "models" 0 '"id" : "redact"' "$da" models --json
+check "schema" 0 '"runnableHere" : true' "$da" schema --json
+check "docs" 0 "." "$da" docs agents
+check "info" 0 "redact" "$da" info redact
+check "unknown model" 1 "no model named nope" "$da" run nope --input hi
+
+if [[ "$os" == Linux ]]; then
+  for id in redact emo gist tongue ear clear moderator; do
+    check "runs $id here" 0 "\"$id\"" "$da" doctor --json
+  done
+  check "voz says where it runs" 1 "voz has no runner on this platform" "$da" voz talk.wav
+  check "clips says where it runs" 1 "clips does not run on Linux yet" "$da" clips talk.wav --transcript talk.srt
+  check "models marks clips" 0 "not on Linux yet" "$da" models --all
+fi
+
+# Text models, which download their weights here on a first run.
+check "redact" 0 "Email \[GIVEN_NAME_1\] at \[EMAIL_1\]" "$da" redact "Email Anna at anna@example.hu"
+check "redact from stdin" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu' | '$da' redact"
+check "emo" 0 "." "$da" emo "pay my bills"
+check "gist" 0 '"slug" : "finance"' "$da" gist --json "The central bank raised interest rates again to fight inflation"
+check "tongue" 0 "^nl " "$da" tongue "dit is een korte zin in het Nederlands"
+
+# Audio as WAV, which core reads without ffmpeg.
+check "ear on wav" 0 '"language" : "en"' "$da" ear talk.wav --json
+check "clear wav to wav" 0 "talk_clear\.wav" "$da" clear talk.wav
+[[ -s talk_clear.wav ]] && ok "clear wrote talk_clear.wav" || fail "clear wrote talk_clear.wav"
+check "clear never overwrites" 0 "talk_clear-2\.wav" "$da" clear talk.wav
+if [[ "$os" != Linux ]]; then
+  check "clips select-only" 0 '"clips" : \[' "$da" clips talk.wav --transcript talk.srt --select-only --json
+  check "clips from a transcript on stdin" 0 '"clips"' sh -c "'$da' clips talk.wav --transcript - --select-only --json < talk.srt"
+fi
+check "no file" 1 "no file at missing.wav" "$da" ear missing.wav
+
+mkdir -p folder && cp talk.wav folder/a.wav && cp talk.wav folder/b.wav && echo hi > folder/notes.txt
+check "folder batch" 0 '"input" : "folder/b.wav"' "$da" ear folder --json
+
+if [[ $has_ffmpeg == 1 ]]; then
+  ffmpeg -v error -y -i talk.wav -c:a aac talk.m4a
+  ffmpeg -v error -y -i talk.wav -c:a libmp3lame talk.mp3 2>/dev/null || ffmpeg -v error -y -i talk.wav talk.mp3
+  ffmpeg -v error -y -f lavfi -i "testsrc=size=320x240:rate=25" -i talk.wav -shortest -pix_fmt yuv420p -g 25 talk.mp4
+  ffmpeg -v error -y -f lavfi -i "testsrc=size=320x240" -frames:v 1 photo.jpg
+  ffmpeg -v error -y -f lavfi -i "color=c=white:size=200x150" -frames:v 1 photo.png
+
+  check "ear on m4a" 0 '"language" : "en"' "$da" ear talk.m4a --json
+  check "ear on mp3" 0 '"language" : "en"' "$da" ear talk.mp3 --json
+  check "ear on video" 0 '"language" : "en"' "$da" ear talk.mp4 --json
+  check "clear keeps m4a" 0 "talk_clear\.m4a" "$da" clear talk.m4a
+  check "clear writes mp3 as m4a" 0 "Written as m4a" "$da" clear talk.mp3
+  check "clear on video" 0 "talk_clear\.mp4" "$da" clear talk.mp4
+  check "clear to a named wav" 0 "named\.wav" "$da" clear talk.m4a --output named.wav
+  check "moderator jpg" 0 '"nsfw" : false' "$da" moderator photo.jpg --json
+  check "moderator png" 0 "^safe" "$da" moderator photo.png
+  check "moderator not an image" 1 "could not read folder/notes.txt as an image" "$da" moderator folder/notes.txt
+  if [[ "$os" != Linux ]]; then
+    check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
+    [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"
+    check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts
+    check "clips into an existing name" 0 'talk_clip-1-2\.mp4' "$da" clips talk.mp4 --transcript talk.srt --count 1
+  fi
+elif [[ "$os" == Linux ]]; then
+  printf 'not really audio' > talk.m4a
+  check "ear asks for ffmpeg" 1 "reading talk.m4a needs ffmpeg, which is not installed" "$da" ear talk.m4a
+  check "clear to m4a asks for ffmpeg" 1 "writing out.m4a needs ffmpeg" "$da" clear talk.wav --output out.m4a
+  printf 'x' > photo.jpg
+  check "moderator asks for ffmpeg" 1 "reading photo.jpg needs ffmpeg" "$da" moderator photo.jpg
+fi
+
+echo
+echo "$passed passed, $failed failed."
+[[ $failed == 0 ]]

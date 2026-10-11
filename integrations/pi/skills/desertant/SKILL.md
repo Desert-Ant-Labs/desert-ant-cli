@@ -26,7 +26,7 @@ with progress on stderr; stdout stays clean JSON.
 - `desertant gist "<text>" --json` tags the topic.
 - `desertant tongue "<text>" --json` names the language the text is written in.
 - `desertant moderator <image> --json` scores an image for nudity and says whether the
-  score crosses the threshold (Apple silicon).
+  score crosses the threshold. On Linux it needs ffmpeg.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word;
   `--srt` or `--vtt` also writes captions beside the input
@@ -36,7 +36,8 @@ with progress on stderr; stdout stays clean JSON.
 - `desertant clear <file> --json` denoises an audio or video file and reports the
   output path.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
-  each clip's start, end, text, and file; `--select-only` gives timestamps only.
+  each clip's start, end, text, and file; `--select-only` gives timestamps only. Clips
+  runs on macOS.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an

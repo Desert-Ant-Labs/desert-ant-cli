@@ -60,7 +60,6 @@ struct TongueVerb: AsyncParsableCommand {
     }
 }
 
-#if canImport(ImageIO)
 struct ModeratorVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "moderator", abstract: Manifest.summary("moderator"))
@@ -79,7 +78,6 @@ struct ModeratorVerb: AsyncParsableCommand {
         try await Execute.run(id: "moderator", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
     }
 }
-#endif
 
 #if TITLE
 struct TitleVerb: AsyncParsableCommand {

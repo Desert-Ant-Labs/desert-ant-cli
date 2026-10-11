@@ -18,6 +18,7 @@ struct Doctor: AsyncParsableCommand {
         let coreml: Bool
         let mlx: Bool
         let litert: Bool
+        let ffmpeg: Bool
         let cachePath: String
         let cacheBytes: Int64
         let downloaded: [String]
@@ -86,7 +87,7 @@ struct Doctor: AsyncParsableCommand {
         if out.isJSON {
             out.emit(Report(
                 os: Self.os, arch: Self.arch, coreml: Self.hasCoreML, mlx: Self.hasMLX,
-                litert: Self.hasLiteRT, cachePath: CacheLocation.root, cacheBytes: bytes,
+                litert: Self.hasLiteRT, ffmpeg: FFmpeg.tools != nil, cachePath: CacheLocation.root, cacheBytes: bytes,
                 downloaded: downloaded, runnable: runnable,
                 version: Version.cli, coreVersion: Version.core, latest: latest,
                 updateAvailable: newer, updateCommand: source.updateCommand,
@@ -118,6 +119,11 @@ struct Doctor: AsyncParsableCommand {
         out.line(check(Self.hasCoreML, "Core ML"))
         out.line(check(Self.hasMLX, "MLX, Apple silicon"))
         out.line(check(Self.hasLiteRT, "LiteRT"))
+        #if !canImport(AVFoundation)
+        out.line(check(FFmpeg.tools != nil, FFmpeg.tools == nil
+            ? "ffmpeg, for audio other than WAV, video, and images. Install it with \(FFmpeg.installHint)."
+            : "ffmpeg, for audio other than WAV, video, and images"))
+        #endif
         out.line()
         out.line(p.bold("Models"))
         out.line("  \(runnable.count) runnable on this machine: \(runnable.joined(separator: ", "))")
