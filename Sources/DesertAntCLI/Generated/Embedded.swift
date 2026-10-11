@@ -937,7 +937,7 @@ minutes in 41s".
   list, so `--count 5` isn't the first five of `--count 10`.
 - `--transcript talk.srt`: use a transcript instead of transcribing. SRT, VTT, or
   JSON as `[{"start": 1.0, "end": 4.5, "text": "..."}]` in seconds; `-` reads one
-  from stdin. On Linux, where Voz doesn't run, clips runs from a transcript.
+  from stdin.
 - `--select-only`: report the moments as timestamps and text, write nothing.
 - `--output-dir clips/`: where the files go.
 - `--force`: replace existing clip files instead of stepping aside.
@@ -1113,7 +1113,7 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 ```json
 {
   "os": "macOS", "arch": "arm64",
-  "coreml": true, "mlx": true, "litert": false,
+  "coreml": true, "mlx": true, "litert": false, "ffmpeg": true,
   "cachePath": "/Users/you/Library/Caches/desert-ant-models",
   "cacheBytes": 1175608980,
   "downloaded": ["clear", "clips", "emo", "gist", "redact", "voz"],
@@ -1124,7 +1124,7 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 }
 ```
 
-`latest` is null when GitHub couldn't be reached.
+`latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
 
 ## Weights
 
@@ -1185,7 +1185,7 @@ true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
 `desertant title "<text>" --json`: `{"title", "description"}`, on Apple silicon
 builds.
 
-`desertant moderator <image> --json`: the nudity score, on Apple silicon builds.
+`desertant moderator <image> --json`: the nudity score. On Linux, reading the image needs ffmpeg.
 
 ```json
 {

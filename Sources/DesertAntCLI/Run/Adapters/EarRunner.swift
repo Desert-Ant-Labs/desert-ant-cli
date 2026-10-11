@@ -1,4 +1,3 @@
-import AudioIO
 import Ear
 import Foundation
 
@@ -31,7 +30,7 @@ struct EarRunner: ModelRunner {
         guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         progress.update(nil, label: "reading audio")
-        let samples = try await AudioIO.decode(path: input, sampleRate: 16_000)
+        let samples = try await Media.decodeMono(input, sampleRate: 16_000)
         progress.update(nil, label: "listening")
         let detection = try await model.identify(samples: samples, sampleRate: 16_000)
         progress.finish()

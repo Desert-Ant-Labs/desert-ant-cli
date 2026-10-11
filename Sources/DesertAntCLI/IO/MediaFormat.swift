@@ -1,21 +1,29 @@
 import Foundation
 
-// Output keeps the input's container unless --output says otherwise. Apple platforms
-// write mov, mp4, m4v, m4a, wav, aiff, and caf but not mp3, so an mp3 comes out as
-// m4a, the nearest lossy container.
+// Output keeps the input's container unless --output says otherwise. A Mac, or Linux
+// with ffmpeg, writes mov, mp4, m4v, m4a, wav, aiff, and caf, so an mp3 comes out as
+// m4a, the nearest lossy container. Linux without ffmpeg writes WAV only.
 
 enum MediaFormat {
-    static let writable: Set<String> = ["mov", "mp4", "m4v", "m4a", "wav", "aiff", "aif", "caf"]
+    static let writable: Set<String> = {
+        #if canImport(AVFoundation)
+        return all
+        #else
+        return FFmpeg.tools == nil ? ["wav"] : all
+        #endif
+    }()
 
-    /// The extension an output should carry for `input`: the input's own when it can
-    /// be written, else m4a for audio and mp4 for video.
+    private static let all: Set<String> = ["mov", "mp4", "m4v", "m4a", "wav", "aiff", "aif", "caf"]
+
+    /// The input's own extension when it can be written, else m4a for audio and mp4
+    /// for video, or wav where only WAV can be written.
     static func outputExtension(for input: String, hasVideo: Bool) -> String {
         let ext = URL(fileURLWithPath: input).pathExtension.lowercased()
         if writable.contains(ext) { return ext }
+        if writable == ["wav"] { return "wav" }
         return hasVideo ? "mp4" : "m4a"
     }
 
-    /// A note for the reader when the container had to change, else nil.
     static func changeNote(from input: String, to output: String) -> String? {
         let from = URL(fileURLWithPath: input).pathExtension.lowercased()
         let to = URL(fileURLWithPath: output).pathExtension.lowercased()

@@ -28,13 +28,16 @@ final class CatalogTests: XCTestCase {
     }
 
     func testEveryPortableModelHasARunner() {
-        // Tongue ships inside the SDK and Moderator reads its image through ImageIO.
         XCTAssertEqual(Runners.runner(for: "tongue")?.inputKind, .text)
         XCTAssertTrue(Runners.runner(for: "tongue")?.isDownloaded() ?? false, "tongue is bundled, never downloaded")
-        #if canImport(ImageIO)
         XCTAssertEqual(Runners.runner(for: "moderator")?.inputKind, .image)
-        #else
-        XCTAssertNil(Runners.runner(for: "moderator"))
+        #if os(Linux)
+        let here = Platform.linux
+        for model in Manifest.shared.models
+        where model.swift?.status == .live && model.swiftPlatforms.contains(here) && Runners.excluded[model.id] == nil
+            && Runners.unavailable[model.id] == nil {
+            XCTAssertNotNil(Runners.runner(for: model.id), "\(model.id) runs on Linux in core but has no runner here")
+        }
         #endif
     }
 

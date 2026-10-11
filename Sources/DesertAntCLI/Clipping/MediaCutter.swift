@@ -1,8 +1,8 @@
 import Foundation
 import Transcript
 
-// Writing a clip out of the source media. AVFoundation does it on Apple platforms;
-// another platform can bring its own cutter behind the same protocol.
+// Writing a clip out of the source media: AVFoundation on Apple platforms, ffmpeg
+// elsewhere.
 
 /// What a media file holds, read before any model is fetched or run.
 struct MediaInfo: Sendable {
@@ -123,3 +123,16 @@ struct AVFoundationCutter: MediaCutter {
     }
 }
 #endif
+
+struct FFmpegCutter: MediaCutter {
+    let tools: FFmpeg.Tools
+
+    func probe(_ source: URL) async throws -> MediaInfo {
+        let info = try FFmpeg.probe(source.path, tools: tools)
+        return MediaInfo(hasVideo: info.hasVideo, hasAudio: info.hasAudio, durationSec: info.durationSec)
+    }
+
+    func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws {
+        try FFmpeg.cut(source.path, ranges: ranges.map { ($0.start, $0.duration) }, to: destination.path, tools: tools)
+    }
+}
