@@ -1,6 +1,6 @@
 # Run Tools/check on macOS and Linux for every push and pull request, with
-# desert-ant-core checked out beside the CLI at the ref CORE_REF names. The Linux job
-# also packages the binary and runs it with libLiteRt.so beside it.
+# desert-ant-core checked out beside the CLI at the ref CORE_REF names. Both jobs also
+# package the binary and run it from the tarball, the way an install runs it.
 name: ci
 
 on:
@@ -26,6 +26,11 @@ jobs:
       - name: Check
         working-directory: desert-ant-cli
         run: Tools/check
+      - name: Package and run the binary
+        working-directory: desert-ant-cli
+        run: |
+          Tools/package darwin-arm64
+          Tools/run-package dist/desertant-darwin-arm64.tar.gz
 
   linux:
     runs-on: ubuntu-22.04
@@ -57,6 +62,7 @@ jobs:
         working-directory: desert-ant-cli
         run: |
           Tools/package linux-x86_64
+          Tools/run-package dist/desertant-linux-x86_64.tar.gz
           mkdir -p /tmp/da && tar -xzf dist/desertant-linux-x86_64.tar.gz -C /tmp/da
           cd /tmp
           da/desertant --version

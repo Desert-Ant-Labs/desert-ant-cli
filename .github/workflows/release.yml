@@ -29,7 +29,9 @@ jobs:
           path: desert-ant-core
       - name: Package
         working-directory: desert-ant-cli
-        run: Tools/package darwin-arm64
+        run: |
+          Tools/package darwin-arm64
+          Tools/run-package dist/desertant-darwin-arm64.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: darwin-arm64
@@ -68,7 +70,9 @@ jobs:
           path: desert-ant-core
       - name: Package
         working-directory: desert-ant-cli
-        run: Tools/package linux-${{ matrix.arch }}
+        run: |
+          Tools/package linux-${{ matrix.arch }}
+          Tools/run-package dist/desertant-linux-${{ matrix.arch }}.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.arch }}
