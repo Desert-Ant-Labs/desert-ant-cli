@@ -34,7 +34,7 @@ gives either as data, all offline.
 
 - `curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh`
 - `brew install desert-ant-labs/tap/desertant`
-- `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[exe=desertant]"`
+- `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`
 
 `desertant update` brings any of those to the latest release.
 

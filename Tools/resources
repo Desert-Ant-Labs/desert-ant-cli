@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Copy the SwiftPM resource bundles from a build's products directory to where the
+# binary will live. A target with resources (Tongue's weights, Hub's tokenizer
+# configs) finds them beside the executable at run time and stops the process when
+# they are missing. Tools/package and Tools/install both run this.
+#
+#   Tools/resources <products-dir> <destination>
+set -euo pipefail
+products="${1:?usage: Tools/resources <products-dir> <destination>}"
+dest="${2:?usage: Tools/resources <products-dir> <destination>}"
+
+shopt -s nullglob
+found=0
+# .bundle on macOS, .resources on Linux. MLX's bundle only carries the metallib,
+# which goes beside the binary as mlx.metallib instead.
+for bundle in "$products"/*.bundle "$products"/*.resources; do
+  [[ "$(basename "$bundle")" == mlx-swift_Cmlx.bundle ]] && continue
+  rm -rf "$dest/$(basename "$bundle")"
+  cp -R "$bundle" "$dest/"
+  found=1
+done
+if [[ "$found" == 0 ]]; then
+  echo "No resource bundles in $products. Tongue cannot run without its own." >&2
+  exit 1
+fi

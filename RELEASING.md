@@ -34,8 +34,9 @@ Every path below pulls the same release assets, so there's one thing to publish.
   the release workflow is green, `Tools/publish-formula` downloads the rendered
   formula from the release and pushes it to the tap from your machine, the way the
   cask is published.
-- mise: `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[exe=desertant]"`, updates
-  with `mise upgrade`. mise needs nothing beyond the release assets.
+- mise: `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`, updates
+  with `mise upgrade`. `extract_all` keeps the whole tarball together; without it mise
+  installs the executable alone, and Tongue, Title, and every Linux model stop working.
 
 `desertant update --check` and `desertant doctor` report a newer release whichever
 way the CLI was installed, and `desertant update` knows which command applies.

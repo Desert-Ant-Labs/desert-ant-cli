@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build a release binary on this machine and tar it as a release asset,
-# dist/desertant-<target>.tar.gz: `desertant` plus mlx.metallib on macOS or
-# libLiteRt.so on Linux. The release workflow runs this on each platform.
+# dist/desertant-<target>.tar.gz: `desertant`, the resource bundles, and mlx.metallib
+# on macOS or libLiteRt.so on Linux. The release workflow runs this on each platform.
 #
 #   Tools/package <darwin-arm64|linux-x86_64|linux-arm64>
 set -euo pipefail
@@ -35,6 +35,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   # MLX looks for mlx.metallib next to the binary.
   install -m 644 "$(dirname "$binary")/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$stage/mlx.metallib"
 fi
+Tools/resources "$(dirname "$binary")" "$stage"
 
 tar -czf "dist/desertant-$target.tar.gz" -C "$stage" .
 rm -rf "$stage"
