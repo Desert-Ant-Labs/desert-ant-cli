@@ -24,7 +24,7 @@ done
 platform=linux/arm64; [[ "$arch" == x86_64 ]] && platform=linux/amd64
 models="${DESERTANT_MODELS_DIR:-desertant-models-$arch}"
 
-# image, then what should happen: run, or refuse.
+# image, then what should happen: run, or refuse. The floor is glibc 2.35.
 default=(
   "ubuntu:22.04 run" "ubuntu:24.04 run" "debian:12 run" "debian:13 run"
   "fedora:41 run" "fedora:42 run" "opensuse/tumbleweed run"
@@ -50,8 +50,10 @@ if command -v apt-get >/dev/null; then
   apt-get install -y -qq --no-install-recommends curl ca-certificates >/dev/null || echo "apt could not install curl"
   [ "$want_ffmpeg" = 1 ] && apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
 elif command -v dnf >/dev/null; then
-  dnf install -y -q --allowerasing curl findutils >/dev/null
+  dnf install -y -q --allowerasing curl findutils tar gzip >/dev/null
   [ "$want_ffmpeg" = 1 ] && dnf install -y -q ffmpeg-free >/dev/null 2>&1 || true
+elif command -v yum >/dev/null; then
+  yum install -y -q curl tar gzip >/dev/null
 elif command -v zypper >/dev/null; then
   zypper -q -n install curl gzip tar >/dev/null
   [ "$want_ffmpeg" = 1 ] && zypper -q -n install ffmpeg >/dev/null 2>&1 || true
@@ -81,12 +83,11 @@ for entry in "${images[@]}"; do
         bash /src/Tools/smoke /usr/local/bin/desertant
       fi" sh "$ffmpeg" >"$log" 2>&1
   code=$?
-  glibc="$(grep -o 'this system has [0-9.]*\|uses musl' "$log" | head -1)"
   if [[ "$want" == run ]] && [[ $code == 0 ]] && grep -q INSTALLED "$log"; then
     echo "ok    $(grep 'passed,' "$log" | tail -1)"
     pass=$((pass + 1))
-  elif [[ "$want" == refuse ]] && ! grep -q INSTALLED "$log" && grep -q "desertant needs glibc" "$log"; then
-    echo "ok    refused: $glibc"
+  elif [[ "$want" == refuse ]] && ! grep -q INSTALLED "$log" && grep -q "desertant needs" "$log"; then
+    echo "ok    refused: $(grep -o 'desertant needs.*' "$log" | head -1)"
     pass=$((pass + 1))
   else
     echo "FAIL  exit $code"

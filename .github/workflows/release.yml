@@ -1,8 +1,8 @@
 # Build and publish a release when a v* tag is pushed (Tools/release makes the tag):
 # one tarball per platform, checksums.txt, and desertant.rb rendered with the real
 # checksums, attached to the GitHub release. Nothing publishes until verify.yml has
-# installed every tarball and run Tools/smoke against it. Tools/publish-formula puts the formula
-# in the tap afterwards, from a maintainer's machine.
+# installed every tarball and run Tools/smoke against it. Tools/publish-formula puts
+# the formula in the tap afterwards, from a maintainer's machine.
 name: release
 
 on:
@@ -30,34 +30,24 @@ jobs:
           path: desert-ant-core
       - name: Package
         working-directory: desert-ant-cli
-        run: |
-          Tools/package darwin-arm64
-          Tools/run-package dist/desertant-darwin-arm64.tar.gz
+        run: Tools/package darwin-arm64
       - uses: actions/upload-artifact@v4
         with:
           name: darwin-arm64
           path: desert-ant-cli/dist/*.tar.gz
 
-  # The official Swift image is multi-arch; setup-swift has no arm64 toolchain.
-  # Core's dal.sh vendors LiteRT with uv.
+  # Tools/linux builds the image from Tools/linux.Dockerfile and packages in it, as CI
+  # does. Core's dal.sh vendors LiteRT with uv inside it.
   linux:
     name: linux-${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
-    container: swift:6.2-jammy
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { arch: x86_64, runner: ubuntu-22.04 }
-          - { arch: arm64, runner: ubuntu-22.04-arm }
+          - { arch: x86_64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
     steps:
-      - name: Build dependencies
-        run: |
-          apt-get update -qq
-          apt-get install -y -qq --no-install-recommends git curl ca-certificates python3 binutils \
-            libcurl4-openssl-dev libxml2-dev zlib1g-dev
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - uses: actions/checkout@v4
         with:
           path: desert-ant-cli
@@ -71,9 +61,7 @@ jobs:
           path: desert-ant-core
       - name: Package
         working-directory: desert-ant-cli
-        run: |
-          Tools/package linux-${{ matrix.arch }}
-          Tools/run-package dist/desertant-linux-${{ matrix.arch }}.tar.gz
+        run: Tools/linux Tools/package linux-${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.arch }}

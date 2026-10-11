@@ -35,26 +35,18 @@ jobs:
           name: darwin-arm64
           path: desert-ant-cli/dist/*.tar.gz
 
-  # The Swift image the release builds in, so CI tests the same binary a release ships.
-  # Core's dal.sh vendors LiteRT with uv.
+  # Tools/linux builds the image from Tools/linux.Dockerfile and runs each step in it,
+  # the same way on a laptop, here, and in the release.
   linux:
     name: linux-${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
-    container: swift:6.2-jammy
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { arch: x86_64, runner: ubuntu-22.04 }
-          - { arch: arm64, runner: ubuntu-22.04-arm }
+          - { arch: x86_64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
     steps:
-      - name: Build dependencies
-        run: |
-          apt-get update -qq
-          apt-get install -y -qq --no-install-recommends git curl ca-certificates python3 binutils ffmpeg \
-            libcurl4-openssl-dev libxml2-dev zlib1g-dev
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - uses: actions/checkout@v4
         with:
           path: desert-ant-cli
@@ -68,10 +60,10 @@ jobs:
           path: desert-ant-core
       - name: Check
         working-directory: desert-ant-cli
-        run: Tools/check
+        run: Tools/linux Tools/check
       - name: Package
         working-directory: desert-ant-cli
-        run: Tools/package linux-${{ matrix.arch }}
+        run: Tools/linux Tools/package linux-${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.arch }}
