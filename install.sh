@@ -5,8 +5,9 @@
 #
 # The release lands in DESERTANT_HOME (~/.local/share/desertant) with the files the
 # binary needs beside it; `desertant` and the `da` alias are symlinks in DESERTANT_BIN
-# (~/.local/bin). DESERTANT_VERSION=v0.2.0 pins a release. `desertant update` runs
-# this script again.
+# (~/.local/bin). DESERTANT_VERSION=v0.2.0 pins a release, and DESERTANT_BASE_URL
+# installs from another folder of release assets. `desertant update` runs this
+# script again.
 set -eu
 
 repo="Desert-Ant-Labs/desert-ant-cli"
@@ -25,8 +26,34 @@ case "$(uname -m)" in
   *) echo "desertant has no build for $(uname -m)." >&2; exit 1 ;;
 esac
 
+# The Linux build links glibc and loads the system's libcurl. Alpine and other musl
+# systems have neither, and an older glibc stops the binary before it prints anything.
+glibc_floor="2.35"
+if [ "$os" = "linux" ]; then
+  if ldd --version 2>&1 | grep -qi musl || ls /lib/ld-musl-* >/dev/null 2>&1; then
+    echo "desertant needs glibc $glibc_floor or later, and this system uses musl (Alpine and similar)." >&2
+    exit 1
+  fi
+  # "glibc 2.35" -> major 2, minor 35, compared as numbers.
+  glibc="$(getconf GNU_LIBC_VERSION 2>/dev/null || true)"
+  glibc="${glibc#glibc }"
+  have_major="${glibc%%.*}" have_minor="${glibc#*.}" have_minor="${have_minor%%.*}"
+  need_major="${glibc_floor%%.*}" need_minor="${glibc_floor#*.}"
+  case "$have_major$have_minor" in
+    '' | *[!0-9]*) ;;
+    *)
+      if [ "$have_major" -lt "$need_major" ] || { [ "$have_major" -eq "$need_major" ] && [ "$have_minor" -lt "$need_minor" ]; }; then
+        echo "desertant needs glibc $glibc_floor or later, and this system has $glibc." >&2
+        exit 1
+      fi
+      ;;
+  esac
+fi
+
 asset="desertant-$os-$arch.tar.gz"
-if [ "$version" = "latest" ]; then
+if [ -n "${DESERTANT_BASE_URL:-}" ]; then
+  base="$DESERTANT_BASE_URL"
+elif [ "$version" = "latest" ]; then
   base="https://github.com/$repo/releases/latest/download"
 else
   base="https://github.com/$repo/releases/download/$version"
@@ -57,14 +84,31 @@ if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
   exit 1
 fi
 
+# Run the new binary before it replaces anything, so a missing library leaves the
+# installed copy as it was.
+mkdir -p "$tmp/new"
+tar -xzf "$tmp/$asset" -C "$tmp/new"
+chmod 755 "$tmp/new/desertant"
+if ! installed="$("$tmp/new/desertant" --version 2>"$tmp/error")"; then
+  echo "The downloaded desertant did not start:" >&2
+  sed 's/^/  /' "$tmp/error" >&2
+  if grep -q "libcurl" "$tmp/error"; then
+    echo "Install libcurl, which the curl package brings on most systems, and run this script again." >&2
+  fi
+  exit 1
+fi
+
 mkdir -p "$home" "$bin"
-tar -xzf "$tmp/$asset" -C "$home"
-chmod 755 "$home/desertant"
+rm -rf "$home"/*.bundle "$home"/*.resources
+cp -R "$tmp/new/." "$home/"
 ln -sf "$home/desertant" "$bin/desertant"
 ln -sf "$home/desertant" "$bin/da"
 
-echo "Installed desertant $("$bin/desertant" --version) into $bin."
+echo "Installed desertant $installed into $bin."
 case ":$PATH:" in
   *":$bin:"*) ;;
   *) echo "Add $bin to your PATH to run it as desertant or da." ;;
 esac
+if [ "$os" = "linux" ] && ! command -v ffmpeg >/dev/null 2>&1; then
+  echo "Install ffmpeg to read audio other than WAV, read images, and cut clips. Text and WAV models run without it."
+fi

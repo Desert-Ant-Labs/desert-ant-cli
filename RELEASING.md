@@ -20,8 +20,9 @@ Tools/publish-formula      # once the release workflow is green
 the version to `VERSION` and the formula, re-embeds, runs `Tools/check` (build, tests,
 manifest in sync, voice), commits, and tags `v0.2.0`. The push triggers
 `.github/workflows/release.yml`, which builds `desertant` for macOS arm64 and Linux
-x86_64 and arm64, attaches the tarballs and a `checksums.txt` to the GitHub release,
-and renders `Formula/desertant.rb` with the real checksums.
+x86_64 and arm64, installs each tarball into clean systems and runs `Tools/smoke`
+against it (`verify.yml`), and only then attaches the tarballs and a `checksums.txt`
+to the GitHub release and renders `Formula/desertant.rb` with the real checksums.
 
 ## How people install and update
 
@@ -50,19 +51,39 @@ later one; until then `info` says the model has no runner on this platform.
 
 ## What a release tarball holds
 
-`desertant`, plus what the binary needs beside it: `mlx.metallib` on macOS (MLX looks
-for it next to the binary; Title runs on it) and `libLiteRt.so` on Linux. The script
-and the formula keep them together in a private directory (`~/.local/share/desertant`,
-Homebrew's `libexec`) and symlink `desertant` and `da` into `bin`.
+`desertant` and what the binary needs beside it: the SwiftPM resource bundles
+(Tongue's weights among them), `mlx.metallib` on macOS (Title runs on MLX, which looks
+for it next to the binary), and `libLiteRt.so` with `THIRD_PARTY_NOTICES.md` on Linux.
+The script and the formula keep them together in a private directory
+(`~/.local/share/desertant`, Homebrew's `libexec`) and symlink `desertant` and `da`
+into `bin`.
 
 ## Linux
 
-The Linux binaries need `libLiteRt.so` beside them. The release workflow vendors it
-the same way desert-ant-core does and ships it inside the tarball, with an rpath of
-`$ORIGIN`, so the installed binary finds it without any system setup. The models
-themselves are tested on Linux in desert-ant-core's CI; this repo's `ci.yml` covers
-what only this repo can break there: it runs `Tools/check`, packages the binary, and
-runs `doctor`, `models`, `schema`, and `docs` from the tarball on every push.
+The Linux binary links the Swift runtime and Foundation statically, so a machine needs
+no Swift toolchain. It loads glibc 2.35 or later, libcurl (which the curl package
+installs), and `libLiteRt.so` from beside itself through an rpath of `$ORIGIN`. The
+release builds in `swift:6.2-jammy`, which is where the glibc floor comes from, and
+`install.sh` refuses an older glibc or a musl system with a message instead of
+installing a binary that cannot start. ffmpeg is optional: core reads and writes WAV
+in pure Swift, and ffmpeg reads other audio, video, and images and cuts clips.
+
+To work on Linux from a Mac, `Tools/linux` runs any command in the same Swift image
+with this repo and core mounted, and keeps the build, SwiftPM, and model caches in
+Docker volumes:
+
+```
+Tools/linux Tools/check                    # the commit gate on Linux
+Tools/linux Tools/package linux-arm64      # dist/desertant-linux-arm64.tar.gz
+Tools/linux-matrix                         # install it into each distribution and smoke-test it
+Tools/linux-matrix --ffmpeg ubuntu:24.04   # the same, with ffmpeg installed
+Tools/smoke dist-extracted/desertant       # one binary, end to end
+```
+
+`--arch x86_64` builds and tests the other architecture under emulation. `Tools/smoke`
+runs every model the platform supports, the file handling, and the errors a person
+sees, and fails on any runtime log line on stderr except TFLite's one XNNPACK line, which has no switch. CI and the release workflow run the
+same scripts through `verify.yml`.
 
 A Windows build is not set up. The starting point is a `windows-latest` job modeled
 on core's, which vendors LiteRT from the win_amd64 wheel.
