@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main
 ```
 
 Or `brew install desert-ant-labs/tap/desertant`, or
-`mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[exe=desertant]"`.
+`mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`.
 
 ## Models
 

@@ -22,6 +22,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   # MLX looks for mlx.metallib next to the binary.
   install -m 644 "$products/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$home/mlx.metallib"
 fi
+"$here/Tools/resources" "$products" "$home"
 ln -sf "$home/desertant" "$bindir/desertant"
 ln -sf "$home/desertant" "$bindir/da"
 
