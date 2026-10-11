@@ -1,0 +1,55 @@
+# Install the packaged tarballs from the calling run the way a person would, and run
+# Tools/smoke against them: on Linux in clean images of the common distributions
+# (Tools/linux-matrix), on macOS from the extracted tarball. ci.yml and release.yml
+# both call this, so a pull request and a release pass the same checks.
+name: verify
+
+on:
+  workflow_call:
+
+jobs:
+  linux:
+    name: linux-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x86_64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}
+          path: dist
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/models
+          key: models-linux-${{ matrix.arch }}-${{ hashFiles('manifest.json') }}
+          restore-keys: models-linux-${{ matrix.arch }}-
+      - name: Distributions, without ffmpeg
+        env:
+          DESERTANT_MODELS_DIR: ${{ runner.temp }}/models
+        run: Tools/linux-matrix --arch ${{ matrix.arch }}
+      - name: Distributions, with ffmpeg
+        env:
+          DESERTANT_MODELS_DIR: ${{ runner.temp }}/models
+        run: Tools/linux-matrix --arch ${{ matrix.arch }} --ffmpeg ubuntu:24.04 debian:12 fedora:42
+
+  darwin:
+    name: darwin-arm64
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: darwin-arm64
+          path: dist
+      - name: ffmpeg
+        run: brew install ffmpeg
+      - name: Smoke
+        run: |
+          mkdir -p "$RUNNER_TEMP/da"
+          tar -xzf dist/desertant-darwin-arm64.tar.gz -C "$RUNNER_TEMP/da"
+          Tools/smoke "$RUNNER_TEMP/da/desertant"

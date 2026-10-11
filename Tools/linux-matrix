@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Install a packaged Linux build with install.sh into clean images of the common
+# distributions, then run Tools/smoke there. A distribution below the glibc floor, or
+# on musl, passes when the installer refuses it with its message.
+#
+#   Tools/linux-matrix [--arch arm64|x86_64] [--ffmpeg] [image...]
+#
+# Reads dist/desertant-linux-<arch>.tar.gz from Tools/package. --ffmpeg installs
+# ffmpeg first where the distribution's own repositories carry it. Model weights
+# download once into a named volume per arch, or into DESERTANT_MODELS_DIR when set.
+set -uo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+arch=""
+case "$(uname -m)" in arm64 | aarch64) arch=arm64 ;; *) arch=x86_64 ;; esac
+ffmpeg=0
+images=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --arch) arch="$2"; shift 2 ;;
+    --ffmpeg) ffmpeg=1; shift ;;
+    *) images+=("$1"); shift ;;
+  esac
+done
+platform=linux/arm64; [[ "$arch" == x86_64 ]] && platform=linux/amd64
+models="${DESERTANT_MODELS_DIR:-desertant-models-$arch}"
+
+# image, then what should happen: run, or refuse.
+default=(
+  "ubuntu:22.04 run" "ubuntu:24.04 run" "debian:12 run" "debian:13 run"
+  "fedora:41 run" "fedora:42 run" "opensuse/tumbleweed run"
+  "ubuntu:20.04 refuse" "debian:11 refuse" "rockylinux:9 refuse" "amazonlinux:2023 refuse"
+  "alpine:3.20 refuse"
+)
+[[ "$arch" == x86_64 ]] && default+=("archlinux:latest run")
+if [[ ${#images[@]} -eq 0 ]]; then images=("${default[@]}"); fi
+
+tarball="$here/dist/desertant-linux-$arch.tar.gz"
+[[ -f "$tarball" ]] || { echo "No $tarball. Run Tools/package linux-$arch first." >&2; exit 1; }
+release="$(mktemp -d)"
+trap 'rm -rf "$release"' EXIT
+cp "$tarball" "$release/"
+(cd "$release" && shasum -a 256 "$(basename "$tarball")" > checksums.txt)
+
+# Each family's package manager, quiet, with curl and bash (Tools/smoke is bash).
+prepare='
+set -e
+want_ffmpeg="$1"
+if command -v apt-get >/dev/null; then
+  apt-get update -qq >/dev/null
+  apt-get install -y -qq --no-install-recommends curl ca-certificates >/dev/null || echo "apt could not install curl"
+  [ "$want_ffmpeg" = 1 ] && apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
+elif command -v dnf >/dev/null; then
+  dnf install -y -q --allowerasing curl findutils >/dev/null
+  [ "$want_ffmpeg" = 1 ] && dnf install -y -q ffmpeg-free >/dev/null 2>&1 || true
+elif command -v zypper >/dev/null; then
+  zypper -q -n install curl gzip tar >/dev/null
+  [ "$want_ffmpeg" = 1 ] && zypper -q -n install ffmpeg >/dev/null 2>&1 || true
+elif command -v pacman >/dev/null; then
+  # The sandbox needs seccomp, which an emulated container may not offer.
+  pacman -Sy --noconfirm --quiet --disable-sandbox curl >/dev/null
+  [ "$want_ffmpeg" = 1 ] && pacman -S --noconfirm --quiet --disable-sandbox ffmpeg >/dev/null
+elif command -v apk >/dev/null; then
+  apk add -q bash curl >/dev/null
+fi
+'
+
+pass=0 fail=0
+for entry in "${images[@]}"; do
+  image="${entry% *}" want="${entry##* }"
+  [[ "$image" == "$want" ]] && want=run
+  echo "=== $image ($arch), expected to $want"
+  log="$(mktemp)"
+  docker run --rm --platform "$platform" \
+    -v "$here:/src:ro" -v "$release:/release:ro" \
+    -v "$models:/root/.cache/desert-ant-models" \
+    -e DESERTANT_BASE_URL=file:///release -e DESERTANT_BIN=/usr/local/bin \
+    -e DESERTANT_NO_UPDATE_CHECK=1 \
+    "$image" sh -c "$prepare
+      if sh /src/install.sh; then
+        echo INSTALLED
+        bash /src/Tools/smoke /usr/local/bin/desertant
+      fi" sh "$ffmpeg" >"$log" 2>&1
+  code=$?
+  glibc="$(grep -o 'this system has [0-9.]*\|uses musl' "$log" | head -1)"
+  if [[ "$want" == run ]] && [[ $code == 0 ]] && grep -q INSTALLED "$log"; then
+    echo "ok    $(grep 'passed,' "$log" | tail -1)"
+    pass=$((pass + 1))
+  elif [[ "$want" == refuse ]] && ! grep -q INSTALLED "$log" && grep -q "desertant needs glibc" "$log"; then
+    echo "ok    refused: $glibc"
+    pass=$((pass + 1))
+  else
+    echo "FAIL  exit $code"
+    grep -E "FAIL|error|Error|needs|did not start|not found" "$log" | head -15 | sed 's/^/      /'
+    fail=$((fail + 1))
+  fi
+  rm -f "$log"
+done
+echo
+echo "$pass images as expected, $fail not."
+[[ $fail == 0 ]]

@@ -1,6 +1,7 @@
 # Build and publish a release when a v* tag is pushed (Tools/release makes the tag):
 # one tarball per platform, checksums.txt, and desertant.rb rendered with the real
-# checksums, attached to the GitHub release. Tools/publish-formula puts the formula
+# checksums, attached to the GitHub release. Nothing publishes until verify.yml has
+# installed every tarball and run Tools/smoke against it. Tools/publish-formula puts the formula
 # in the tap afterwards, from a maintainer's machine.
 name: release
 
@@ -53,7 +54,7 @@ jobs:
       - name: Build dependencies
         run: |
           apt-get update -qq
-          apt-get install -y -qq --no-install-recommends git curl ca-certificates python3 \
+          apt-get install -y -qq --no-install-recommends git curl ca-certificates python3 binutils \
             libcurl4-openssl-dev libxml2-dev zlib1g-dev
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
@@ -78,8 +79,12 @@ jobs:
           name: linux-${{ matrix.arch }}
           path: desert-ant-cli/dist/*.tar.gz
 
-  publish:
+  verify:
     needs: [darwin, linux]
+    uses: ./.github/workflows/verify.yml
+
+  publish:
+    needs: [verify]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
