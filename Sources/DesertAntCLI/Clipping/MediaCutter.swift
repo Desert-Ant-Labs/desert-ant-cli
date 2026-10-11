@@ -52,8 +52,21 @@ struct AVFoundationCutter: MediaCutter {
             preset = video ? AVAssetExportPresetHighestQuality : AVAssetExportPresetAppleM4A
             type = video ? .mp4 : .m4a
         }
+        do {
+            try await export(composition, preset: preset, as: type, to: destination)
+        } catch where preset == AVAssetExportPresetPassthrough {
+            // Passthrough stops on some AAC ranges, such as one that starts within the
+            // first 0.1s of an m4a. Re-encoding the same range works.
+            try? FileManager.default.removeItem(at: destination)
+            try await export(composition, preset: video ? AVAssetExportPresetHighestQuality : AVAssetExportPresetAppleM4A,
+                             as: video ? .mp4 : .m4a,
+                             to: destination)
+        }
+    }
+
+    private func export(_ composition: AVComposition, preset: String, as type: AVFileType, to destination: URL) async throws {
         guard let session = AVAssetExportSession(asset: composition, presetName: preset) else {
-            throw RunError("could not start an export for \(source.lastPathComponent)")
+            throw RunError("could not start an export for \(destination.lastPathComponent)")
         }
         do {
             try await session.export(to: destination, as: type)
