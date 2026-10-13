@@ -1,3 +1,5 @@
+<img src="docs/banner.png" width="1280" alt="Desert Ant CLI: Little brains in your terminal. Voz transcribes a recording and pipes it into Redact, then transcribes a folder of four.">
+
 # Desert Ant CLI
 
 ![Swift](https://img.shields.io/badge/Swift-macOS%20%7C%20Linux-F05138?logo=swift&logoColor=white)
