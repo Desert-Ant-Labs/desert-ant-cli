@@ -23,14 +23,12 @@ enum Runners {
         ModeratorRunner(),
         EyeRunner(),
         WhoRunner(),
+        ClipsRunner(),
     ]
 
     /// Models whose frameworks exist only on Apple platforms.
     private static let appleOnly: [any ModelRunner] = {
         var runners: [any ModelRunner] = []
-        #if !os(Linux)
-        runners.append(ClipsRunner())
-        #endif
         #if canImport(Voz)
         runners.append(VozRunner())
         #endif
@@ -50,14 +48,7 @@ enum Runners {
     ]
 
     /// Models core lists for this platform that do not run here yet, and the reason a reader sees.
-    static let unavailable: [String: String] = {
-        #if os(Linux)
-        // Core cannot load the LiteRT export of clips v0.1.0 yet.
-        ["clips": "not on Linux yet"]
-        #else
-        [:]
-        #endif
-    }()
+    static let unavailable: [String: String] = [:]
 
     static func runner(for id: String) -> (any ModelRunner)? { all[id.lowercased()] }
 }

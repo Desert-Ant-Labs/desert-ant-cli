@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "4.0.0",
+  "sdkVersion": "4.1.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -613,7 +613,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/uhm",
         "url": "https://huggingface.co/desert-ant-labs/uhm",
-        "revision": "v1.1.0",
+        "revision": "v1.2.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": ["coreml"],
@@ -741,7 +741,7 @@ enum Embedded {
       "summary": "On-device speaker labeling: per-person turns with timestamps.",
       "category": "Speaker diarization",
       "lifecycle": "beta",
-      "visibility": "internal",
+      "visibility": "public",
       "home": "desert-ant-core",
       "sdks": {
         "swift": { "status": "live", "package": "Who", "platforms": ["apple", "linux", "windows"] },
@@ -761,7 +761,7 @@ enum Embedded {
         { "id": "int8", "default": false, "note": "Weights stored as 8-bit integers: about 42 MB of Core ML graphs on Apple platforms, the same turns; the one precision elsewhere, about 49 MB of LiteRT graphs, where it is the default." }
       ],
       "hub": {
-        "tags": ["audio", "speaker-diarization", "diarization", "speech", "on-device", "core-ml", "litert"],
+        "tags": ["audio", "speaker-diarization", "diarization", "speech", "on-device", "core-ml", "litert", "onnx"],
         "pipelineTag": "voice-activity-detection",
         "libraryName": null
       },
@@ -975,9 +975,8 @@ runs skip both.
 
 The pipeline lives in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the
 three steps and writes the report; `Transcriber` and `MediaCutter` are the seams,
-with Voz and AVFoundation behind them on Apple platforms. Another platform brings its
-own recognizer and cutter by conforming to those two protocols, and `--transcript`
-already works everywhere.
+with Voz behind the first everywhere, and AVFoundation behind the second on Apple
+platforms and ffmpeg on Linux.
 """###),
         (name: "eye", markdown: ###"""
 # Photos and video
@@ -1515,7 +1514,6 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 ```json
 {
   "input": "/work/talk.mp4",
-  "transcript": null,
   "sentences": 212,
   "materialSec": 2880.0,
   "transcribeSec": 9.7,
@@ -1535,8 +1533,8 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 }
 ```
 
-Clips come back best first. `file` is null under `--select-only`. `transcript` is
-the transcript file that was used, or null when Voz transcribed.
+Clips come back best first. `file` is left out under `--select-only`. `transcript` is
+the transcript file that was used, and is left out when Voz transcribed.
 
 ## Errors
 
@@ -1832,8 +1830,7 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
 - Cut short clips from a talk or recording: `desertant clips talk.mp4 --json` transcribes,
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
-  timestamps without writing; `--transcript talk.srt` skips transcribing. Clips runs on
-  macOS.
+  timestamps without writing; `--transcript talk.srt` skips transcribing.
 - Label who said what: `desertant who talk.mp4 --json` gives each speaker's time and
   turns. `desertant voz talk.mp4 --speakers --json` transcribes and puts a `speaker` on
   every sentence; `--names "Anna,Ben"` names them in the order they first speak, and
@@ -1912,8 +1909,7 @@ first use with progress on stderr; stdout stays clean JSON.
 - `desertant clear <file> --json` denoises an audio or video file and reports the
   output path.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
-  each clip's start, end, text, and file; `--select-only` gives timestamps only. Clips
-  runs on macOS.
+  each clip's start, end, text, and file; `--select-only` gives timestamps only.
 - `desertant who <file> --json` labels who spoke when: each speaker's time and turns.
   `desertant voz <file> --speakers --json` transcribes and labels each sentence with its
   speaker; `--names "Anna,Ben"` names them in the order they first speak.

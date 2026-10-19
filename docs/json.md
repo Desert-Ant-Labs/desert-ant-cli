@@ -344,7 +344,6 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 ```json
 {
   "input": "/work/talk.mp4",
-  "transcript": null,
   "sentences": 212,
   "materialSec": 2880.0,
   "transcribeSec": 9.7,
@@ -364,8 +363,8 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 }
 ```
 
-Clips come back best first. `file` is null under `--select-only`. `transcript` is
-the transcript file that was used, or null when Voz transcribed.
+Clips come back best first. `file` is left out under `--select-only`. `transcript` is
+the transcript file that was used, and is left out when Voz transcribed.
 
 ## Errors
 

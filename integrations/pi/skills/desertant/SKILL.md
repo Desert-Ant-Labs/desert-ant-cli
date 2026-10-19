@@ -35,8 +35,7 @@ with progress on stderr; stdout stays clean JSON.
 - `desertant clear <file> --json` denoises an audio or video file and reports the
   output path.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
-  each clip's start, end, text, and file; `--select-only` gives timestamps only. Clips
-  runs on macOS.
+  each clip's start, end, text, and file; `--select-only` gives timestamps only.
 - `desertant who <file> --json` labels who spoke when: each speaker's time and turns.
   `desertant voz <file> --speakers --json` transcribes and labels each sentence with its
   speaker; `--names "Anna,Ben"` names them in the order they first speak.

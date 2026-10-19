@@ -66,8 +66,6 @@ if [[ "$os" == Linux ]]; then
   for id in redact emo gist tongue ear clear moderator who voz eye; do
     check "runs $id here" 0 "\"$id\"" "$da" doctor --json
   done
-  check "clips says where it runs" 1 "clips does not run on Linux yet" "$da" clips talk.wav --transcript talk.srt
-  check "models marks clips" 0 "not on Linux yet" "$da" models --all
 fi
 
 # Text models, which download their weights here on a first run. A virtual Mac has no
@@ -89,10 +87,9 @@ check "ear on wav" 0 '"language" : "en"' "$da" ear talk.wav --json
 check "clear wav to wav" 0 "talk_clear\.wav" "$da" clear talk.wav
 [[ -s talk_clear.wav ]] && ok "clear wrote talk_clear.wav" || fail "clear wrote talk_clear.wav"
 check "clear never overwrites" 0 "talk_clear-2\.wav" "$da" clear talk.wav
-if [[ "$os" != Linux ]]; then
-  check "clips select-only" 0 '"clips" : \[' "$da" clips talk.wav --transcript talk.srt --select-only --json
-  check "clips from a transcript on stdin" 0 '"clips"' sh -c "'$da' clips talk.wav --transcript - --select-only --json < talk.srt"
-fi
+check "clips select-only" 0 '"clips" : \[' "$da" clips talk.wav --transcript talk.srt --select-only --json
+check "clips from a transcript on stdin" 0 '"clips"' sh -c "'$da' clips talk.wav --transcript - --select-only --json < talk.srt"
+check "clips transcribes with voz" 0 '"sentences" : [1-9]' "$da" clips talk.wav --select-only --json
 check "who on wav" 0 '"speakerCount" : [1-9]' "$da" who talk.wav --json
 check "who writes rttm" 0 "^SPEAKER talk 1 " "$da" who talk.wav --format rttm
 check "who labels a transcript" 0 '"lines" : \[' "$da" who talk.wav --transcript talk.srt --json
@@ -130,14 +127,13 @@ if [[ $has_ffmpeg == 1 ]]; then
     check "eye video thumbnail" 0 "talk_thumbnail\.jpg" "$da" eye talk.mp4 --thumbnail --every 2
     [[ -s talk_thumbnail.jpg ]] && ok "eye wrote talk_thumbnail.jpg" || fail "eye wrote talk_thumbnail.jpg"
   fi
-  if [[ "$os" != Linux ]]; then
-    check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
-    [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"
-    check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts
-    check "clips into an existing name" 0 'talk_clip-1-2\.mp4' "$da" clips talk.mp4 --transcript talk.srt --count 1
-  fi
+  check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
+  [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"
+  check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts
+  check "clips into an existing name" 0 'talk_clip-1-2\.mp4' "$da" clips talk.mp4 --transcript talk.srt --count 1
 elif [[ "$os" == Linux ]]; then
   printf 'not really audio' > talk.m4a
+  check "clips asks for ffmpeg to cut" 1 "cutting clips needs ffmpeg" "$da" clips talk.wav --transcript talk.srt
   check "ear asks for ffmpeg" 1 "reading talk.m4a needs ffmpeg, which is not installed" "$da" ear talk.m4a
   check "clear to m4a asks for ffmpeg" 1 "writing out.m4a needs ffmpeg" "$da" clear talk.wav --output out.m4a
   printf 'x' > photo.jpg

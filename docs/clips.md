@@ -37,6 +37,5 @@ runs skip both.
 
 The pipeline lives in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the
 three steps and writes the report; `Transcriber` and `MediaCutter` are the seams,
-with Voz and AVFoundation behind them on Apple platforms. Another platform brings its
-own recognizer and cutter by conforming to those two protocols, and `--transcript`
-already works everywhere.
+with Voz behind the first everywhere, and AVFoundation behind the second on Apple
+platforms and ffmpeg on Linux.

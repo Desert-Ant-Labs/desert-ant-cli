@@ -100,8 +100,8 @@ numbers, its limits, and a live demo. `da info <model>` prints the same card.
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
-Redact, Emo, Gist, and Tongue are multilingual. Uhm, Clips, and Title run on Apple
-silicon Macs. The rest also run on Linux, and `da models` lists what runs on your
+Redact, Emo, Gist, and Tongue are multilingual. Uhm and Title run on Apple silicon
+Macs. The rest also run on Linux, and `da models` lists what runs on your
 machine.
 
 ## Transcripts and captions

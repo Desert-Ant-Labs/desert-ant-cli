@@ -84,7 +84,7 @@ struct ClipPipeline {
             sentences = try TranscriptFile.load(file)
         } else {
             guard let transcriber else {
-                throw RunError("transcribing needs Voz, which runs on macOS. Pass --transcript with an .srt, .vtt, or .json file instead.")
+                throw RunError("transcribing needs Voz, which does not run here. Pass --transcript with an .srt, .vtt, or .json file instead.")
             }
             let model = transcriber.name
             if !transcriber.isDownloaded() {

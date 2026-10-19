@@ -43,8 +43,7 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
 - Cut short clips from a talk or recording: `desertant clips talk.mp4 --json` transcribes,
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
-  timestamps without writing; `--transcript talk.srt` skips transcribing. Clips runs on
-  macOS.
+  timestamps without writing; `--transcript talk.srt` skips transcribing.
 - Label who said what: `desertant who talk.mp4 --json` gives each speaker's time and
   turns. `desertant voz talk.mp4 --speakers --json` transcribes and puts a `speaker` on
   every sentence; `--names "Anna,Ben"` names them in the order they first speak, and
