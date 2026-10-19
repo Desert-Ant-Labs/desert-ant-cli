@@ -90,10 +90,13 @@ jobs:
       # The notes are written by hand before Tools/release tags; the tag is v<version>.
       - name: Release notes
         id: notes
-        run: echo "path=release-notes/${GITHUB_REF_NAME#v}.md" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "path=release-notes/${GITHUB_REF_NAME#v}.md" >> "$GITHUB_OUTPUT"
 
       - uses: softprops/action-gh-release@v2
         with:
+          name: desertant ${{ steps.notes.outputs.version }}
           files: dist/*
           body_path: ${{ steps.notes.outputs.path }}
 
