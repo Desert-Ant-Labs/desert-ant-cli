@@ -20,7 +20,7 @@ minutes in 41s".
   list, so `--count 5` isn't the first five of `--count 10`.
 - `--transcript talk.srt`: use a transcript instead of transcribing. SRT, VTT, or
   JSON as `[{"start": 1.0, "end": 4.5, "text": "..."}]` in seconds; `-` reads one
-  from stdin. On Linux, where Voz doesn't run, clips runs from a transcript.
+  from stdin.
 - `--select-only`: report the moments as timestamps and text, write nothing.
 - `--output-dir clips/`: where the files go.
 - `--force`: replace existing clip files instead of stepping aside.

@@ -1,0 +1,42 @@
+1
+00:00:00,080 --> 00:00:03,700
+Desert ants find their way home across
+open sand without any landmarks.
+
+2
+00:00:04,080 --> 00:00:06,800
+They count their steps and
+read the angle of the sun.
+
+3
+00:00:06,800 --> 00:00:07,600
+A forager
+
+4
+00:00:07,600 --> 00:00:09,200
+can walk more than a hundred meters
+
+5
+00:00:09,200 --> 00:00:11,760
+from the nest and still
+return in a straight line.
+
+6
+00:00:11,760 --> 00:00:15,730
+Researchers once put tiny stilts on
+the ants to make their steps longer,
+
+7
+00:00:15,730 --> 00:00:19,810
+those ants walked right past the nest
+because their step count was wrong.
+
+8
+00:00:19,810 --> 00:00:23,090
+Small brains can do precise
+work when the method is simple,
+
+9
+00:00:23,090 --> 00:00:26,540
+that is the idea behind small
+models that run on your own device

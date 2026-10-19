@@ -42,6 +42,7 @@ struct DesertAnt: AsyncParsableCommand {
             VozVerb.self,
             UhmVerb.self,
             ClipsVerb.self,
+            ModeratorVerb.self,
             // Agents.
             Schema.self,
             Docs.self,
@@ -52,10 +53,6 @@ struct DesertAnt: AsyncParsableCommand {
             // Title runs on MLX and is compiled in only when the build asks for it.
             #if TITLE
             commands.append(TitleVerb.self)
-            #endif
-            // Moderator reads its image through ImageIO.
-            #if canImport(ImageIO)
-            commands.append(ModeratorVerb.self)
             #endif
             return commands
         }(),

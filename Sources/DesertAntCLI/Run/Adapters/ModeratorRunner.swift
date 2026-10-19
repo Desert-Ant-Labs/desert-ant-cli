@@ -1,10 +1,8 @@
-#if canImport(ImageIO)
 import Foundation
 import Moderator
 
-// Moderator: whether an image shows nudity or sexual activity. Core's Swift SDK runs
-// on Linux too, but only takes decoded pixels there. The CLI reads an image file
-// through ImageIO, so the runner is Apple-only until the CLI carries its own decoder.
+// Moderator: whether an image shows nudity or sexual activity. ImageIO decodes the
+// file on Apple platforms and ffmpeg elsewhere.
 
 struct ModeratorRunner: ModelRunner {
     let id = "moderator"
@@ -74,12 +72,7 @@ struct ModeratorRunner: ModelRunner {
         let settings = try settings(arguments)
         let opts = settings.options
 
-        let pixels: ImagePixels
-        do {
-            pixels = try ImagePixels(contentsOf: URL(fileURLWithPath: input))
-        } catch {
-            throw RunError("could not read \(input) as an image.")
-        }
+        let pixels = try Self.pixels(input)
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         progress.update(nil, label: "looking")
         let result = try await model.analyze(pixels, options: opts)
@@ -103,5 +96,24 @@ struct ModeratorRunner: ModelRunner {
                       ("nude", r.nude), ("sex act", r.sexAct)]
         out.line(p.dim(detail.map { "\($0.0) \(String(format: "%.2f", $0.1))" }.joined(separator: "  ")))
     }
+
+    static func pixels(_ input: String) throws -> ImagePixels {
+        #if canImport(ImageIO)
+        do {
+            return try ImagePixels(contentsOf: URL(fileURLWithPath: input))
+        } catch {
+            throw RunError("could not read \(input) as an image.")
+        }
+        #else
+        let tools = try FFmpeg.require(for: input)
+        guard let image = try? FFmpeg.decodeImage(input, tools: tools) else {
+            throw RunError("could not read \(input) as an image.")
+        }
+        // EXIF sits in the first header segments, which are at most 64KB each.
+        let head = FileHandle(forReadingAtPath: input).map { [UInt8]($0.readData(ofLength: 256 * 1024)) } ?? []
+        let upright = Exif.upright(image.rgb, width: image.width, height: image.height,
+                                   orientation: Exif.orientation(jpeg: head))
+        return try ImagePixels(width: upright.width, height: upright.height, rgb: upright.rgb)
+        #endif
+    }
 }
-#endif

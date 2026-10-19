@@ -94,7 +94,7 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 ```json
 {
   "os": "macOS", "arch": "arm64",
-  "coreml": true, "mlx": true, "litert": false,
+  "coreml": true, "mlx": true, "litert": false, "ffmpeg": true,
   "cachePath": "/Users/you/Library/Caches/desert-ant-models",
   "cacheBytes": 1175608980,
   "downloaded": ["clear", "clips", "emo", "gist", "redact", "voz"],
@@ -105,7 +105,7 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 }
 ```
 
-`latest` is null when GitHub couldn't be reached.
+`latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
 
 ## Weights
 
@@ -166,7 +166,7 @@ true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
 `desertant title "<text>" --json`: `{"title", "description"}`, on Apple silicon
 builds.
 
-`desertant moderator <image> --json`: the nudity score, on Apple silicon builds.
+`desertant moderator <image> --json`: the nudity score. On Linux, reading the image needs ffmpeg.
 
 ```json
 {

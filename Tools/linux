@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Run a command in a Linux build container, from a Mac or a Linux host: the same
+# Swift image the release builds in, with this repo and the core checkout mounted.
+# The build, SwiftPM, uv, and model caches live in named volumes per arch, so the
+# second run is incremental and the host's .build is never touched.
+#
+#   Tools/linux                          a shell, native arch
+#   Tools/linux Tools/check              the commit gate on Linux
+#   Tools/linux --arch x86_64 Tools/package linux-x86_64
+#
+# x86_64 on an Apple silicon Mac runs under emulation: correct, and a few times
+# slower. DESERT_ANT_CORE points at the core checkout, as in Tools/check.
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+core="$(cd "${DESERT_ANT_CORE:-$here/../desert-ant-core}" && pwd)"
+
+arch=""
+case "$(uname -m)" in arm64 | aarch64) arch=arm64 ;; *) arch=x86_64 ;; esac
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --arch) arch="$2"; shift 2 ;;
+    --) shift; break ;;
+    *) break ;;
+  esac
+done
+case "$arch" in
+  arm64) platform=linux/arm64 ;;
+  x86_64) platform=linux/amd64 ;;
+  *) echo "The arch must be arm64 or x86_64." >&2; exit 1 ;;
+esac
+
+image="desertant-build:$arch"
+# The build image: the release workflow's Swift image plus what Tools/check,
+# Tools/package, and the tests need. Rebuilt only when this text changes.
+dockerfile="$(cat "$here/Tools/linux.Dockerfile")"
+stamp="$(printf '%s' "$dockerfile" | shasum -a 256 | cut -c1-12)"
+if [[ "$(docker image inspect -f '{{index .Config.Labels "stamp"}}' "$image" 2>/dev/null)" != "$stamp" ]]; then
+  echo "Building $image." >&2
+  printf '%s\n' "$dockerfile" | docker build -q --platform "$platform" --label "stamp=$stamp" -t "$image" - >/dev/null
+fi
+
+# The Linux graph has no MLX, so SwiftPM would rewrite the committed Package.resolved.
+# Each arch resolves into its own copy instead.
+state="${XDG_CACHE_HOME:-$HOME/.cache}/desertant-linux"
+mkdir -p "$state"
+[[ -f "$state/Package.resolved.$arch" ]] || cp "$here/Package.resolved" "$state/Package.resolved.$arch"
+
+tty=(); [[ -t 0 && -t 1 ]] && tty=(-it)
+[[ $# -eq 0 ]] && set -- bash
+exec docker run --rm ${tty[@]+"${tty[@]}"} --platform "$platform" \
+  -v "$here:/src/desert-ant-cli" \
+  -v "$core:/src/desert-ant-core" \
+  -v "desertant-build-$arch:/src/desert-ant-cli/.build" \
+  -v "$state/Package.resolved.$arch:/src/desert-ant-cli/Package.resolved" \
+  -v "desertant-swiftpm-$arch:/root/.cache/org.swift.swiftpm" \
+  -v "desertant-uv-$arch:/root/.cache/uv" \
+  -v "desertant-models-$arch:/root/.cache/desert-ant-models" \
+  -e DESERT_ANT_CORE=/src/desert-ant-core \
+  -e DESERTANT_NO_UPDATE_CHECK=1 \
+  -w /src/desert-ant-cli \
+  "$image" "$@"

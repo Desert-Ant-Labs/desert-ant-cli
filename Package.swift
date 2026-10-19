@@ -50,8 +50,7 @@ let package = Package(
                 .product(name: "Transcript", package: core),
                 .product(name: "Voz", package: core, condition: .when(platforms: [.macOS])),
                 .product(name: "Uhm", package: core, condition: .when(platforms: [.macOS])),
-                // Moderator runs everywhere, but decoding an image file needs ImageIO.
-                .product(name: "Moderator", package: core, condition: .when(platforms: [.macOS])),
+                .product(name: "Moderator", package: core),
                 // The download cache lives here; the cache command reads its root.
                 .product(name: "ModelStore", package: core),
             ] + (mlx ? [.product(name: "Title", package: core, condition: .when(platforms: [.macOS]))] : []),

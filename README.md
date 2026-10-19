@@ -38,6 +38,12 @@ curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main
 Or `brew install desert-ant-labs/tap/desertant`, or
 `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`.
 
+On Linux, desertant runs on x86_64 and arm64 with glibc 2.35 or later, such as Ubuntu
+22.04, Debian 12, Fedora 41, or openSUSE Tumbleweed, and needs libcurl, which the curl
+package installs. Text models and WAV audio need nothing else. To read other audio,
+video, and images, install ffmpeg: `sudo apt install ffmpeg`, or your distribution's
+package.
+
 ## Models
 
 Each model has a page on [desertant.com](https://desertant.com/models/) with its
@@ -66,8 +72,8 @@ numbers, its limits, and a live demo. `da info <model>` prints the same card.
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
-Redact, Emo, Gist, and Tongue are multilingual. Voz, Uhm, Title, and Moderator need
-Apple silicon, the rest run on macOS and Linux, and `da models` lists what runs on
+Redact, Emo, Gist, and Tongue are multilingual. Voz, Uhm, Clips, and Title run on
+Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on
 your machine.
 
 ## Transcripts and captions

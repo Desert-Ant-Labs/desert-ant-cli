@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build a release binary on this machine and tar it as a release asset,
 # dist/desertant-<target>.tar.gz: `desertant`, the resource bundles, and mlx.metallib
-# on macOS or libLiteRt.so on Linux. The release workflow runs this on each platform.
+# on macOS or libLiteRt.so and its notices on Linux. The release workflow runs this
+# on each platform.
 #
 #   Tools/package <darwin-arm64|linux-x86_64|linux-arm64>
 set -euo pipefail
@@ -16,7 +17,16 @@ if [[ "$(uname -s)" == "Linux" ]]; then
   # dal.sh changes directory when sourced, so it only runs inside the subshell. The
   # $ORIGIN rpath lets the binary find libLiteRt.so beside itself without setup.
   litert="$(cd "$core" && source Tools/dal.sh && dal_vendor_litert >&2 && echo "$core/$(dal_litert_dir)")"
-  linker=(-Xlinker "-L$litert" -Xlinker -rpath -Xlinker '$ORIGIN')
+  # The Swift runtime and Foundation go into the binary: a machine without a Swift
+  # toolchain has no libswiftCore.so to load.
+  linker=(--static-swift-stdlib -Xlinker "-L$litert" -Xlinker -rpath -Xlinker '$ORIGIN')
+  # Link against upstream curl, which has no versioned symbols (see
+  # Tools/linux.Dockerfile), so the binary loads any distribution's libcurl.so.4.
+  if [[ ! -d /opt/curl-link/lib ]]; then
+    echo "Package Linux builds in the build image: Tools/linux Tools/package $target" >&2
+    exit 1
+  fi
+  linker+=(-Xlinker -L/opt/curl-link/lib)
 fi
 # Title (MLX) is part of the macOS build; see Package.swift.
 [[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
@@ -30,6 +40,13 @@ rm -rf "$stage" && mkdir -p "$stage" dist
 install -m 755 "$binary" "$stage/desertant"
 if [[ -n "$litert" ]]; then
   install -m 644 "$litert/libLiteRt.so" "$stage/libLiteRt.so"
+  install -m 644 THIRD_PARTY_NOTICES.md "$stage/THIRD_PARTY_NOTICES.md"
+  # The static Swift runtime brings its debug info along; a download does not need it.
+  strip "$stage/desertant"
+  if readelf -V -W "$stage/desertant" | grep -q CURL_; then
+    echo "desertant asks for a libcurl symbol version; it linked against Debian's libcurl." >&2
+    exit 1
+  fi
 fi
 if [[ "$(uname -s)" == "Darwin" ]]; then
   # MLX looks for mlx.metallib next to the binary.

@@ -20,22 +20,20 @@ enum Runners {
         ClearRunner(),
         EarRunner(),
         TongueRunner(),
-        // Selection is portable; transcribing and cutting gate themselves inside.
-        ClipsRunner(),
+        ModeratorRunner(),
     ]
 
     /// Models whose frameworks exist only on Apple platforms.
     private static let appleOnly: [any ModelRunner] = {
         var runners: [any ModelRunner] = []
+        #if !os(Linux)
+        runners.append(ClipsRunner())
+        #endif
         #if canImport(CoreML) && canImport(AVFoundation)
         runners += [VozRunner(), UhmRunner()]
         #endif
         #if TITLE
         runners.append(TitleRunner())
-        #endif
-        // Reading an image file goes through ImageIO; see ModeratorRunner.
-        #if canImport(ImageIO)
-        runners.append(ModeratorRunner())
         #endif
         return runners
     }()
@@ -45,6 +43,16 @@ enum Runners {
         "shapes": "takes stroke points, a job for the SDK",
         "align": "refines Apple SpeechAnalyzer timestamps; voz already times every word",
     ]
+
+    /// Models core lists for this platform that do not run here yet, and the reason a reader sees.
+    static let unavailable: [String: String] = {
+        #if os(Linux)
+        // Core cannot load the LiteRT export of clips v0.1.0 yet.
+        ["clips": "not on Linux yet"]
+        #else
+        [:]
+        #endif
+    }()
 
     static func runner(for id: String) -> (any ModelRunner)? { all[id.lowercased()] }
 }

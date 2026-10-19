@@ -100,6 +100,9 @@ enum Execute {
     /// The runner for an id, or a message that says why there is none.
     static func resolveRunner(_ id: String) throws -> any ModelRunner {
         if let runner = Runners.runner(for: id) { return runner }
+        if Runners.unavailable[id.lowercased()] != nil {
+            throw RunError("\(id) does not run on Linux yet. It runs on macOS.")
+        }
         if Manifest.shared.model(id) != nil {
             throw RunError("\(id) has no runner on this platform. `desertant info \(id)` shows where it runs.")
         }

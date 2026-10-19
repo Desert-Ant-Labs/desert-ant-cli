@@ -937,7 +937,7 @@ minutes in 41s".
   list, so `--count 5` isn't the first five of `--count 10`.
 - `--transcript talk.srt`: use a transcript instead of transcribing. SRT, VTT, or
   JSON as `[{"start": 1.0, "end": 4.5, "text": "..."}]` in seconds; `-` reads one
-  from stdin. On Linux, where Voz doesn't run, clips runs from a transcript.
+  from stdin.
 - `--select-only`: report the moments as timestamps and text, write nothing.
 - `--output-dir clips/`: where the files go.
 - `--force`: replace existing clip files instead of stepping aside.
@@ -1113,7 +1113,7 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 ```json
 {
   "os": "macOS", "arch": "arm64",
-  "coreml": true, "mlx": true, "litert": false,
+  "coreml": true, "mlx": true, "litert": false, "ffmpeg": true,
   "cachePath": "/Users/you/Library/Caches/desert-ant-models",
   "cacheBytes": 1175608980,
   "downloaded": ["clear", "clips", "emo", "gist", "redact", "voz"],
@@ -1124,7 +1124,7 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 }
 ```
 
-`latest` is null when GitHub couldn't be reached.
+`latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
 
 ## Weights
 
@@ -1185,7 +1185,7 @@ true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
 `desertant title "<text>" --json`: `{"title", "description"}`, on Apple silicon
 builds.
 
-`desertant moderator <image> --json`: the nudity score, on Apple silicon builds.
+`desertant moderator <image> --json`: the nudity score. On Linux, reading the image needs ffmpeg.
 
 ```json
 {
@@ -1504,7 +1504,7 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
 - Tag what a text is about: `desertant gist "<article text>" --json`
 - Name the language a short text is written in: `desertant tongue "<text>" --json`
 - Flag nudity in a photo before upload or display: `desertant moderator photo.jpg --json`
-  scores the image 0...1 and says whether the score crosses the threshold (Apple silicon).
+  scores the image 0...1 and says whether the score crosses the threshold. On Linux it needs ffmpeg.
 - Write a title and description for a passage: `desertant title "<text>" --json`
   (Apple silicon)
 - Enhance an audio or video file: `desertant clear meeting.mp4 --json` writes an
@@ -1515,7 +1515,8 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
 - Cut short clips from a talk or recording: `desertant clips talk.mp4 --json` transcribes,
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
-  timestamps without writing; `--transcript talk.srt` skips transcribing.
+  timestamps without writing; `--transcript talk.srt` skips transcribing. Clips runs on
+  macOS.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an
@@ -1573,7 +1574,7 @@ first use with progress on stderr; stdout stays clean JSON.
 - `desertant gist "<text>" --json` tags the topic.
 - `desertant tongue "<text>" --json` names the language the text is written in.
 - `desertant moderator <image> --json` scores an image for nudity and says whether the
-  score crosses the threshold (Apple silicon).
+  score crosses the threshold. On Linux it needs ffmpeg.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word;
   `--srt` or `--vtt` also writes captions beside the input
@@ -1583,7 +1584,8 @@ first use with progress on stderr; stdout stays clean JSON.
 - `desertant clear <file> --json` denoises an audio or video file and reports the
   output path.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
-  each clip's start, end, text, and file; `--select-only` gives timestamps only.
+  each clip's start, end, text, and file; `--select-only` gives timestamps only. Clips
+  runs on macOS.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an

@@ -20,8 +20,9 @@ Tools/publish-formula      # once the release workflow is green
 the version to `VERSION` and the formula, re-embeds, runs `Tools/check` (build, tests,
 manifest in sync, voice), commits, and tags `v0.2.0`. The push triggers
 `.github/workflows/release.yml`, which builds `desertant` for macOS arm64 and Linux
-x86_64 and arm64, attaches the tarballs and a `checksums.txt` to the GitHub release,
-and renders `Formula/desertant.rb` with the real checksums.
+x86_64 and arm64, installs each tarball into clean systems and runs `Tools/smoke`
+against it (`verify.yml`), and only then attaches the tarballs and a `checksums.txt`
+to the GitHub release and renders `Formula/desertant.rb` with the real checksums.
 
 ## How people install and update
 
@@ -50,19 +51,50 @@ later one; until then `info` says the model has no runner on this platform.
 
 ## What a release tarball holds
 
-`desertant`, plus what the binary needs beside it: `mlx.metallib` on macOS (MLX looks
-for it next to the binary; Title runs on it) and `libLiteRt.so` on Linux. The script
-and the formula keep them together in a private directory (`~/.local/share/desertant`,
-Homebrew's `libexec`) and symlink `desertant` and `da` into `bin`.
+`desertant` and what the binary needs beside it: the SwiftPM resource bundles
+(Tongue's weights among them), `mlx.metallib` on macOS (Title runs on MLX, which looks
+for it next to the binary), and `libLiteRt.so` with `THIRD_PARTY_NOTICES.md` on Linux.
+The script and the formula keep them together in a private directory
+(`~/.local/share/desertant`, Homebrew's `libexec`) and symlink `desertant` and `da`
+into `bin`.
 
 ## Linux
 
-The Linux binaries need `libLiteRt.so` beside them. The release workflow vendors it
-the same way desert-ant-core does and ships it inside the tarball, with an rpath of
-`$ORIGIN`, so the installed binary finds it without any system setup. The models
-themselves are tested on Linux in desert-ant-core's CI; this repo's `ci.yml` covers
-what only this repo can break there: it runs `Tools/check`, packages the binary, and
-runs `doctor`, `models`, `schema`, and `docs` from the tarball on every push.
+The Linux binary links the Swift runtime and Foundation statically, so a machine needs
+no Swift toolchain. At run time it needs glibc 2.35 or later, libcurl, and
+`libLiteRt.so`, which it finds beside itself through an rpath of `$ORIGIN`. The glibc
+floor comes from the build image, `swift:6.2-jammy` (`Tools/linux.Dockerfile`).
+`install.sh` refuses an older glibc or a musl system with a message instead of
+installing a binary that cannot start.
+
+The binary links against upstream curl, built in the image for linking only. Debian's
+libcurl tags its symbols with versions that Fedora, openSUSE, and Arch don't have, and
+their loader would print a warning on every run.
+
+ffmpeg is optional. Core reads and writes WAV in Swift, and ffmpeg reads other audio,
+video, and images.
+
+An Amazon Linux 2 build image would lower the floor, and doesn't work. On arm64 the
+linker refuses LiteRT, which needs glibc 2.34. On x86_64 the binary stops with a
+libcurl error on Ubuntu 22.04 and Rocky 9, whose curl is older than the one that
+image's Foundation expects.
+
+`Tools/linux` runs any command in the build image, from a Mac or a Linux host, with
+this repo and core mounted. CI and the release workflow build through it too.
+
+```
+Tools/linux Tools/check                    # the commit gate on Linux
+Tools/linux Tools/package linux-arm64      # dist/desertant-linux-arm64.tar.gz
+Tools/linux-matrix                         # install that tarball into each distribution and smoke-test it
+Tools/linux-matrix --ffmpeg ubuntu:24.04   # the same, with ffmpeg installed
+Tools/smoke path/to/desertant              # one binary, end to end
+```
+
+`--arch x86_64` builds and tests the other architecture, under emulation on Apple
+silicon. `Tools/smoke` runs every model the platform supports, the file handling, and
+the errors a person sees. It fails on any log line on stderr except TFLite's
+"Created TensorFlow Lite XNNPACK delegate", which LiteRT has no setting to turn off.
+CI and the release workflow run the same scripts through `verify.yml`.
 
 A Windows build is not set up. The starting point is a `windows-latest` job modeled
 on core's, which vendors LiteRT from the win_amd64 wheel.

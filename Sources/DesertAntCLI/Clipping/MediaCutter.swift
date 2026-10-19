@@ -1,8 +1,8 @@
 import Foundation
 import Transcript
 
-// Writing a clip out of the source media. AVFoundation does it on Apple platforms;
-// another platform can bring its own cutter behind the same protocol.
+// Writing a clip out of the source media: AVFoundation on Apple platforms, ffmpeg
+// elsewhere.
 
 /// What a media file holds, read before any model is fetched or run.
 struct MediaInfo: Sendable {
@@ -52,8 +52,21 @@ struct AVFoundationCutter: MediaCutter {
             preset = video ? AVAssetExportPresetHighestQuality : AVAssetExportPresetAppleM4A
             type = video ? .mp4 : .m4a
         }
+        do {
+            try await export(composition, preset: preset, as: type, to: destination)
+        } catch where preset == AVAssetExportPresetPassthrough {
+            // Passthrough stops on some AAC ranges, such as one that starts within the
+            // first 0.1s of an m4a. Re-encoding the same range works.
+            try? FileManager.default.removeItem(at: destination)
+            try await export(composition, preset: video ? AVAssetExportPresetHighestQuality : AVAssetExportPresetAppleM4A,
+                             as: video ? .mp4 : .m4a,
+                             to: destination)
+        }
+    }
+
+    private func export(_ composition: AVComposition, preset: String, as type: AVFileType, to destination: URL) async throws {
         guard let session = AVAssetExportSession(asset: composition, presetName: preset) else {
-            throw RunError("could not start an export for \(source.lastPathComponent)")
+            throw RunError("could not start an export for \(destination.lastPathComponent)")
         }
         do {
             try await session.export(to: destination, as: type)
@@ -110,3 +123,16 @@ struct AVFoundationCutter: MediaCutter {
     }
 }
 #endif
+
+struct FFmpegCutter: MediaCutter {
+    let tools: FFmpeg.Tools
+
+    func probe(_ source: URL) async throws -> MediaInfo {
+        let info = try FFmpeg.probe(source.path, tools: tools)
+        return MediaInfo(hasVideo: info.hasVideo, hasAudio: info.hasAudio, durationSec: info.durationSec)
+    }
+
+    func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws {
+        try FFmpeg.cut(source.path, ranges: ranges.map { ($0.start, $0.duration) }, to: destination.path, tools: tools)
+    }
+}

@@ -54,7 +54,7 @@ struct ClipPipeline {
         #if canImport(AVFoundation)
         return AVFoundationCutter()
         #else
-        return nil
+        return FFmpeg.tools.map(FFmpegCutter.init)
         #endif
     }
 
@@ -84,7 +84,7 @@ struct ClipPipeline {
             sentences = try TranscriptFile.load(file)
         } else {
             guard let transcriber else {
-                throw RunError("transcribing needs Voz, which runs on Apple platforms. Pass --transcript with an .srt or .json file instead.")
+                throw RunError("transcribing needs Voz, which runs on macOS. Pass --transcript with an .srt, .vtt, or .json file instead.")
             }
             let model = transcriber.name
             if !transcriber.isDownloaded() {
@@ -116,7 +116,7 @@ struct ClipPipeline {
         var cutSec = 0.0
         if !request.selectOnly, !picks.isEmpty {
             guard let cutter else {
-                throw RunError("cutting needs AVFoundation, which runs on Apple platforms. Pass --select-only to get the moments as timestamps.")
+                throw RunError("cutting clips needs ffmpeg, which is not installed. Install ffmpeg with \(FFmpeg.installHint), or pass --select-only to get the moments as timestamps.")
             }
             let cutting = Date()
             let ext = MediaFormat.outputExtension(for: request.media.path, hasVideo: info?.hasVideo ?? false)
