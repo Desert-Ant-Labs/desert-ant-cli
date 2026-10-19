@@ -81,8 +81,8 @@ lists them.
 }
 ```
 
-`input` is `text`, `file` (a recording), or `image`, or null when the model has no
-runner on this machine. Every
+`input` is `text`, `file` (a recording), `image`, or `visual` (a photo or a video),
+or null when the model has no runner on this machine. Every
 `options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option
 count=3`). Each entry also carries `emits` (the document kind its `--json` result is,
 or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's
@@ -184,7 +184,62 @@ builds.
 `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are
 decision scores in 0...1, not calibrated probabilities.
 
-`voz`, `uhm`, `ear`, `clear`, `clips`, and `moderator` take several paths, or a
+`desertant eye <photo> --json`: what the photo is, its scores, and what is in it. On
+Linux, reading the photo needs ffmpeg.
+
+```json
+{
+  "input": "trip/IMG_9641.HEIC",
+  "model": "eye@v1.0.0",
+  "width": 4032,
+  "height": 3024,
+  "kind": "photo",
+  "scores": {"aesthetic": 0.71, "keeper": 0.0, "cover": 0.70},
+  "sharpness": 1.0,
+  "tags": {"cloud": 0.84, "hiking": 0.86, "mountain": 0.93, "people": 0.97, "photo": 0.99, "sharp": 1.0, "sky": 0.98},
+  "faces": [{"box": {"x0": 0.24, "y0": 0.46, "x1": 0.25, "y1": 0.47}, "confidence": 0.41, "quality": 0.61,
+             "pose": {"yaw": 5.3, "pitch": -1.9, "roll": -7.9},
+             "tags": {"eyes_closed": 0.48, "happy": 0, "looking_at_camera": 0, "looking_away": 0.57, "smiling": 0.45, "surprised": 0}}],
+  "people": [{"label": "person", "confidence": 0.45, "box": {"x0": 0.23, "y0": 0.44, "x1": 0.29, "y1": 0.54}}],
+  "pets": []
+}
+```
+
+`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag
+that is missing scored below it; `--all-tags` holds every confidence. `kind` is the
+most likely photo type. `scores` are percentiles in 0...1 against Eye's calibration
+set. Boxes are in 0...1 of the upright image, from the top left. `rotation` (90, 180,
+or 270) appears when the photo is turned clockwise by that much. `crop` appears with
+`--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`.
+`embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts`
+leaves its keys out.
+
+`desertant eye <video> --json`: the frames, the thumbnail, and the tags that hold.
+
+```json
+{
+  "input": "/work/launch.mp4",
+  "durationSec": 81.4,
+  "every": 1,
+  "kind": "screenshot",
+  "tags": {"keeper": 0.63, "reference": 1, "screenshot": 0.62, "sharp": 1},
+  "thumbnail": {"time": 7.5, "cover": 0.97, "crop": null, "file": "/work/launch_thumbnail.jpg"},
+  "frames": [{"input": "/work/launch.mp4", "time": 0.5, "kind": "screenshot", "tags": {"reference": 0.91}}]
+}
+```
+
+`tags` maps each tag to the share of frames it holds in. `frames` holds one photo
+document per frame, each with its `time`. With `--has` or `--not`, `matches` lists the
+stretches where every frame matches, as `[{"start", "end"}]` in seconds.
+
+With `--has` or `--not` and several photos, the result is an array of the photo
+documents that match. The questions return their own shapes:
+
+- `--duplicates`: `{"photos": 15, "groups": [{"keep": "trip/IMG_3615.HEIC", "others": ["trip/IMG_3619.HEIC"]}]}`.
+- `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
+- `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
+
+`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, and `eye` take several paths, or a
 folder, and `--recursive` looks inside its folders. One path returns the document
 below. Several paths or a folder return an array of those documents, in the order the
 files ran, each with its `input`. A file the model does not read is skipped, with a
@@ -214,6 +269,11 @@ that run on the device."}],
 
 `captions` are the cues SRT and VTT are written from (a newline inside `text` is a line break). `files` maps each extension written to its path, empty when none was.
 
+With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order the
+speakers first speak, and a sentence two people share is split where the speaker
+changes. The document adds `speakers` and `turns`, as `who` writes them below.
+
+
 `desertant uhm <file> --json`: the filler words, in order.
 
 ```json
@@ -237,6 +297,31 @@ that run on the device."}],
 
 `language` is an ISO code, or null when there was nothing to listen to. Candidates
 under 0.01 are left out.
+
+`desertant who <file> --json`: who spoke when.
+
+```json
+{
+  "input": "/work/interview.mp4",
+  "durationSec": 45.891,
+  "loadSec": 0.17,
+  "processingSec": 0.04,
+  "speakerCount": 2,
+  "speakers": [
+    {"speaker": 0, "name": "Speaker 1", "seconds": 28.27, "share": 0.616, "turns": 4},
+    {"speaker": 1, "name": "Speaker 2", "seconds": 11.84, "share": 0.258, "turns": 3}
+  ],
+  "turns": [{"start": 0.0, "end": 4.92, "speaker": 0}, {"start": 5.56, "end": 10.88, "speaker": 1}],
+  "files": {}
+}
+```
+
+Speakers are numbered from 0 in the order they first speak, and `speakers` lists the
+most heard first. `name` is from `--names`, else `Speaker 1` and on. `share` is the
+speaker's time against the whole recording. `turns` are joined across pauses up to
+`--join` seconds (1 by default) and sorted by start; turns of two speakers can
+overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
+"speaker", "text"}]`. `files` maps the format written with `-o` to its path.
 
 `desertant clear <file> --json`: where the enhanced file landed.
 

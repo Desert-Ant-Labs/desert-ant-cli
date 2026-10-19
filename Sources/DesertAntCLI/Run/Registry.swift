@@ -21,6 +21,8 @@ enum Runners {
         EarRunner(),
         TongueRunner(),
         ModeratorRunner(),
+        EyeRunner(),
+        WhoRunner(),
     ]
 
     /// Models whose frameworks exist only on Apple platforms.
@@ -29,8 +31,11 @@ enum Runners {
         #if !os(Linux)
         runners.append(ClipsRunner())
         #endif
+        #if canImport(Voz)
+        runners.append(VozRunner())
+        #endif
         #if canImport(CoreML) && canImport(AVFoundation)
-        runners += [VozRunner(), UhmRunner()]
+        runners.append(UhmRunner())
         #endif
         #if TITLE
         runners.append(TitleRunner())

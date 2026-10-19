@@ -1,9 +1,11 @@
-#if canImport(CoreML) && canImport(AVFoundation)
+#if canImport(Voz)
 import Foundation
 import Transcript
+import Who
 
 // Voz: a transcript with a time on every word. Sentences on stdout, captions and
 // transcripts as files, the document under --json (which `clips --transcript` reads).
+// With --speakers, Who labels each line with who said it.
 
 struct VozRunner: ModelRunner {
     let id = "voz"
@@ -17,9 +19,12 @@ struct VozRunner: ModelRunner {
         RunOption(name: "output", help: "Write one file at this path; the format comes from its extension: srt, vtt, txt, or json."),
         RunOption(name: "format", help: "What stdout carries: text (default), srt, vtt, txt, or json."),
         RunOption(name: "force", help: "Replace an existing file instead of stepping aside."),
+        RunOption(name: "speakers", help: "Label each line with who said it, through Who: names in captions and the transcript."),
+        RunOption(name: "names", help: "With --speakers, names in the order the speakers first speak, comma-separated: \"Anna,Ben\"."),
     ]
 
     private let transcriber = VozTranscriber()
+    private let who = Who()
 
     func isDownloaded() -> Bool { transcriber.isDownloaded() }
     func download(_ progress: @escaping @Sendable (Double) -> Void) async throws {
@@ -36,11 +41,22 @@ struct VozRunner: ModelRunner {
         let sentences: [Span]
         let captions: [Caption]
         let files: [String: String]
+        /// With --speakers.
+        let speakers: [SpeakerSummary]?
+        let turns: [SpeakerTurn]?
     }
     struct Span: Encodable {
         let start: Double
         let end: Double
         let text: String
+        /// With --speakers, on sentences.
+        var speaker: Int? = nil
+    }
+
+    private struct Voices {
+        let turns: LabeledTurns
+        let lines: [SpokenLine]
+        let names: [String]
     }
 
     enum Kind: String, CaseIterable {
@@ -60,9 +76,10 @@ struct VozRunner: ModelRunner {
         let t = try await transcriber.transcription(of: URL(fileURLWithPath: input)) {
             progress.update($0, label: "transcribing")
         }
+        let voices = arguments["speakers"] == "true" ? try await label(input, t, names: Speakers.names(arguments["names"]), progress) : nil
         progress.finish()
         let sentences = t.sentences
-        let cues = Captions.captions(from: t.words, sentences: sentences)
+        let cues = voices.map { SpeakerFile.captions($0.lines, words: t.words).map(\.0) } ?? Captions.captions(from: t.words, sentences: sentences)
         let force = arguments["force"] == "true"
 
         // Files: the flags write beside the input, --output writes one path.
@@ -70,7 +87,7 @@ struct VozRunner: ModelRunner {
         for ext in ["srt", "vtt", "txt"] where arguments[ext] == "true" {
             let path = try Destination.resolve(requested: nil, default: Destination.sibling(of: input, suffix: "", extension: ext),
                                                input: input, force: force)
-            try render(input: input, try kind(ext), t, sentences, cues, files: [:], loadSec: loadSec).write(toFile: path, atomically: true, encoding: .utf8)
+            try render(input: input, try kind(ext), t, sentences, cues, voices, files: [:], loadSec: loadSec).write(toFile: path, atomically: true, encoding: .utf8)
             files[ext] = path
         }
         if let wanted = arguments["output"] {
@@ -79,16 +96,20 @@ struct VozRunner: ModelRunner {
                 throw RunError("--output needs an extension that names the format: srt, vtt, txt, or json.")
             }
             let path = try Destination.resolve(requested: wanted, default: wanted, input: input, force: force)
-            try render(input: input, k, t, sentences, cues, files: files, loadSec: loadSec).write(toFile: path, atomically: true, encoding: .utf8)
+            try render(input: input, k, t, sentences, cues, voices, files: files, loadSec: loadSec).write(toFile: path, atomically: true, encoding: .utf8)
             files[ext] = path
         }
 
         // Stdout.
         if format == .json {
-            out.emit(document(input: input, t, sentences, cues, files: files, loadSec: loadSec))
+            out.emit(document(input: input, t, sentences, cues, voices, files: files, loadSec: loadSec))
             return
         }
-        if format == .text {
+        if format == .text, let voices {
+            out.speakerSummary(voices.turns.summary, duration: t.durationSec)
+            out.line()
+            out.script(voices.lines, names: voices.names)
+        } else if format == .text {
             let width = min(Terminal.columns, 100)
             let show = arguments["timestamps"] == "true"
             let keyWidth = Format.stamp(sentences.last?.start ?? 0).count
@@ -102,7 +123,7 @@ struct VozRunner: ModelRunner {
                 }
             }
         } else {
-            print(try render(input: input, format, t, sentences, cues, files: files, loadSec: loadSec), terminator: "")
+            print(try render(input: input, format, t, sentences, cues, voices, files: files, loadSec: loadSec), terminator: "")
         }
         out.space()
         for (ext, path) in files.sorted(by: { $0.key < $1.key }) { out.note("\(ext)  \(path)") }
@@ -117,26 +138,42 @@ struct VozRunner: ModelRunner {
         return k
     }
 
+    /// Who spoke when, matched to the words.
+    private func label(_ input: String, _ t: VozTranscriber.Transcription, names: [String], _ progress: Progress) async throws -> Voices {
+        if !who.isDownloaded() {
+            try await who.download { progress.update($0, label: "downloading who") }
+        }
+        progress.update(nil, label: "listening for speakers")
+        let result = try await who.labels(of: input)
+        FirstLoad.done("who")
+        let turns = result.turns.map { SpeakerTurn(start: $0.start, end: $0.end, speaker: $0.speaker) }
+        return Voices(turns: LabeledTurns(turns, duration: result.duration, join: Speakers.defaultJoin, names: names),
+                      lines: Speakers.lines(words: t.words, turns: turns), names: names)
+    }
+
     private func render(input: String, _ kind: Kind, _ t: VozTranscriber.Transcription, _ sentences: [Sentence], _ cues: [Caption],
-                        files: [String: String], loadSec: Double) throws -> String {
+                        _ voices: Voices?, files: [String: String], loadSec: Double) throws -> String {
         switch kind {
-        case .srt: return TranscriptFile.srt(cues)
-        case .vtt: return TranscriptFile.vtt(cues)
-        case .txt, .text: return TranscriptFile.text(sentences)
+        case .srt: return voices.map { SpeakerFile.srt($0.lines, words: t.words, names: $0.names) } ?? TranscriptFile.srt(cues)
+        case .vtt: return voices.map { SpeakerFile.vtt($0.lines, words: t.words, names: $0.names) } ?? TranscriptFile.vtt(cues)
+        case .txt, .text: return voices.map { SpeakerFile.text($0.lines, names: $0.names) } ?? TranscriptFile.text(sentences)
         case .json:
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-            return String(decoding: try encoder.encode(document(input: input, t, sentences, cues, files: files, loadSec: loadSec)), as: UTF8.self) + "\n"
+            return String(decoding: try encoder.encode(document(input: input, t, sentences, cues, voices, files: files, loadSec: loadSec)), as: UTF8.self) + "\n"
         }
     }
 
     private func document(input: String, _ t: VozTranscriber.Transcription, _ sentences: [Sentence], _ cues: [Caption],
-                          files: [String: String], loadSec: Double) -> Document {
-        Document(
+                          _ voices: Voices?, files: [String: String], loadSec: Double) -> Document {
+        // A sentence two people share is split where the speaker changes.
+        let spans = voices.map { $0.lines.map { Span(start: $0.start, end: $0.end, text: $0.text, speaker: $0.speaker) } }
+            ?? sentences.map { Span(start: $0.start, end: $0.end, text: $0.text) }
+        return Document(
             input: input, text: t.text, durationSec: t.durationSec, loadSec: loadSec, processingSec: t.processingSec,
             words: t.words.map { Span(start: $0.start, end: $0.end, text: $0.text.trimmingCharacters(in: .whitespaces)) },
-            sentences: sentences.map { Span(start: $0.start, end: $0.end, text: $0.text) },
-            captions: cues, files: files)
+            sentences: spans, captions: cues, files: files,
+            speakers: voices?.turns.summary, turns: voices?.turns.joined)
     }
 }
 #endif

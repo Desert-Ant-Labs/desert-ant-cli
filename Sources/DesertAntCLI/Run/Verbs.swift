@@ -79,6 +79,61 @@ struct ModeratorVerb: AsyncParsableCommand {
     }
 }
 
+struct EyeVerb: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "eye", abstract: Manifest.summary("eye"),
+        discussion: """
+        One photo prints what it is, its scores, its tags, and its faces. Several photos or a folder \
+        answer one question together: --has and --not filter, --duplicates groups near-duplicates, \
+        --best picks the keeper, --similar-to and --sort rank. A video is sampled into frames: the \
+        frame for a thumbnail, the tags that hold, and with --has, the moments that match.
+        """)
+    @Argument(help: "The photos or videos, or a folder of them.") var files: [String]
+    @Option(help: "Only the photos with all of these tags, comma-separated: \"dog,beach\".") var has: String?
+    @Option(help: "Leave out the photos with any of these tags: \"blurry,screenshot\".") var not: String?
+    @Flag(help: "Count a tag at confidence 0.9 instead of 0.5.") var strict = false
+    @Flag(help: "Group the photos into near-duplicates, the one to keep first.") var duplicates = false
+    @Flag(help: "The one photo to keep from the set.") var best = false
+    @Option(name: .customLong("similar-to"), help: "Rank the photos by how alike they are to this photo.") var similarTo: String?
+    @Option(help: "Rank the photos by aesthetic, keeper, cover, sharpness, or a tag's confidence.") var sort: String?
+    @Option(help: "With --sort or --similar-to, how many photos to list.") var limit: Int?
+    @Option(help: "Also write the best crop at this aspect: 1:1, 16:9, 4:5.") var crop: String?
+    @Flag(help: "On a video, also write the frame that makes the best thumbnail.") var thumbnail = false
+    @Option(help: "On a video, look at a frame every this many seconds.") var every: Double?
+    @Option(name: .customLong("output-dir"), help: "Where crops and thumbnails go. Default: beside the input.") var outputDir: String?
+    @Flag(help: "Replace an existing file instead of stepping aside.") var force = false
+    @Option(help: "What to compute: photo, layout, faces, sharpness. Default all.") var parts: String?
+    @Option(name: .customLong("max-faces"), help: "The most faces to read per photo.") var maxFaces: Int?
+    @Option(help: "How many tags a line on screen shows.") var tags: Int?
+    @Flag(name: .customLong("all-tags"), help: "Put every tag's confidence in the JSON.") var allTags = false
+    @Flag(help: "Put the 512-number embedding in the JSON.") var embedding = false
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
+    @OptionGroup var global: GlobalOptions
+
+    func run() async throws {
+        var args = RunArguments()
+        args.set("has", has)
+        args.set("not", not)
+        args.set("strict", strict ? "true" : nil)
+        args.set("duplicates", duplicates ? "true" : nil)
+        args.set("best", best ? "true" : nil)
+        args.set("similar-to", similarTo)
+        args.set("sort", sort)
+        args.set("limit", limit)
+        args.set("crop", crop)
+        args.set("thumbnail", thumbnail ? "true" : nil)
+        args.set("every", every)
+        args.set("output-dir", outputDir)
+        args.set("force", force ? "true" : nil)
+        args.set("parts", parts)
+        args.set("max-faces", maxFaces)
+        args.set("tags", tags)
+        args.set("all-tags", allTags ? "true" : nil)
+        args.set("embedding", embedding ? "true" : nil)
+        try await Execute.run(id: "eye", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
+    }
+}
+
 #if TITLE
 struct TitleVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -104,11 +159,15 @@ struct VozVerb: AsyncParsableCommand {
     var output: String?
     @Option(help: "What stdout carries: text, srt, vtt, txt, or json.") var format: String?
     @Flag(help: "Replace an existing file instead of stepping aside.") var force = false
+    @Flag(help: "Label each line with who said it, through Who.") var speakers = false
+    @Option(help: "With --speakers, names in the order the speakers first speak: \"Anna,Ben\".") var names: String?
     @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
         var args = RunArguments()
+        args.set("speakers", speakers ? "true" : nil)
+        args.set("names", names)
         args.set("timestamps", timestamps ? "true" : nil)
         args.set("srt", srt ? "true" : nil)
         args.set("vtt", vtt ? "true" : nil)
@@ -144,6 +203,35 @@ struct EarVerb: AsyncParsableCommand {
         var args = RunArguments()
         args.set("top", top)
         try await Execute.run(id: "ear", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
+    }
+}
+
+struct WhoVerb: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "who", abstract: Manifest.summary("who"),
+        discussion: "Prints each speaker's time and the turns. Pass a transcript to label it line by line, or run `voz --speakers` to transcribe and label in one go.")
+    @Argument(help: "The audio or video files, or a folder of them.") var files: [String]
+    @Option(help: "Names for the speakers in the order they first speak, comma-separated: \"Anna,Ben\".") var names: String?
+    @Option(name: .customLong("min-share"), help: "Leave out speakers heard for less than this share of the recording, 0...1.") var minShare: Double?
+    @Option(help: "Join a speaker's turns across pauses up to this many seconds. Default 1.") var join: Double?
+    @Option(help: "A transcript to label line by line: the --json of voz, or an .srt or .vtt; `-` reads stdin.") var transcript: String?
+    @Option(help: "What stdout carries: text, json, rttm, or with a transcript, srt, vtt, or txt.") var format: String?
+    @Option(name: [.short, .long], help: "Write one file here; the format comes from its extension: rttm, json, srt, vtt, or txt.")
+    var output: String?
+    @Flag(help: "Replace an existing file instead of stepping aside.") var force = false
+    @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
+    @OptionGroup var global: GlobalOptions
+
+    func run() async throws {
+        var args = RunArguments()
+        args.set("names", names)
+        args.set("min-share", minShare)
+        args.set("join", join)
+        args.set("transcript", transcript)
+        args.set("format", format)
+        args.set("output", output)
+        args.set("force", force ? "true" : nil)
+        try await Execute.run(id: "who", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
     }
 }
 

@@ -56,8 +56,28 @@ enum TranscriptFile {
         return String(format: "%02d:%02d:%02d\(separator)%03d", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
     }
 
+    /// The words of a `desertant voz --json` document, each with its leading space back
+    /// as `Sentence.sentences(from:)` expects; nil for any other transcript.
+    static func words(_ url: URL) -> [TimedWord]? {
+        guard url.pathExtension.lowercased() == "json", let data = try? Data(contentsOf: url),
+              let doc = try? JSONDecoder().decode(Words.self, from: data), !doc.words.isEmpty else { return nil }
+        return doc.words.enumerated().map { i, w in TimedWord(text: i == 0 ? w.text : " " + w.text, start: w.start, end: w.end) }
+    }
+
+    /// The transcript an option names: a path, or `-` for one on stdin, saved to a
+    /// temporary file with the extension its first character implies.
+    static func url(option path: String) throws -> URL {
+        guard path == "-" else { return URL(fileURLWithPath: path) }
+        guard let text = readStdin() else { throw RunError("--transcript - needs a transcript on stdin.") }
+        let ext = text.hasPrefix("{") || text.hasPrefix("[") ? "json" : "srt"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("desertant-\(UUID().uuidString).\(ext)")
+        try text.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
     private struct Line: Decodable { let start: Double; let end: Double; let text: String }
     private struct Document: Decodable { let sentences: [Line] }
+    private struct Words: Decodable { let words: [Line] }
 
     private static func json(_ text: String) throws -> [(Double, Double, String)] {
         let data = Data(text.utf8)

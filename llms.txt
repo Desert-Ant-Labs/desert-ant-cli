@@ -2,8 +2,9 @@
 
 > desertant runs Desert Ant Labs on-device models from the terminal: transcribe a
 > recording, cut short clips from a talk, clean up the audio, find filler words, name
-> the spoken language, redact personal data, suggest emoji, tag a text's topic, name
-> the language of a short text, flag nudity in an image, and write a title. Weights download once and cache; nothing leaves the device when a
+> the spoken language, label who said what, redact personal data, suggest emoji, tag a
+> text's topic, name the language of a short text, flag nudity in an image, find, rank,
+> and crop photos, pick a video's thumbnail, and write a title. Weights download once and cache; nothing leaves the device when a
 > model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
 Start with `desertant schema --json`: it lists every runnable model, its input, and
@@ -23,6 +24,10 @@ gives either as data, all offline.
   weights live, and what is shared with other Desert Ant apps.
 - [Transcripts and captions](docs/voz.md): voz, timestamps, SRT, VTT, and text files,
   and how captions are cut.
+- [Speakers](docs/who.md): who, voz --speakers, names, RTTM, and speaker-labeled
+  captions.
+- [Photos and video](docs/eye.md): eye, tags, filters, near-duplicates, rankings,
+  crops, and video thumbnails.
 - [Clips](docs/clips.md): cutting clips from a recording, transcript formats, output
   names, and the report.
 - [Pipelines](docs/pipelines.md): composing commands, piping JSON not media, and

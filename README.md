@@ -6,10 +6,10 @@
 ![Release](https://img.shields.io/github/v/release/Desert-Ant-Labs/desert-ant-cli?color=ADB49C&label=release)
 ![License](https://img.shields.io/badge/license-MIT-ADB49C)
 
-Transcribe a recording, cut the best moments into clips, clean up the audio, redact
-personal data from text, name the language of a line, flag nudity in a photo, or tag
-a topic, with [Desert Ant Labs](https://desertant.com) models running on your own
-machine. Weights download once. Nothing leaves the device.
+Transcribe a recording and label who said what, cut the best moments into clips,
+clean up the audio, find, rank, and crop photos, redact personal data from text, name
+the language of a line, flag nudity in a photo, or tag a topic, with
+[Desert Ant Labs](https://desertant.com) models running on your own machine. Weights download once. Nothing leaves the device.
 
 ```
 $ da voz talk.mp4 -t
@@ -51,6 +51,8 @@ numbers, its limits, and a live demo. `da info <model>` prints the same card.
 
 - **[Voz](https://desertant.com/models/voz/)** `da voz talk.mp4`  
   Transcribe a recording, with a time on every word, in 25 languages.
+- **[Who](https://desertant.com/models/who/)** `da who talk.mp4`  
+  Label who said what in a recording: each speaker's turns and time.
 - **[Clips](https://desertant.com/models/clips/)** `da clips talk.mp4`  
   Cut a podcast, interview, or meeting into short clips and highlights.
 - **[Clear](https://desertant.com/models/clear/)** `da clear talk.mp4`  
@@ -58,7 +60,7 @@ numbers, its limits, and a live demo. `da info <model>` prints the same card.
 - **[Uhm](https://desertant.com/models/uhm/)** `da uhm talk.mp4`  
   Find every "uh", "um", and "hmm", with the exact span to cut.
 - **[Ear](https://desertant.com/models/ear/)** `da ear talk.mp4`  
-  Name the language being spoken, from 99.
+  Name the language being spoken, from 102.
 - **[Redact](https://desertant.com/models/redact/)** `da redact "<text>"`  
   Replace names, emails, and phone numbers in a text with labels.
 - **[Emo](https://desertant.com/models/emo/)** `da emo "<text>"`  
@@ -69,12 +71,14 @@ numbers, its limits, and a live demo. `da info <model>` prints the same card.
   Name the language a short text is written in, from three words, in 84 languages.
 - **[Moderator](https://desertant.com/models/moderator/)** `da moderator photo.jpg`  
   Flag nudity or sexual content before a photo is uploaded or shown.
+- **[Eye](https://desertant.com/models/eye/)** `da eye photos/`  
+  Find, rank, and crop photos, group near-duplicates, and pick a video's thumbnail.
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
-Redact, Emo, Gist, and Tongue are multilingual. Voz, Uhm, Clips, and Title run on
-Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on
-your machine.
+Redact, Emo, Gist, and Tongue are multilingual. Uhm, Clips, and Title run on Apple
+silicon Macs. The rest also run on Linux, and `da models` lists what runs on your
+machine.
 
 ## Transcripts and captions
 
@@ -90,6 +94,29 @@ da voz talk.mp4 --format srt   SRT on stdout, for a pipe
 
 Captions are cut the way broadcasters cut them: two lines of 42 characters, no more
 than 7s on screen. `da docs voz` has the rest.
+
+## Speakers
+
+`da voz talk.mp4 --speakers` transcribes and labels each line with who said it, and
+`--names "Anna,Ben"` names the speakers in the order they first speak. The SRT, VTT,
+and text files carry the names. `da who talk.mp4` alone prints each speaker's time and
+turns, and `--format rttm` writes them for diarization tools. `da docs who` has the
+rest.
+
+## Photos
+
+`da eye` reads what a photo is, how it came out, and what is in it. On a folder, one
+flag asks one question:
+
+```
+da eye trip/ --has beach --not blurry    the paths of the matches
+da eye burst/ --duplicates               near-duplicates, the keeper first
+da eye trip/ --sort aesthetic --limit 5  the five best looking
+da eye IMG_0056.jpeg --crop 1:1          a square crop beside the photo
+da eye launch.mp4 --thumbnail            the frame to use as a thumbnail
+```
+
+`da docs eye` lists the tags and the rest of the flags.
 
 ## Chain
 
@@ -142,8 +169,8 @@ command and how they chain.
 `da docs` prints the docs offline. The same docs are in the repo, indexed by
 `llms.txt`: [using desertant from an agent](docs/agents.md), the
 [JSON contracts](docs/json.md), [files and the cache](docs/files.md),
-[clips](docs/clips.md), [pipelines](docs/pipelines.md), and
-[performance](docs/performance.md).
+[speakers](docs/who.md), [photos and video](docs/eye.md), [clips](docs/clips.md),
+[pipelines](docs/pipelines.md), and [performance](docs/performance.md).
 
 ## License
 

@@ -11,7 +11,7 @@ desertant schema --json
 ```
 
 The catalog of every shipping model: its id, whether it runs on this machine, whether
-it takes text, a recording, or an image, and its options with a line of help each. The schema is
+it takes text, a recording, an image, or a photo or video, and its options with a line of help each. The schema is
 built from the same code the commands run, so a model, option, or exit code listed
 there exists. Read it once per session rather than guessing flags.
 
@@ -47,8 +47,13 @@ given, so a long passage can be piped in. A file or image model takes a path, se
 paths, or a folder, with `--recursive` for the folders inside, and loads the model
 once for all of them. Media never comes from stdin. With more than one file the
 `--json` result is an array, one document per file in the order they ran. A file that
-fails is reported on stderr and the rest still run. The exit code is 1 at the end. `clips --transcript -` reads a transcript document from stdin, so
-`voz --json` pipes into `clips`; see [pipelines.md](pipelines.md).
+fails is reported on stderr and the rest still run. The exit code is 1 at the end. `clips --transcript -` and `who --transcript -` read a transcript
+document from stdin, so `voz --json` pipes into either; see [pipelines.md](pipelines.md).
+
+`eye` also answers questions about a set of photos: `--has` and `--not` filter,
+`--duplicates` groups near-duplicates, `--best` picks one, and `--sort` and
+`--similar-to` rank. Each returns one JSON value for the whole set; see
+[eye.md](eye.md).
 
 ## What comes back
 

@@ -29,7 +29,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "3.5.0", traits: mlx ? ["MLX"] : []),
+        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "4.0.0", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
         .executableTarget(
@@ -45,19 +45,26 @@ let package = Package(
                 .product(name: "Tongue", package: core),
                 // Audio decode for the models that take samples (ear, uhm).
                 .product(name: "AudioIO", package: core),
-                // The clips pipeline: selection everywhere, Voz on Apple platforms.
+                // The clips pipeline and transcripts. Voz runs on Core ML on Apple, LiteRT on Linux.
                 .product(name: "Clips", package: core),
                 .product(name: "Transcript", package: core),
-                .product(name: "Voz", package: core, condition: .when(platforms: [.macOS])),
+                .product(name: "Voz", package: core, condition: .when(platforms: [.macOS, .linux])),
                 .product(name: "Uhm", package: core, condition: .when(platforms: [.macOS])),
                 .product(name: "Moderator", package: core),
+                .product(name: "Eye", package: core),
+                .product(name: "Who", package: core),
                 // The download cache lives here; the cache command reads its root.
                 .product(name: "ModelStore", package: core),
+                // Core's requests in flight, waited for before exit (see Root.swift).
+                .product(name: "Usage", package: core),
+                // LiteRT's log level, set to errors on Linux.
+                .target(name: "CQuietLiteRt", condition: .when(platforms: [.linux])),
             ] + (mlx ? [.product(name: "Title", package: core, condition: .when(platforms: [.macOS]))] : []),
             swiftSettings: mlx ? [.define("TITLE")] : []
             // No resources on purpose: the manifest, version, and docs are compiled in
             // (Generated/Embedded.swift, from Tools/embed) so the binary is one file.
         ),
+        .target(name: "CQuietLiteRt"),
         .testTarget(
             name: "DesertAntCLITests",
             dependencies: ["DesertAntCLI"]

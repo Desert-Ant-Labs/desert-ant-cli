@@ -26,15 +26,8 @@ struct ClipsRunner: ModelRunner {
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
         guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
         var request = ClipPipeline.Request(media: URL(fileURLWithPath: input))
-        request.transcript = try arguments["transcript"].map { path in
-            // `-` reads the transcript from stdin, as `desertant voz --json` or an SRT.
-            guard path == "-" else { return URL(fileURLWithPath: path) }
-            guard let text = readStdin() else { throw RunError("--transcript - needs a transcript on stdin.") }
-            let ext = text.hasPrefix("{") || text.hasPrefix("[") ? "json" : "srt"
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("desertant-\(UUID().uuidString).\(ext)")
-            try text.write(to: url, atomically: true, encoding: .utf8)
-            return url
-        }
+        // `-` reads the transcript from stdin, as `desertant voz --json` or an SRT.
+        request.transcript = try arguments["transcript"].map(TranscriptFile.url(option:))
         request.count = arguments.int("count")
         request.outputDirectory = arguments["output-dir"].map { URL(fileURLWithPath: $0) }
         request.selectOnly = arguments["select-only"] == "true"

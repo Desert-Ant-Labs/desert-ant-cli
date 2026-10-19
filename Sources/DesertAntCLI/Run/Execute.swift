@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(CQuietLiteRt)
+import CQuietLiteRt
+#endif
 
 // Shared execution: resolve the input, make sure the weights are present, run.
 
@@ -16,7 +19,7 @@ enum Execute {
                 throw RunError("\(id) needs text. Pass it as an argument or pipe it in.")
             }
             input = text
-        case .file, .image:
+        case .file, .image, .visual:
             guard let path = rawInput else { throw RunError("\(id) needs a file path.") }
             input = path
         }
@@ -38,6 +41,16 @@ enum Execute {
             throw RunError("\(id) takes text, not files. Pass the text as --input, or pipe it in.")
         }
         let expanded = try Inputs.expand(rawInputs, kind: runner.inputKind, recursive: recursive)
+        // A question about the inputs together, such as which photos are near-duplicates.
+        if let set = runner as? any SetRunner, set.wantsSet(arguments) {
+            try runner.validate(arguments)
+            try await ensureDownloaded(runner, out: out)
+            noteSkipped(expanded, runner, out)
+            out.space()
+            try await set.runSet(expanded.files, batch: expanded.isBatch, arguments: arguments, out: out)
+            out.space()
+            return
+        }
         guard expanded.isBatch else {
             try await run(id: id, rawInput: expanded.files.first, arguments: arguments, out: out)
             return
@@ -55,16 +68,7 @@ enum Execute {
         try runner.validate(arguments)
 
         try await ensureDownloaded(runner, out: out)
-        // A skipped file is a note, so --quiet drops it; a failed file below is not.
-        if !expanded.skipped.isEmpty, !out.options.quiet {
-            let shown = expanded.skipped.prefix(5).joined(separator: ", ")
-            let more = expanded.skipped.count > 5 ? ", and \(expanded.skipped.count - 5) more" : ""
-            if expanded.skipped.count == 1 {
-                out.warn("Skipped \(shown), \(runner.inputKind.rejected).")
-            } else {
-                out.warn("Skipped \(expanded.skipped.count) files, \(runner.inputKind.rejected): \(shown)\(more).")
-            }
-        }
+        noteSkipped(expanded, runner, out)
 
         let batch = Batch()
         var each = out
@@ -91,6 +95,18 @@ enum Execute {
         }
     }
 
+    /// A skipped file is a note, so --quiet drops it; a failed file is not.
+    private static func noteSkipped(_ expanded: Inputs.Expanded, _ runner: any ModelRunner, _ out: Output) {
+        guard !expanded.skipped.isEmpty, !out.options.quiet else { return }
+        let shown = expanded.skipped.prefix(5).joined(separator: ", ")
+        let more = expanded.skipped.count > 5 ? ", and \(expanded.skipped.count - 5) more" : ""
+        if expanded.skipped.count == 1 {
+            out.warn("Skipped \(shown), \(runner.inputKind.rejected).")
+        } else {
+            out.warn("Skipped \(expanded.skipped.count) files, \(runner.inputKind.rejected): \(shown)\(more).")
+        }
+    }
+
     /// The same text the CLI prints for the error on a single run.
     private static func message(of error: Error) -> String {
         if let localized = error as? LocalizedError, let text = localized.errorDescription { return text }
@@ -99,6 +115,7 @@ enum Execute {
 
     /// The runner for an id, or a message that says why there is none.
     static func resolveRunner(_ id: String) throws -> any ModelRunner {
+        _ = quietLiteRt
         if let runner = Runners.runner(for: id) { return runner }
         if Runners.unavailable[id.lowercased()] != nil {
             throw RunError("\(id) does not run on Linux yet. It runs on macOS.")
@@ -108,6 +125,13 @@ enum Execute {
         }
         throw RunError("no model named \(id). Try `desertant models`.")
     }
+
+    /// Once, before a model loads: LiteRT otherwise logs each accelerator it looks for.
+    private static let quietLiteRt: Void = {
+        #if canImport(CQuietLiteRt)
+        desertant_quiet_litert()
+        #endif
+    }()
 
     /// Download the weights if they are not on disk, showing progress on stderr.
     static func ensureDownloaded(_ runner: any ModelRunner, out: Output) async throws {

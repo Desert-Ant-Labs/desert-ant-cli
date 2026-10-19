@@ -60,10 +60,9 @@ check "info" 0 "redact" "$da" info redact
 check "unknown model" 1 "no model named nope" "$da" run nope --input hi
 
 if [[ "$os" == Linux ]]; then
-  for id in redact emo gist tongue ear clear moderator; do
+  for id in redact emo gist tongue ear clear moderator who voz eye; do
     check "runs $id here" 0 "\"$id\"" "$da" doctor --json
   done
-  check "voz says where it runs" 1 "voz has no runner on this platform" "$da" voz talk.wav
   check "clips says where it runs" 1 "clips does not run on Linux yet" "$da" clips talk.wav --transcript talk.srt
   check "models marks clips" 0 "not on Linux yet" "$da" models --all
 fi
@@ -84,6 +83,11 @@ if [[ "$os" != Linux ]]; then
   check "clips select-only" 0 '"clips" : \[' "$da" clips talk.wav --transcript talk.srt --select-only --json
   check "clips from a transcript on stdin" 0 '"clips"' sh -c "'$da' clips talk.wav --transcript - --select-only --json < talk.srt"
 fi
+check "who on wav" 0 '"speakerCount" : [1-9]' "$da" who talk.wav --json
+check "who writes rttm" 0 "^SPEAKER talk 1 " "$da" who talk.wav --format rttm
+check "who labels a transcript" 0 '"lines" : \[' "$da" who talk.wav --transcript talk.srt --json
+check "voz on wav" 0 '"words" : \[' "$da" voz talk.wav --json
+check "voz with speakers" 0 '"speaker" : 0' "$da" voz talk.wav --speakers --json
 check "no file" 1 "no file at missing.wav" "$da" ear missing.wav
 
 mkdir -p folder && cp talk.wav folder/a.wav && cp talk.wav folder/b.wav && echo hi > folder/notes.txt
@@ -106,6 +110,16 @@ if [[ $has_ffmpeg == 1 ]]; then
   check "moderator jpg" 0 '"nsfw" : false' "$da" moderator photo.jpg --json
   check "moderator png" 0 "^safe" "$da" moderator photo.png
   check "moderator not an image" 1 "could not read folder/notes.txt as an image" "$da" moderator folder/notes.txt
+  check "who on video" 0 '"speakerCount"' "$da" who talk.mp4 --json
+  # Eye's weights are gated during the beta, so these run where a token can fetch them.
+  if [[ -n "${HF_TOKEN:-}" ]]; then
+    check "eye jpg" 0 '"kind" : ' "$da" eye photo.jpg --json
+    check "eye crop" 0 "photo_crop\.jpg" "$da" eye photo.jpg --crop 1:1
+    [[ -s photo_crop.jpg ]] && ok "eye wrote photo_crop.jpg" || fail "eye wrote photo_crop.jpg"
+    check "eye filter" 0 "" "$da" eye photo.jpg photo.png --not screenshot
+    check "eye video thumbnail" 0 "talk_thumbnail\.jpg" "$da" eye talk.mp4 --thumbnail --every 2
+    [[ -s talk_thumbnail.jpg ]] && ok "eye wrote talk_thumbnail.jpg" || fail "eye wrote talk_thumbnail.jpg"
+  fi
   if [[ "$os" != Linux ]]; then
     check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
     [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"

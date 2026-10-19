@@ -50,9 +50,9 @@ struct Home: AsyncParsableCommand {
         let indent = "  "
 
         // Verbs grouped by what they take.
-        let groups: [(String, RunInputKind)] = [("Text", .text), ("Recordings", .file), ("Images", .image)]
-        for (label, kind) in groups {
-            let members = verbs.filter { $0.input == kind.placeholder }
+        let groups: [(String, [RunInputKind])] = [("Text", [.text]), ("Recordings", [.file]), ("Photos and video", [.image, .visual])]
+        for (label, kinds) in groups {
+            let members = verbs.filter { entry in kinds.contains { $0.placeholder == entry.input } }
             guard !members.isEmpty else { continue }
             out.line(p.faint(label))
             for entry in members {

@@ -14,9 +14,13 @@ enum FirstLoad {
 
     /// The progress label for loading `id`.
     static func label(_ id: String) -> String {
+        #if canImport(CoreML)
         FileManager.default.fileExists(atPath: marker(id).path)
             ? "loading \(id)"
             : "loading \(id), slower the first time on this Mac"
+        #else
+        "loading \(id)"
+        #endif
     }
 
     /// Record that `id` has loaded once on this machine.

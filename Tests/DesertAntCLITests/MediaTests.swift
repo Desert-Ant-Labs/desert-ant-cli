@@ -123,6 +123,28 @@ final class MediaTests: XCTestCase {
         XCTAssertEqual(Exif.orientation(jpeg: [0xFF, 0xD8, 0xFF, 0xE1, 0x7F]), 1, "a cut-off header")
     }
 
+    func testCaptureTimeReadsTheExifDirectory() {
+        // IFD0 holds a pointer to the Exif directory, which holds DateTimeOriginal (20 bytes,
+        // stored past the directory) and OffsetTimeOriginal (7 bytes).
+        func u16(_ v: Int) -> [UInt8] { [UInt8(v & 0xFF), UInt8(v >> 8)] }
+        func u32(_ v: Int) -> [UInt8] { u16(v & 0xFFFF) + u16(v >> 16) }
+        let stamp = Array("2026:10:18 10:38:33\0".utf8), offset = Array("+02:00\0".utf8)
+        let exifIFD = 8 + 2 + 12 + 4
+        let values = exifIFD + 2 + 2 * 12 + 4
+        var tiff: [UInt8] = [0x49, 0x49] + u16(42) + u32(8)
+        tiff += u16(1) + u16(0x8769) + u16(4) + u32(1) + u32(exifIFD) + u32(0)
+        tiff += u16(2) + u16(0x9003) + u16(2) + u32(stamp.count) + u32(values)
+        tiff += u16(0x9011) + u16(2) + u32(offset.count) + u32(values + stamp.count) + u32(0)
+        tiff += stamp + offset
+        let app1: [UInt8] = Array("Exif\0\0".utf8) + tiff
+        let jpeg: [UInt8] = [0xFF, 0xD8, 0xFF, 0xE1, UInt8((app1.count + 2) >> 8), UInt8((app1.count + 2) & 0xFF)] + app1 + [0xFF, 0xDA, 0, 2]
+        let taken = Exif.dateTimeOriginal(jpeg: jpeg)
+        XCTAssertEqual(taken?.stamp, "2026:10:18 10:38:33")
+        XCTAssertEqual(taken?.offset, "+02:00")
+        XCTAssertNil(Exif.dateTimeOriginal(jpeg: jpegHeader(orientation: 6, littleEndian: true)), "no Exif directory")
+        XCTAssertEqual(Exif.orientation(jpeg: jpeg), 1)
+    }
+
     func testWAVRoundTripsWithoutFFmpeg() async throws {
         let path = dir.appendingPathComponent("tone.wav").path
         let left = (0..<1600).map { Float(sin(Double($0) / 10)) * 0.5 }

@@ -1,4 +1,6 @@
 import ArgumentParser
+import Foundation
+import Usage
 
 // desertant. The root command and the tree under it. The binary installs as
 // `desertant` with a `da` alias.
@@ -39,10 +41,12 @@ struct DesertAnt: AsyncParsableCommand {
             TongueVerb.self,
             ClearVerb.self,
             EarVerb.self,
+            WhoVerb.self,
             VozVerb.self,
             UhmVerb.self,
             ClipsVerb.self,
             ModeratorVerb.self,
+            EyeVerb.self,
             // Agents.
             Schema.self,
             Docs.self,
@@ -58,4 +62,21 @@ struct DesertAnt: AsyncParsableCommand {
         }(),
         defaultSubcommand: Home.self
     )
+
+    /// ArgumentParser's own entry point, plus a wait for core's network requests still in
+    /// flight: a process that exits under one can crash on the way out.
+    static func main() async {
+        do {
+            var command = try parseAsRoot()
+            if var asyncCommand = command as? AsyncParsableCommand {
+                try await asyncCommand.run()
+            } else {
+                try command.run()
+            }
+            await TelemetryDebug.shared.flushAndWait()
+        } catch {
+            await TelemetryDebug.shared.flushAndWait()
+            exit(withError: error)
+        }
+    }
 }

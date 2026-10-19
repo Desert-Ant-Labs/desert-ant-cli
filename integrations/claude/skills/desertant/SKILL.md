@@ -1,6 +1,6 @@
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, labeling who said what, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, or cropping photos, picking a video's thumbnail, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
 ---
 
 # desertant
@@ -39,12 +39,23 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
   enhanced file and reports its path.
 - Transcribe with word times: `desertant voz talk.mp4 --json`; `--srt` or `--vtt` also
   writes subtitles. Find filler words: `desertant uhm talk.mp4 --json`. Name the
-  spoken language: `desertant ear talk.mp4 --json`. Voz and Uhm need Apple silicon.
+  spoken language: `desertant ear talk.mp4 --json`. Uhm needs Apple silicon.
 - Cut short clips from a talk or recording: `desertant clips talk.mp4 --json` transcribes,
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
   timestamps without writing; `--transcript talk.srt` skips transcribing. Clips runs on
   macOS.
+- Label who said what: `desertant who talk.mp4 --json` gives each speaker's time and
+  turns. `desertant voz talk.mp4 --speakers --json` transcribes and puts a `speaker` on
+  every sentence; `--names "Anna,Ben"` names them in the order they first speak, and
+  `--srt` or `--vtt` writes captions with the names.
+- Understand photos : `desertant eye photo.jpg --json` gives the kind of
+  image, its scores, tags, faces, people, and pets. On a folder, one flag asks one
+  question: `--has dog --not blurry` lists the matching paths, `--duplicates` groups
+  near-duplicates with the keeper first, `--best` picks one photo, and
+  `--sort aesthetic` or `--similar-to photo.jpg` ranks. `--crop 1:1` writes a crop. Use
+  `--strict` before moving or deleting anything. On a video, `--thumbnail` writes the
+  best frame and `--has people` returns the stretches that match.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an
@@ -65,6 +76,7 @@ command `emits` and `accepts`; a match feeds through the named option, as a file
 
 ```
 desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript -
+desertant voz talk.mp4 --json | desertant who talk.mp4 --transcript - --json
 ```
 
 Transcribe once and reuse the transcript rather than letting clips transcribe again.

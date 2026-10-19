@@ -6,6 +6,7 @@ enum Format {
     /// A measured duration: "41s", "2m 10s", "1h 03m".
     static func elapsed(_ seconds: Double) -> String {
         let s = Int(seconds.rounded())
+        if seconds < 0.1 { return String(format: "%.2fs", seconds) }
         if s < 60 { return seconds < 10 ? String(format: "%.1fs", seconds) : "\(s)s" }
         let m = s / 60, rest = s % 60
         if m < 60 { return rest == 0 ? "\(m)m" : "\(m)m \(rest)s" }

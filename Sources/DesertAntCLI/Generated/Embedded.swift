@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "3.5.0",
+  "sdkVersion": "4.0.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -136,7 +136,7 @@ enum Embedded {
       "id": "ear",
       "name": "Ear",
       "tagline": "Detect spoken language from 30 seconds audio.",
-      "summary": "On-device spoken language identification across 99 languages.",
+      "summary": "On-device spoken language identification across 102 languages.",
       "category": "Language identification",
       "lifecycle": "stable",
       "visibility": "public",
@@ -150,7 +150,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/ear",
         "url": "https://huggingface.co/desert-ant-labs/ear",
-        "revision": "v0.1.0",
+        "revision": "v0.2.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": ["coreml", "litert"],
@@ -161,15 +161,15 @@ enum Embedded {
         "libraryName": null
       },
       "languages": {
-        "count": 99,
+        "count": 102,
         "codes": [
-          "af", "am", "ar", "as", "az", "ba", "be", "bg", "bn", "bo", "br", "bs", "ca", "cs", "cy", "da",
-          "de", "el", "en", "es", "et", "eu", "fa", "fi", "fo", "fr", "gl", "gu", "ha", "haw", "he", "hi",
-          "hr", "ht", "hu", "hy", "id", "is", "it", "ja", "jw", "ka", "kk", "km", "kn", "ko", "la", "lb",
-          "ln", "lo", "lt", "lv", "mg", "mi", "mk", "ml", "mn", "mr", "ms", "mt", "my", "ne", "nl", "nn",
-          "no", "oc", "pa", "pl", "ps", "pt", "ro", "ru", "sa", "sd", "si", "sk", "sl", "sn", "so", "sq",
-          "sr", "su", "sv", "sw", "ta", "te", "tg", "th", "tk", "tl", "tr", "tt", "uk", "ur", "uz", "vi",
-          "yi", "yo", "zh"
+          "af", "am", "ar", "as", "ast", "az", "be", "bg", "bn", "bs", "ca", "ceb", "ckb", "cs", "cy", "da",
+          "de", "el", "en", "es", "et", "eu", "fa", "ff", "fi", "fil", "fr", "ga", "gl", "gu", "ha", "he",
+          "hi", "hr", "hu", "hy", "id", "ig", "is", "it", "ja", "jv", "ka", "kam", "kea", "kk", "km", "kn",
+          "ko", "ky", "lb", "lg", "ln", "lo", "lt", "luo", "lv", "mi", "mk", "ml", "mn", "mr", "ms", "mt",
+          "my", "ne", "nl", "no", "nso", "ny", "oc", "om", "or", "pa", "pl", "ps", "pt", "ro", "ru", "sd",
+          "sk", "sl", "sn", "so", "sr", "sv", "sw", "ta", "te", "tg", "th", "tr", "uk", "umb", "ur", "uz",
+          "vi", "wo", "xh", "yo", "zh", "zu"
         ],
         "basis": "declared",
         "source": null
@@ -219,29 +219,29 @@ enum Embedded {
     {
       "id": "eye",
       "name": "Eye",
-      "tagline": "Tag and rank images.",
-      "summary": "On-device frame scoring: which shot to keep from a burst or a clip.",
-      "category": "Image and video scoring",
-      "lifecycle": "closed-beta",
-      "visibility": "internal",
-      "home": null,
+      "tagline": "Score, tag, and crop photos.",
+      "summary": "On-device photo understanding: scenes, quality, faces, people, pets, crops and sharpness.",
+      "category": "Photo understanding",
+      "lifecycle": "beta",
+      "visibility": "public",
+      "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "planned" },
-        "kotlin": { "status": "none" },
-        "js": { "status": "none" }
+        "swift": { "status": "live", "package": "Eye", "platforms": ["apple", "linux", "windows"] },
+        "kotlin": { "status": "live", "package": "ai.desertant:eye", "platforms": ["android"] },
+        "js": { "status": "live", "package": "@desert-ant-labs/eye", "platforms": ["web", "node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/eye",
         "url": "https://huggingface.co/desert-ant-labs/eye",
-        "revision": "main",
+        "revision": "v1.0.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
-      "runtime": ["coreml"],
+      "runtime": ["coreml", "litert"],
       "variants": [],
       "hub": {
-        "tags": ["image", "video", "frame-scoring", "aesthetics", "clip", "on-device", "core-ml"],
-        "pipelineTag": "image-feature-extraction",
+        "tags": ["image", "image-classification", "aesthetics", "face-analysis", "object-detection", "on-device", "core-ml", "litert", "tflite"],
+        "pipelineTag": "image-classification",
         "libraryName": null
       },
       "languages": null,
@@ -335,7 +335,7 @@ enum Embedded {
       "tagline": "Flag nudity before upload or display.",
       "summary": "On-device NSFW image detection, trained only on licensed and synthetic data.",
       "category": "Content moderation",
-      "lifecycle": "beta",
+      "lifecycle": "stable",
       "visibility": "public",
       "home": "desert-ant-core",
       "sdks": {
@@ -462,7 +462,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/shapes",
         "url": "https://huggingface.co/desert-ant-labs/shapes",
-        "revision": "v0.3.0",
+        "revision": "v1.0.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": ["coreml", "litert"],
@@ -651,11 +651,17 @@ enum Embedded {
           "status": "live",
           "package": "Voz",
           "platforms": [
-            "apple"
+            "apple",
+            "linux",
+            "windows"
           ]
         },
         "kotlin": {
-          "status": "none"
+          "status": "live",
+          "package": "ai.desertant:voz",
+          "platforms": [
+            "android"
+          ]
         },
         "js": {
           "status": "live",
@@ -670,11 +676,12 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/voz",
         "url": "https://huggingface.co/desert-ant-labs/voz",
-        "revision": "v0.1.0",
+        "revision": "v0.4.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": [
         "coreml",
+        "litert",
         "onnx"
       ],
       "variants": [],
@@ -686,6 +693,7 @@ enum Embedded {
           "word-timestamps",
           "on-device",
           "core-ml",
+          "litert",
           "apple-neural-engine",
           "multilingual"
         ],
@@ -732,25 +740,28 @@ enum Embedded {
       "tagline": "Label who said what in audio and video.",
       "summary": "On-device speaker labeling: per-person turns with timestamps.",
       "category": "Speaker diarization",
-      "lifecycle": "closed-beta",
+      "lifecycle": "beta",
       "visibility": "internal",
-      "home": null,
+      "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "planned" },
-        "kotlin": { "status": "none" },
+        "swift": { "status": "live", "package": "Who", "platforms": ["apple", "linux", "windows"] },
+        "kotlin": { "status": "live", "package": "ai.desertant:who", "platforms": ["android"] },
         "js": { "status": "none" }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/who",
         "url": "https://huggingface.co/desert-ant-labs/who",
-        "revision": "main",
+        "revision": "v0.3.1",
         "license": "desert-ant-labs-source-available-1.0"
       },
-      "runtime": ["coreml"],
-      "variants": [],
+      "runtime": ["coreml", "litert"],
+      "variants": [
+        { "id": "fp16", "default": true, "note": "Weights as float16 Core ML graphs, about 81 MB; Apple platforms only." },
+        { "id": "int8", "default": false, "note": "Weights stored as 8-bit integers: about 42 MB of Core ML graphs on Apple platforms, the same turns; the one precision elsewhere, about 49 MB of LiteRT graphs, where it is the default." }
+      ],
       "hub": {
-        "tags": ["audio", "speaker-diarization", "diarization", "speech", "on-device", "core-ml"],
+        "tags": ["audio", "speaker-diarization", "diarization", "speech", "on-device", "core-ml", "litert"],
         "pipelineTag": "voice-activity-detection",
         "libraryName": null
       },
@@ -772,8 +783,9 @@ enum Embedded {
 
 > desertant runs Desert Ant Labs on-device models from the terminal: transcribe a
 > recording, cut short clips from a talk, clean up the audio, find filler words, name
-> the spoken language, redact personal data, suggest emoji, tag a text's topic, name
-> the language of a short text, flag nudity in an image, and write a title. Weights download once and cache; nothing leaves the device when a
+> the spoken language, label who said what, redact personal data, suggest emoji, tag a
+> text's topic, name the language of a short text, flag nudity in an image, find, rank,
+> and crop photos, pick a video's thumbnail, and write a title. Weights download once and cache; nothing leaves the device when a
 > model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
 Start with `desertant schema --json`: it lists every runnable model, its input, and
@@ -793,6 +805,10 @@ gives either as data, all offline.
   weights live, and what is shared with other Desert Ant apps.
 - [Transcripts and captions](docs/voz.md): voz, timestamps, SRT, VTT, and text files,
   and how captions are cut.
+- [Speakers](docs/who.md): who, voz --speakers, names, RTTM, and speaker-labeled
+  captions.
+- [Photos and video](docs/eye.md): eye, tags, filters, near-duplicates, rankings,
+  crops, and video thumbnails.
 - [Clips](docs/clips.md): cutting clips from a recording, transcript formats, output
   names, and the report.
 - [Pipelines](docs/pipelines.md): composing commands, piping JSON not media, and
@@ -829,7 +845,7 @@ desertant schema --json
 ```
 
 The catalog of every shipping model: its id, whether it runs on this machine, whether
-it takes text, a recording, or an image, and its options with a line of help each. The schema is
+it takes text, a recording, an image, or a photo or video, and its options with a line of help each. The schema is
 built from the same code the commands run, so a model, option, or exit code listed
 there exists. Read it once per session rather than guessing flags.
 
@@ -865,8 +881,13 @@ given, so a long passage can be piped in. A file or image model takes a path, se
 paths, or a folder, with `--recursive` for the folders inside, and loads the model
 once for all of them. Media never comes from stdin. With more than one file the
 `--json` result is an array, one document per file in the order they ran. A file that
-fails is reported on stderr and the rest still run. The exit code is 1 at the end. `clips --transcript -` reads a transcript document from stdin, so
-`voz --json` pipes into `clips`; see [pipelines.md](pipelines.md).
+fails is reported on stderr and the rest still run. The exit code is 1 at the end. `clips --transcript -` and `who --transcript -` read a transcript
+document from stdin, so `voz --json` pipes into either; see [pipelines.md](pipelines.md).
+
+`eye` also answers questions about a set of photos: `--has` and `--not` filter,
+`--duplicates` groups near-duplicates, `--best` picks one, and `--sort` and
+`--similar-to` rank. Each returns one JSON value for the whole set; see
+[eye.md](eye.md).
 
 ## What comes back
 
@@ -957,6 +978,137 @@ three steps and writes the report; `Transcriber` and `MediaCutter` are the seams
 with Voz and AVFoundation behind them on Apple platforms. Another platform brings its
 own recognizer and cutter by conforming to those two protocols, and `--transcript`
 already works everywhere.
+"""###),
+        (name: "eye", markdown: ###"""
+# Photos and video
+
+Find, rank, and crop photos by what is in them and how they came out, group near-duplicates, and pick the frame of a video to use as its thumbnail.
+
+```
+da eye IMG_0056.jpeg
+```
+
+```
+photo  keeper 0.27  aesthetic 0.76  cover 0.73  sharpness 0.89
+sharp, cat, animal, keeper, pet, couch, furniture, himalayan
+2 pets
+```
+
+The first line names the kind of image (photo, selfie, screenshot, photo of screen, document, receipt, and the rest) and four scores:
+
+- `keeper`: how likely people are to keep a photo like this.
+- `aesthetic`: how good the photo is as a photograph.
+- `cover`: how well the photo works as a cover or a thumbnail.
+- `sharpness`: the probability that a person calls the photo sharp.
+
+Keeper, aesthetic, and cover are percentiles: an aesthetic of 0.76 scores higher than 76% of the photos Eye was calibrated on. The second line holds the tags that reach a confidence of 0.5, most confident first, and the third counts faces, closed eyes, and pets, and says when a photo is turned on its side.
+
+Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG. Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye) before the first run.
+
+## Filters
+
+```
+da eye trip/ --has beach --not blurry,people
+```
+
+`--has` keeps the photos with every tag listed, `--not` drops the photos with any of them, and the command prints the paths that match, one per line. The paths go to stdout alone, so the result pipes into other tools:
+
+```
+da eye ~/Desktop --has screenshot --strict | xargs -I{} mv {} ~/Screenshots/
+```
+
+`--strict` counts a tag at a confidence of 0.9 instead of 0.5. Use `--strict` for anything that acts without asking, like moving or deleting files.
+
+## Near-duplicates, the best shot, and rankings
+
+```
+da eye burst/ --duplicates
+```
+
+```
+IMG_0146.jpg  keep
+IMG_0145.jpg
+
+IMG_0147.jpg  keep
+IMG_0148.jpg
+IMG_0149.jpg
+
+2 groups of near-duplicates in 5 photos. 3 could go.
+```
+
+When every photo has a capture time in its EXIF, only photos taken within seconds of each other count as near-duplicates. The photo to keep in each group comes first, chosen the way `--best` chooses.
+
+```
+da eye burst/ --best
+da eye trip/ --sort aesthetic --limit 10
+da eye trip/ --similar-to IMG_3615.HEIC --limit 5
+```
+
+- `--best` prints the one photo to keep from the set: nobody's eyes closed, then the best faces, then the keeper score.
+- `--sort` ranks by `aesthetic`, `keeper`, `cover`, `sharpness`, or any tag's confidence, such as `--sort dog`.
+- `--similar-to` ranks by how alike each photo is to the one named. Near-duplicates score above 0.9.
+
+Filters apply first, so `da eye trip/ --has mountain --not people --sort aesthetic --limit 5` ranks the landscapes alone. Each command asks one question: `--duplicates`, `--best`, `--sort`, and `--similar-to` don't combine.
+
+## Crops
+
+```
+da eye IMG_0056.jpeg --crop 1:1
+```
+
+`--crop` writes Eye's best crop at that aspect beside the input, `IMG_0056_crop.jpeg`, in the input's format. The aspect is width to height, such as `1:1`, `4:5`, `16:9`, or `1.91`, and the crop matches that aspect exactly. `--output-dir thumbs/` puts the crops in another folder. With a filter or a question, `--crop` crops each photo the answer names: the matches, the keepers, the best shot, or the ranked photos.
+
+## Video
+
+```
+da eye launch.mp4 --thumbnail --crop 16:9
+```
+
+```
+screenshot  1 minute, 81 frames
+reference, sharp, keeper, tablet computer, letter message, newspaper, poster
+thumbnail  0:08  cover 0.97
+launch_thumbnail.jpg
+```
+
+Eye looks at a frame every second, at most 100 frames over the video, and `--every 5` looks every 5s. The second line lists the tags that hold in at least a quarter of the frames. The thumbnail is the frame with the best cover score among the frames with no blur and nobody's eyes closed. `--thumbnail` writes that frame at full size as `launch_thumbnail.jpg`, and `--crop` crops the frame to an aspect.
+
+`--has` on a video prints the stretches where every condition holds:
+
+```
+da eye launch.mp4 --has people
+```
+
+```
+0:12 to 0:17  5.2s
+0:34 to 0:46  12s
+```
+
+## Tags
+
+Every tag has a confidence from 0 to 1, calibrated so the same two cutoffs work for every tag: 0.5 by default, 0.9 with `--strict`.
+
+| Group | Tags |
+| --- | --- |
+| Photo type | `photo`, `selfie`, `screenshot`, `photo_of_screen`, `receipt`, `document`, `id_card`, `whiteboard`, `map`, `chart_or_slide`, `meme_or_graphic`, `illustration_or_art`, `shopping_reference`, `medical_reference`, `repair_reference`, `other`, and `reference` for any capture taken to remember something |
+| Keep or delete | `keeper`, `forgettable`, `accidental`, `technical_flaw`, `unusable`, `bad_framing`, `bad_lighting`, `test_or_duplicate_shot`, `reference_photo`, `low_content` |
+| Quality | `sharp`, `blurry` (the whole frame soft with no sharp subject), `bokeh` (a sharp subject against a soft background), `peak_moment`, `rotated` |
+| People | `people`, `group_shot` (three or more faces), `portrait` (one main face), `smiling`, `eyes_closed`, `everyone_smiling`, `everyone_looking`, `candid` |
+| Faces | `eyes_closed`, `smiling`, `looking_at_camera`, `looking_away`, `happy`, `surprised`, on each face |
+| Sensitive | `sensitive` (any of these), `nsfw_explicit`, `nsfw_suggestive`, `blood_injury`, `medical_hospital`, `funeral`, `accident_disaster`, `violence_protest`, `weapon` |
+| Scenes | 558 Open Images classes, such as `dog`, `beach`, `food`, `car`, `mountain` |
+
+Write a tag with underscores in `--has`, `--not`, and `--sort`; the screen shows it with spaces. To list every tag Eye computes, run `da eye photo.jpg --all-tags --json | jq -r '.tags | keys[]'`.
+
+## Speed
+
+On an M4 Max, Eye read 15 full-size photos in 6.2s, model load included, and 81 frames of a video in 10.7s. `--parts` computes less: `photo` (the kind, scenes, keep or delete, sensitive, scores), `layout` (people and pet boxes, crops), `faces`, and `sharpness`. A tag whose part didn't run is left out, and `blurry` needs `photo`, `faces`, and `sharpness`.
+
+## Limits
+
+- The scores rank photos against each other. A low keeper score on one photo says little until you compare it with the rest of the set.
+- `--duplicates`, `--best`, `--sort`, and `--similar-to` compare photos, and leave videos out.
+- The JSON holds the tags that reach the cutoff. `--all-tags` adds every confidence, and `--embedding` adds the 512 numbers Eye compares photos with.
 """###),
         (name: "files", markdown: ###"""
 # Files and the cache
@@ -1100,8 +1252,8 @@ lists them.
 }
 ```
 
-`input` is `text`, `file` (a recording), or `image`, or null when the model has no
-runner on this machine. Every
+`input` is `text`, `file` (a recording), `image`, or `visual` (a photo or a video),
+or null when the model has no runner on this machine. Every
 `options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option
 count=3`). Each entry also carries `emits` (the document kind its `--json` result is,
 or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's
@@ -1203,7 +1355,62 @@ builds.
 `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are
 decision scores in 0...1, not calibrated probabilities.
 
-`voz`, `uhm`, `ear`, `clear`, `clips`, and `moderator` take several paths, or a
+`desertant eye <photo> --json`: what the photo is, its scores, and what is in it. On
+Linux, reading the photo needs ffmpeg.
+
+```json
+{
+  "input": "trip/IMG_9641.HEIC",
+  "model": "eye@v1.0.0",
+  "width": 4032,
+  "height": 3024,
+  "kind": "photo",
+  "scores": {"aesthetic": 0.71, "keeper": 0.0, "cover": 0.70},
+  "sharpness": 1.0,
+  "tags": {"cloud": 0.84, "hiking": 0.86, "mountain": 0.93, "people": 0.97, "photo": 0.99, "sharp": 1.0, "sky": 0.98},
+  "faces": [{"box": {"x0": 0.24, "y0": 0.46, "x1": 0.25, "y1": 0.47}, "confidence": 0.41, "quality": 0.61,
+             "pose": {"yaw": 5.3, "pitch": -1.9, "roll": -7.9},
+             "tags": {"eyes_closed": 0.48, "happy": 0, "looking_at_camera": 0, "looking_away": 0.57, "smiling": 0.45, "surprised": 0}}],
+  "people": [{"label": "person", "confidence": 0.45, "box": {"x0": 0.23, "y0": 0.44, "x1": 0.29, "y1": 0.54}}],
+  "pets": []
+}
+```
+
+`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag
+that is missing scored below it; `--all-tags` holds every confidence. `kind` is the
+most likely photo type. `scores` are percentiles in 0...1 against Eye's calibration
+set. Boxes are in 0...1 of the upright image, from the top left. `rotation` (90, 180,
+or 270) appears when the photo is turned clockwise by that much. `crop` appears with
+`--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`.
+`embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts`
+leaves its keys out.
+
+`desertant eye <video> --json`: the frames, the thumbnail, and the tags that hold.
+
+```json
+{
+  "input": "/work/launch.mp4",
+  "durationSec": 81.4,
+  "every": 1,
+  "kind": "screenshot",
+  "tags": {"keeper": 0.63, "reference": 1, "screenshot": 0.62, "sharp": 1},
+  "thumbnail": {"time": 7.5, "cover": 0.97, "crop": null, "file": "/work/launch_thumbnail.jpg"},
+  "frames": [{"input": "/work/launch.mp4", "time": 0.5, "kind": "screenshot", "tags": {"reference": 0.91}}]
+}
+```
+
+`tags` maps each tag to the share of frames it holds in. `frames` holds one photo
+document per frame, each with its `time`. With `--has` or `--not`, `matches` lists the
+stretches where every frame matches, as `[{"start", "end"}]` in seconds.
+
+With `--has` or `--not` and several photos, the result is an array of the photo
+documents that match. The questions return their own shapes:
+
+- `--duplicates`: `{"photos": 15, "groups": [{"keep": "trip/IMG_3615.HEIC", "others": ["trip/IMG_3619.HEIC"]}]}`.
+- `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
+- `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
+
+`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, and `eye` take several paths, or a
 folder, and `--recursive` looks inside its folders. One path returns the document
 below. Several paths or a folder return an array of those documents, in the order the
 files ran, each with its `input`. A file the model does not read is skipped, with a
@@ -1233,6 +1440,11 @@ that run on the device."}],
 
 `captions` are the cues SRT and VTT are written from (a newline inside `text` is a line break). `files` maps each extension written to its path, empty when none was.
 
+With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order the
+speakers first speak, and a sentence two people share is split where the speaker
+changes. The document adds `speakers` and `turns`, as `who` writes them below.
+
+
 `desertant uhm <file> --json`: the filler words, in order.
 
 ```json
@@ -1256,6 +1468,31 @@ that run on the device."}],
 
 `language` is an ISO code, or null when there was nothing to listen to. Candidates
 under 0.01 are left out.
+
+`desertant who <file> --json`: who spoke when.
+
+```json
+{
+  "input": "/work/interview.mp4",
+  "durationSec": 45.891,
+  "loadSec": 0.17,
+  "processingSec": 0.04,
+  "speakerCount": 2,
+  "speakers": [
+    {"speaker": 0, "name": "Speaker 1", "seconds": 28.27, "share": 0.616, "turns": 4},
+    {"speaker": 1, "name": "Speaker 2", "seconds": 11.84, "share": 0.258, "turns": 3}
+  ],
+  "turns": [{"start": 0.0, "end": 4.92, "speaker": 0}, {"start": 5.56, "end": 10.88, "speaker": 1}],
+  "files": {}
+}
+```
+
+Speakers are numbered from 0 in the order they first speak, and `speakers` lists the
+most heard first. `name` is from `--names`, else `Speaker 1` and on. `share` is the
+speaker's time against the whole recording. `turns` are joined across pauses up to
+`--join` seconds (1 by default) and sorted by start; turns of two speakers can
+overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
+"speaker", "text"}]`. `files` maps the format written with `-o` to its path.
 
 `desertant clear <file> --json`: where the enhanced file landed.
 
@@ -1362,12 +1599,13 @@ as a file or, with `-`, from stdin, so the steps chain in the shell:
 
 ```
 desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript -
+desertant voz talk.mp4 --json | desertant who talk.mp4 --transcript - --format vtt
 desertant clear talk.mp4 --json | jq -r .output
 ```
 
 `desertant schema --json` says which documents fit where: each command lists what it
-`emits` (`transcript`, `spans`, `clips`, `file`) and what it `accepts`, with the
-option that takes it. An agent plans a chain from that alone. clips also takes SRT or
+`emits` (`transcript`, `speakers`, `spans`, `clips`, `file`) and what it `accepts`,
+with the option that takes it. An agent plans a chain from that alone. clips also takes SRT or
 VTT written by anything else.
 
 ## Render once
@@ -1384,8 +1622,8 @@ re-encode video when a cut has to land on the frame. And enhance, fillers, and
 transcribe each decode audio; running fillers and transcribe on the one enhanced
 audio file trims that to one extraction.
 
-Ships today: `desertant voz` (the transcript) and `desertant uhm` (the filler
-spans). Planned: a final `desertant export` that takes the documents and renders
+Ships today: `desertant voz` (the transcript), `desertant who` (the speakers'
+turns), and `desertant uhm` (the filler spans). Planned: a final `desertant export` that takes the documents and renders
 once.
 
 ## Large files
@@ -1415,7 +1653,7 @@ da voz talk.mp4
 
 Prints the transcript, one sentence per line, and ends with the measured line:
 "Voz loaded in 1.1s. Transcribed 2 minutes of audio in 0.5s, 270x realtime". The first figure is
-the model coming up, once per run; the realtime factor is the recognizer alone. Voz runs on Apple silicon; 25 languages.
+the model coming up, once per run; the realtime factor is the recognizer alone. Voz runs on Apple silicon and on Linux, in 25 languages.
 
 ## Timestamps
 
@@ -1469,10 +1707,87 @@ readable:
 
 The transcript (`--txt`, `--format txt`, and the screen) is sentences, not cues.
 """###),
+        (name: "who", markdown: ###"""
+# Speakers
+
+Label who said what in a podcast, interview, or meeting recording: each speaker's time, their turns, and with a transcript, the speaker of every line.
+
+```
+da who interview.mp4
+```
+
+```
+2 speakers in 46 seconds
+Speaker 1      28s   62%
+Speaker 2      12s   26%
+
+0:00 to 0:05  Speaker 1  4.9s
+0:06 to 0:11  Speaker 2  5.3s
+0:12 to 0:15  Speaker 1  3.1s
+Who labeled 46 seconds in 0.03s, 1377x realtime.
+```
+
+Who numbers the speakers in the order they first speak. Who labels voices and doesn't know the people, so `--names "Sam,Dan"` names them in that order. The share is each speaker's time against the whole recording, so silence and music make the shares add up to less than 100%. Who takes audio or video, and labeled a 15-minute recording in 1.5s on an M4 Max. On Linux, ffmpeg reads any file that isn't WAV.
+
+## Who said what
+
+```
+da voz interview.mp4 --speakers --names "Sam,Dan"
+```
+
+```
+Sam
+0:00  Welcome back to the show.
+0:01  Today we are talking about small models that run on your phone.
+
+Dan
+0:05  Thanks for having me.
+0:07  I have been building on device features for about five years now.
+```
+
+Voz transcribes, Who labels the speakers, and each word goes to the speaker heard while it's spoken. A sentence two people share splits where the speaker changes. The caption and text files carry the speakers too:
+
+- `--srt`: the speaker's name in front of a cue when the speaker changes, `Sam: Welcome back to the show.`
+- `--vtt`: a voice tag on every cue, `<v Sam>Welcome back to the show.`, which players can show or style.
+- `--txt`: a paragraph per turn, the name in front.
+
+Who downloads on the first `--speakers` run.
+
+## A transcript you already have
+
+```
+da voz interview.mp4 --json > interview.json
+da who interview.mp4 --transcript interview.json --format vtt > interview.vtt
+```
+
+`--transcript` takes the `--json` of voz, an `.srt`, or a `.vtt`, and `-` reads it from stdin. A Voz document carries every word's time, so a line splits where the speaker changes. An SRT or VTT from elsewhere is labeled cue by cue: each cue goes to the speaker heard most during it.
+
+## Formats
+
+`--format` puts one format on stdout, and `-o path` writes one file in the format its extension names:
+
+- `rttm`: one `SPEAKER` line per turn, the format diarization tools score and exchange.
+- `json`: the document in [json.md](json.md).
+- `srt`, `vtt`, `txt`: the transcript with speakers, with `--transcript`.
+
+A taken name steps aside (`interview-2.rttm`); `--force` replaces.
+
+## Turns
+
+Who splits a turn wherever a speaker pauses, so `who` joins a speaker's turns across pauses up to 1s. Another speaker talking in between keeps two turns apart, so a short "yes" stays on the page. `--join 0` keeps every turn as Who found it, and `--join 3` joins across longer pauses. The RTTM and JSON turns are the joined ones; the times and shares count every turn.
+
+`--min-share 0.05` leaves out a speaker heard for less than 5% of the recording, such as a laugh or a jingle that got a number of its own. The other speakers are numbered again in the order they first speak.
+
+## Limits
+
+- Who is built for conversations of up to four speakers. A recording with more voices is labeled with its four most present ones.
+- A speaker's number holds within one recording. Speaker 1 in two files can be two different people.
+- Two voices that sound alike can come out as one speaker.
+"""###),
         (name: "skill", markdown: ###"""
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, labeling who said what, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, or cropping photos, picking a video's thumbnail, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
 ---
 
 # desertant
@@ -1511,12 +1826,23 @@ Weights download on first use with progress on stderr; stdout stays clean JSON.
   enhanced file and reports its path.
 - Transcribe with word times: `desertant voz talk.mp4 --json`; `--srt` or `--vtt` also
   writes subtitles. Find filler words: `desertant uhm talk.mp4 --json`. Name the
-  spoken language: `desertant ear talk.mp4 --json`. Voz and Uhm need Apple silicon.
+  spoken language: `desertant ear talk.mp4 --json`. Uhm needs Apple silicon.
 - Cut short clips from a talk or recording: `desertant clips talk.mp4 --json` transcribes,
   picks the moments, and writes one file per clip beside the input, reporting each
   clip's start, end, text, and file. `--select-only` returns the moments as
   timestamps without writing; `--transcript talk.srt` skips transcribing. Clips runs on
   macOS.
+- Label who said what: `desertant who talk.mp4 --json` gives each speaker's time and
+  turns. `desertant voz talk.mp4 --speakers --json` transcribes and puts a `speaker` on
+  every sentence; `--names "Anna,Ben"` names them in the order they first speak, and
+  `--srt` or `--vtt` writes captions with the names.
+- Understand photos : `desertant eye photo.jpg --json` gives the kind of
+  image, its scores, tags, faces, people, and pets. On a folder, one flag asks one
+  question: `--has dog --not blurry` lists the matching paths, `--duplicates` groups
+  near-duplicates with the keeper first, `--best` picks one photo, and
+  `--sort aesthetic` or `--similar-to photo.jpg` ranks. `--crop 1:1` writes a crop. Use
+  `--strict` before moving or deleting anything. On a video, `--thumbnail` writes the
+  best frame and `--has people` returns the stretches that match.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an
@@ -1537,6 +1863,7 @@ command `emits` and `accepts`; a match feeds through the named option, as a file
 
 ```
 desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript -
+desertant voz talk.mp4 --json | desertant who talk.mp4 --transcript - --json
 ```
 
 Transcribe once and reuse the transcript rather than letting clips transcribe again.
@@ -1577,8 +1904,7 @@ first use with progress on stderr; stdout stays clean JSON.
   score crosses the threshold. On Linux it needs ffmpeg.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word;
-  `--srt` or `--vtt` also writes captions beside the input
-  (Apple silicon).
+  `--srt` or `--vtt` also writes captions beside the input.
 - `desertant uhm <file> --json` finds the filler words (Apple silicon).
 - `desertant ear <file> --json` names the language spoken.
 - `desertant clear <file> --json` denoises an audio or video file and reports the
@@ -1586,6 +1912,14 @@ first use with progress on stderr; stdout stays clean JSON.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
   each clip's start, end, text, and file; `--select-only` gives timestamps only. Clips
   runs on macOS.
+- `desertant who <file> --json` labels who spoke when: each speaker's time and turns.
+  `desertant voz <file> --speakers --json` transcribes and labels each sentence with its
+  speaker; `--names "Anna,Ben"` names them in the order they first speak.
+- `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags,
+  faces, people, and pets. On a folder, `--has dog --not blurry` lists
+  the matches, `--duplicates` groups near-duplicates, `--best` picks one, and
+  `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail`
+  writes the best frame and `--has people` gives the stretches that match.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an

@@ -39,12 +39,23 @@ final class CatalogTests: XCTestCase {
             XCTAssertNotNil(Runners.runner(for: model.id), "\(model.id) runs on Linux in core but has no runner here")
         }
         #endif
+        XCTAssertEqual(Runners.runner(for: "who")?.inputKind, .file)
+        XCTAssertEqual(Runners.runner(for: "eye")?.inputKind, .visual)
+        XCTAssertTrue(Runners.runner(for: "eye") is any SetRunner)
     }
 
     func testInputKindPlaceholders() {
         XCTAssertEqual(RunInputKind.text.placeholder, "\"<text>\"")
         XCTAssertEqual(RunInputKind.file.placeholder, "<file>")
         XCTAssertEqual(RunInputKind.image.placeholder, "<image>")
+        XCTAssertEqual(RunInputKind.visual.placeholder, "<photo or video>")
+    }
+
+    func testVisualTakesPhotosAndVideos() {
+        XCTAssertTrue(RunInputKind.visual.extensions.isSuperset(of: ["jpg", "heic", "png", "mp4", "mov"]))
+        XCTAssertFalse(RunInputKind.visual.extensions.contains("mp3"))
+        XCTAssertTrue(RunInputKind.isVideo("trip/IMG_1.MOV"))
+        XCTAssertFalse(RunInputKind.isVideo("trip/IMG_1.HEIC"))
     }
 
     func testRunnerOptionNamesAreUnique() {

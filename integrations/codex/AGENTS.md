@@ -26,8 +26,7 @@ first use with progress on stderr; stdout stays clean JSON.
   score crosses the threshold. On Linux it needs ffmpeg.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word;
-  `--srt` or `--vtt` also writes captions beside the input
-  (Apple silicon).
+  `--srt` or `--vtt` also writes captions beside the input.
 - `desertant uhm <file> --json` finds the filler words (Apple silicon).
 - `desertant ear <file> --json` names the language spoken.
 - `desertant clear <file> --json` denoises an audio or video file and reports the
@@ -35,6 +34,14 @@ first use with progress on stderr; stdout stays clean JSON.
 - `desertant clips <file> --json` cuts short clips from a talk or recording and reports
   each clip's start, end, text, and file; `--select-only` gives timestamps only. Clips
   runs on macOS.
+- `desertant who <file> --json` labels who spoke when: each speaker's time and turns.
+  `desertant voz <file> --speakers --json` transcribes and labels each sentence with its
+  speaker; `--names "Anna,Ben"` names them in the order they first speak.
+- `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags,
+  faces, people, and pets. On a folder, `--has dog --not blurry` lists
+  the matches, `--duplicates` groups near-duplicates, `--best` picks one, and
+  `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail`
+  writes the best frame and `--has people` gives the stretches that match.
 
 - A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
   `--recursive` for its subfolders) and loads the model once. The result is then an

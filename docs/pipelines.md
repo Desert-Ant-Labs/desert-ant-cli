@@ -16,12 +16,13 @@ as a file or, with `-`, from stdin, so the steps chain in the shell:
 
 ```
 desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript -
+desertant voz talk.mp4 --json | desertant who talk.mp4 --transcript - --format vtt
 desertant clear talk.mp4 --json | jq -r .output
 ```
 
 `desertant schema --json` says which documents fit where: each command lists what it
-`emits` (`transcript`, `spans`, `clips`, `file`) and what it `accepts`, with the
-option that takes it. An agent plans a chain from that alone. clips also takes SRT or
+`emits` (`transcript`, `speakers`, `spans`, `clips`, `file`) and what it `accepts`,
+with the option that takes it. An agent plans a chain from that alone. clips also takes SRT or
 VTT written by anything else.
 
 ## Render once
@@ -38,8 +39,8 @@ re-encode video when a cut has to land on the frame. And enhance, fillers, and
 transcribe each decode audio; running fillers and transcribe on the one enhanced
 audio file trims that to one extraction.
 
-Ships today: `desertant voz` (the transcript) and `desertant uhm` (the filler
-spans). Planned: a final `desertant export` that takes the documents and renders
+Ships today: `desertant voz` (the transcript), `desertant who` (the speakers'
+turns), and `desertant uhm` (the filler spans). Planned: a final `desertant export` that takes the documents and renders
 once.
 
 ## Large files

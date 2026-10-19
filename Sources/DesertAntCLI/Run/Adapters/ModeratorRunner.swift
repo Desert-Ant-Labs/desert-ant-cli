@@ -109,10 +109,8 @@ struct ModeratorRunner: ModelRunner {
         guard let image = try? FFmpeg.decodeImage(input, tools: tools) else {
             throw RunError("could not read \(input) as an image.")
         }
-        // EXIF sits in the first header segments, which are at most 64KB each.
-        let head = FileHandle(forReadingAtPath: input).map { [UInt8]($0.readData(ofLength: 256 * 1024)) } ?? []
         let upright = Exif.upright(image.rgb, width: image.width, height: image.height,
-                                   orientation: Exif.orientation(jpeg: head))
+                                   orientation: Exif.orientation(jpeg: Exif.head(input)))
         return try ImagePixels(width: upright.width, height: upright.height, rgb: upright.rgb)
         #endif
     }

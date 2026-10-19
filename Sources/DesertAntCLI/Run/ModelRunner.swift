@@ -12,6 +12,8 @@ enum RunInputKind: String, Sendable {
     case file
     /// A path to an image file.
     case image
+    /// A path to an image or a video file.
+    case visual
 }
 
 /// One option a runner accepts, e.g. `limit`. Declared once on the runner so the verb,
@@ -64,6 +66,17 @@ extension ModelRunner {
     var accepts: [Intake] { [] }
 }
 
+/// A runner that can also answer a question about its inputs together: which photos in
+/// a folder are near-duplicates, the best of a burst. With none of those options set, it
+/// runs one file at a time like any other runner.
+protocol SetRunner: ModelRunner {
+    /// Whether these options ask about the inputs together.
+    func wantsSet(_ arguments: RunArguments) -> Bool
+    /// Run every input, then answer about the set. `inputs` are already expanded;
+    /// `batch` is whether they came as several paths or a folder rather than one file.
+    func runSet(_ inputs: [String], batch: Bool, arguments: RunArguments, out: Output) async throws
+}
+
 /// The parsed options a runner receives: string key-value pairs, with typed readers.
 struct RunArguments: Sendable {
     private(set) var values: [String: String] = [:]
@@ -99,6 +112,7 @@ extension RunInputKind {
         case .text: "\"<text>\""
         case .file: "<file>"
         case .image: "<image>"
+        case .visual: "<photo or video>"
         }
     }
 
@@ -108,7 +122,16 @@ extension RunInputKind {
         case .text: []
         case .file: ["mp3", "m4a", "aac", "wav", "aiff", "aif", "caf", "flac", "mp4", "mov", "m4v"]
         case .image: ["jpg", "jpeg", "png", "heic", "heif", "gif", "tif", "tiff", "bmp", "webp"]
+        case .visual: Self.image.extensions.union(Self.videoExtensions)
         }
+    }
+
+    /// The video containers a visual model samples frames from.
+    static let videoExtensions: Set<String> = ["mp4", "mov", "m4v"]
+
+    /// Whether `path` names a video by its extension.
+    static func isVideo(_ path: String) -> Bool {
+        videoExtensions.contains((path as NSString).pathExtension.lowercased())
     }
 
     /// The files in a folder, in a message: "no audio or video files in ...".
@@ -117,6 +140,7 @@ extension RunInputKind {
         case .text: "text"
         case .file: "audio or video"
         case .image: "image"
+        case .visual: "image or video"
         }
     }
 
@@ -126,6 +150,7 @@ extension RunInputKind {
         case .text: "not text"
         case .file: "not audio or video"
         case .image: "not an image"
+        case .visual: "not an image or video"
         }
     }
 }

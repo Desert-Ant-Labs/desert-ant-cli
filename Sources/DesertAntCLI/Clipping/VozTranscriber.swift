@@ -1,12 +1,13 @@
-#if canImport(CoreML) && canImport(AVFoundation)
-import AVFoundation
+#if canImport(Voz)
 import Foundation
 import Transcript
 import Voz
+#if canImport(AVFoundation)
+import AVFoundation
+#endif
 
-// Voz with word timestamps, for the `voz` command and the clips pipeline. Apple
-// platforms only, since Voz drives Core ML directly. A video container is exported to
-// a temporary audio file first, since Voz reads audio.
+// Voz with word timestamps, for the `voz` command and the clips pipeline. Off Apple
+// platforms the CLI decodes the media to samples through ffmpeg.
 
 actor VozTranscriber: Transcriber {
     nonisolated let name = "voz"
@@ -35,10 +36,14 @@ actor VozTranscriber: Transcriber {
         try await prepare { _ in }
         guard let voz else { throw RunError("voz did not load") }
 
+        #if canImport(AVFoundation)
         let audio = try await Self.audioOnly(media)
         defer { if audio != media { try? FileManager.default.removeItem(at: audio) } }
-
         let result = try await voz.transcribe(audio) { progress($0.fractionCompleted) }
+        #else
+        let samples = try await Media.decodeMono(media.path, sampleRate: 16_000)
+        let result = try await voz.transcribe(samples: samples, sampleRate: 16_000) { progress($0.fractionCompleted) }
+        #endif
         guard !result.words.isEmpty else { throw RunError("no speech found in \(media.lastPathComponent)") }
         return Transcription(text: result.text, words: Self.spaced(result.words),
                              durationSec: result.duration, processingSec: result.processingTime)
@@ -52,6 +57,7 @@ actor VozTranscriber: Transcriber {
         }
     }
 
+    #if canImport(AVFoundation)
     /// The media itself when it is already audio, else its audio track exported to a
     /// temporary m4a.
     static func audioOnly(_ media: URL) async throws -> URL {
@@ -68,5 +74,6 @@ actor VozTranscriber: Transcriber {
         try await session.export(to: url, as: .m4a)
         return url
     }
+    #endif
 }
 #endif

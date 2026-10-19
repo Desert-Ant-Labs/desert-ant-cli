@@ -43,7 +43,7 @@ struct ClipPipeline {
     let clips = Clips()
 
     var transcriber: (any Transcriber)? {
-        #if canImport(CoreML) && canImport(AVFoundation)
+        #if canImport(Voz)
         return VozTranscriber()
         #else
         return nil
