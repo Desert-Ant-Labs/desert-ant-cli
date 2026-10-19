@@ -25,6 +25,15 @@ case "$(uname -m)" in
   x86_64 | amd64) arch="x86_64" ;;
   *) echo "desertant has no build for $(uname -m)." >&2; exit 1 ;;
 esac
+# A shell under Rosetta reports x86_64 on an Apple silicon Mac, which runs the arm64 build.
+if [ "$os" = "darwin" ] && [ "$arch" = "x86_64" ]; then
+  if [ "$(sysctl -n sysctl.proc_translated 2>/dev/null)" = "1" ]; then
+    arch="arm64"
+  else
+    echo "desertant needs an Apple silicon Mac. This Mac has an Intel processor." >&2
+    exit 1
+  fi
+fi
 
 # The Linux build links glibc 2.35 and loads the system's libcurl. Alpine and other
 # musl systems have neither, and an older glibc stops the binary before it prints
@@ -110,8 +119,16 @@ ln -sf "$home/desertant" "$bin/da"
 echo "Installed desertant $installed into $bin."
 case ":$PATH:" in
   *":$bin:"*) ;;
-  *) echo "Add $bin to your PATH to run it as desertant or da." ;;
+  *)
+    echo "Add $bin to your PATH to run it as desertant or da:"
+    case "${SHELL:-}" in
+      */fish) echo "  fish_add_path $bin" ;;
+      */zsh) echo "  echo 'export PATH=\"$bin:\$PATH\"' >> ~/.zshrc && exec zsh" ;;
+      */bash) echo "  echo 'export PATH=\"$bin:\$PATH\"' >> ~/.bashrc && exec bash" ;;
+      *) echo "  export PATH=\"$bin:\$PATH\"" ;;
+    esac
+    ;;
 esac
 if [ "$os" = "linux" ] && ! command -v ffmpeg >/dev/null 2>&1; then
-  echo "Install ffmpeg to read audio other than WAV, video, and images. Text models and WAV audio run without it."
+  echo "Install ffmpeg to read audio other than WAV, video, and images."
 fi

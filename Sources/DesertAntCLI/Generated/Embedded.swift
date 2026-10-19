@@ -1014,7 +1014,7 @@ da eye trip/ --has beach --not blurry,people
 `--has` keeps the photos with every tag listed, `--not` drops the photos with any of them, and the command prints the paths that match, one per line. The paths go to stdout alone, so the result pipes into other tools:
 
 ```
-da eye ~/Desktop --has screenshot --strict | xargs -I{} mv {} ~/Screenshots/
+da eye ~/Desktop --has screenshot --strict | while IFS= read -r f; do mv "$f" ~/Screenshots/; done
 ```
 
 `--strict` counts a tag at a confidence of 0.9 instead of 0.5. Use `--strict` for anything that acts without asking, like moving or deleting files.

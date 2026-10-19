@@ -11,7 +11,7 @@ clean up the audio, find, rank, and crop photos, redact personal data from text,
 the language of a line, flag nudity in a photo, or tag a topic, with
 [Desert Ant Labs](https://desertant.com) models running on your own machine. Weights download once. Nothing leaves the device.
 
-```
+```console
 $ da voz talk.mp4 -t
 0:00  We build small models that run on the device.
 0:04  Nothing leaves the phone, and there is no cloud bill.
@@ -31,18 +31,42 @@ Email [GIVEN_NAME_1] at [EMAIL_1] or call [PHONE_1]
 
 ## Install
 
-```
+desertant runs on Apple silicon Macs with macOS 14 or later, and on Linux on x86_64
+and arm64.
+
+### Install script
+
+```sh
 curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
 ```
 
-Or `brew install desert-ant-labs/tap/desertant`, or
-`mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`.
+Update with `da update`.
 
-On Linux, desertant runs on x86_64 and arm64 with glibc 2.35 or later, such as Ubuntu
-22.04, Debian 12, Fedora 41, or openSUSE Tumbleweed, and needs libcurl, which the curl
-package installs. Text models and WAV audio need nothing else. To read other audio,
-video, and images, install ffmpeg: `sudo apt install ffmpeg`, or your distribution's
-package.
+### Homebrew
+
+```sh
+brew install desert-ant-labs/tap/desertant
+```
+
+Update with `brew upgrade desertant`.
+
+### mise
+
+```sh
+mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"
+```
+
+Update with `mise upgrade`.
+
+### Linux requirements
+
+desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 41,
+and libcurl. ffmpeg reads compressed audio, video, and images, and libheif reads HEIC
+photos:
+
+```sh
+sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
+```
 
 ## Models
 
@@ -85,11 +109,11 @@ machine.
 `da voz talk.mp4` prints the transcript, one sentence per line, and `-t` puts the time
 in front of each. Caption and text files are one flag each, written beside the input:
 
-```
-da voz talk.mp4 --srt          talk.srt, captions
-da voz talk.mp4 --vtt --txt    talk.vtt and talk.txt
-da voz talk.mp4 -o notes.vtt   one file, the format from its extension
-da voz talk.mp4 --format srt   SRT on stdout, for a pipe
+```sh
+da voz talk.mp4 --srt          # talk.srt, captions
+da voz talk.mp4 --vtt --txt    # talk.vtt and talk.txt
+da voz talk.mp4 -o notes.vtt   # one file, the format from its extension
+da voz talk.mp4 --format srt   # SRT on stdout, for a pipe
 ```
 
 Captions are cut the way broadcasters cut them: two lines of 42 characters, no more
@@ -105,24 +129,67 @@ rest.
 
 ## Photos
 
-`da eye` reads what a photo is, how it came out, and what is in it. On a folder, one
-flag asks one question:
+`da eye` reads what a photo is, how it came out, and what is in it.
 
-```
-da eye trip/ --has beach --not blurry    the paths of the matches
-da eye burst/ --duplicates               near-duplicates, the keeper first
-da eye trip/ --sort aesthetic --limit 5  the five best looking
-da eye IMG_0056.jpeg --crop 1:1          a square crop beside the photo
-da eye launch.mp4 --thumbnail            the frame to use as a thumbnail
+```console
+$ da eye IMG_0056.jpeg
+photo  keeper 0.27  aesthetic 0.76  cover 0.73  sharpness 0.89
+sharp, cat, animal, keeper, pet, couch, furniture, himalayan
+2 pets
 ```
 
-`da docs eye` lists the tags and the rest of the flags.
+On a folder, one flag asks one question about the photos together:
+
+```sh
+da eye trip/ --has beach --not blurry         # the paths of the matches
+da eye trip/ --duplicates                     # near-duplicates, the keeper first
+da eye trip/ --best                           # the one photo to keep
+da eye trip/ --sort aesthetic --limit 5       # the five best looking
+da eye trip/ --similar-to trip/IMG_3615.HEIC  # the most alike first
+```
+
+A filter prints one path per line, so the matches can go straight to another command.
+To move every screenshot off the desktop:
+
+```sh
+mkdir -p ~/Desktop/Screenshots
+da eye ~/Desktop --has screenshot --strict | while IFS= read -r f; do mv "$f" ~/Desktop/Screenshots/; done
+```
+
+`--strict` counts a tag at a confidence of 0.9 instead of 0.5. Use it for anything that
+acts without asking. To set aside the extra shots of every burst and check them before
+deleting:
+
+```sh
+mkdir -p trip/extras
+da eye trip/ --duplicates --json | jq -r '.groups[].others[]' | while IFS= read -r f; do mv "$f" trip/extras/; done
+```
+
+`--crop` writes Eye's best crop at an aspect, and on a video, `--thumbnail` writes the
+frame to use as its thumbnail:
+
+```sh
+da eye trip/ --sort cover --limit 5 --crop 1:1 --output-dir covers/
+da eye launch.mp4 --thumbnail
+```
+
+Each run reads the photos again, at about 0.3s a photo on an M4 Max. To ask many
+questions of a large folder, read it once into JSON and query the file:
+
+```sh
+da eye photos/ --recursive --all-tags --json > photos.json
+jq -r '.[] | select(.kind == "receipt") | .input' photos.json
+```
+
+Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to
+[desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye). `da docs eye` lists
+the tags and the rest of the flags.
 
 ## Chain
 
 Commands compose through their JSON. Transcribe once, then cut:
 
-```
+```sh
 da voz talk.mp4 --json | da clips talk.mp4 --transcript -
 ```
 
@@ -135,7 +202,7 @@ covers the rest. desertant never overwrites a file: a second run writes
 A file verb takes several files, or a folder, and loads the model once for all of
 them:
 
-```
+```sh
 da moderator photos/ --json
 da ear interviews/ --recursive
 ```
@@ -148,14 +215,14 @@ reported on stderr and the rest still run. The exit code is 1 at the end.
 One command writes a skill for every agent installed on your machine, in the current
 project: Claude Code and Pi get a skill file, Codex gets a section in `AGENTS.md`.
 
-```
+```sh
 desertant setup
 ```
 
 `desertant setup claude` does one agent, and `--global` writes where the agent looks for
 every project. Or paste this into the agent and let the agent do both steps:
 
-```
+```text
 Install the Desert Ant CLI with: curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
 Then run `desertant setup` in this project.
 ```
