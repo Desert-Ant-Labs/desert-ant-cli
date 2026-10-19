@@ -139,7 +139,9 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 
 To restore originals in a reply, replace each `placeholder` with its `original`.
 Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`,
-`CREDIT_CARD`, `IP_ADDRESS`, `URL`, and the rest of that set.
+`CREDIT_CARD`, `IP_ADDRESS`, `URL`, and the rest of that set. On a Mac without a
+Neural Engine, such as a virtual Mac, Redact finds no names, addresses, or cities, and
+says so on stderr; emails, cards, and IBANs are still redacted.
 
 `desertant gist "<text>" --json`: an array of topics, best first.
 

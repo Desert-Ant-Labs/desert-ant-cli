@@ -1,3 +1,7 @@
+#if canImport(CoreML)
+import CoreML
+#endif
+import Foundation
 import Redact
 
 // Redact: personal data replaced with restorable placeholders.
@@ -10,6 +14,24 @@ struct RedactRunner: ModelRunner {
     ]
 
     private let model = Redact()
+
+    /// Redact's Core ML export finds names on the Neural Engine only. Without it, the SDK
+    /// falls back to pattern matches and reports no error. Linux runs the LiteRT export,
+    /// which finds names everywhere.
+    static let offNeuralEngine: Bool = {
+        #if canImport(CoreML)
+        switch ProcessInfo.processInfo.environment["DAL_COREML_COMPUTE_UNITS"] {
+        case "cpu", "cpuOnly", "cpuAndGPU": return true
+        default:
+            return !MLModel.availableComputeDevices.contains { device in
+                if case .neuralEngine = device { return true }
+                return false
+            }
+        }
+        #else
+        return false
+        #endif
+    }()
 
     func isDownloaded() -> Bool { model.isDownloaded() }
     func download(_ progress: @escaping @Sendable (Double) -> Void) async throws {
@@ -32,6 +54,9 @@ struct RedactRunner: ModelRunner {
         // `Redact.Options` does not resolve.
         var opts = Options()
         if let min = arguments.double("min-confidence") { opts.minimumConfidence = min }
+        if Self.offNeuralEngine {
+            out.warn("Redact runs without the Neural Engine on this Mac, so it does not detect names, addresses, or cities. Emails, cards, and IBANs are still redacted.")
+        }
         let redaction = try await model.redaction(of: input, options: opts)
         if out.isJSON {
             out.emit(Result(
