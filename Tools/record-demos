@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Record the README's demos with a built desertant: the demo episode, the terminal
-# recordings in docs/media/*.tape, and a still of burned captions in each shape. The
-# episode is Tests/Fixtures/talk.wav over a public domain clip of a Formica fusca ant by
+# recordings in docs/media/*.tape. The episode is Tests/Fixtures/talk.wav over a public domain clip of a Formica fusca ant by
 # Samuel Koivisto, from Wikimedia Commons. The models run once first, so the recordings
 # show a second run. Needs curl, ffmpeg, and vhs.
 #
@@ -25,35 +24,17 @@ ln -s "$da" "$demo/bin/da"
 export PATH="$demo/bin:$PATH" DESERTANT_NO_UPDATE_CHECK=1
 cd "$demo"
 
-# The episode in each shape: the footage looped, cropped around the ant, with the
-# fixture's speech.
+# The episode: the footage looped, cropped around the ant, with the fixture's speech.
 duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$talk")"
-episode() {
-  local name="$1" width="$2" height="$3"
-  ffmpeg -v error -y -stream_loop -1 -i "$footage" -i "$talk" \
-    -filter_complex "[0:v]scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}:(iw-${width})*0.45:(ih-${height})/2,setsar=1,fps=30,format=yuv420p[v]" \
-    -map "[v]" -map 1:a -t "$duration" -c:v libx264 -crf 18 -preset medium -c:a aac -b:a 160k "$name.mp4"
-}
-episode episode 1920 1080
-episode episode-square 1080 1080
-episode episode-vertical 1080 1920
+width=1920 height=1080
+ffmpeg -v error -y -stream_loop -1 -i "$footage" -i "$talk" \
+  -filter_complex "[0:v]scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height}:(iw-${width})*0.45:(ih-${height})/2,setsar=1,fps=30,format=yuv420p[v]" \
+  -map "[v]" -map 1:a -t "$duration" -c:v libx264 -crf 18 -preset medium -c:a aac -b:a 160k episode.mp4
 
 # A first run loads the models and prepares them for the Neural Engine.
 da flow run podcast-clips episode.mp4 --output-dir warm --quiet >/dev/null
 
 cd "$here"
 for tape in "$media"/*.tape; do vhs "$tape" >/dev/null; done
-
-# Burned captions in each shape, from one transcript so the words match.
-cd "$demo"
-da voz episode.mp4 --json > episode.json
-for name in episode episode-square episode-vertical; do
-  da clips "$name.mp4" --transcript episode.json --count 1 --captions burn --output-dir "shapes-$name" --quiet >/dev/null
-done
-frame() { ffmpeg -v error -y -ss 6 -i "shapes-$1/$1_clip-1.mp4" -frames:v 1 -vf "scale=-1:720" "$1.png"; }
-frame episode && frame episode-square && frame episode-vertical
-ffmpeg -v error -y -i episode-vertical.png -i episode-square.png -i episode.png \
-  -filter_complex "[0]pad=iw+24:ih:0:0:color=0xfbfaf4[a];[1]pad=iw+24:ih:0:0:color=0xfbfaf4[b];[a][b][2]hstack=inputs=3,pad=iw+48:ih+48:24:24:color=0xfbfaf4" \
-  -frames:v 1 "$media/caption-shapes.jpg"
 
 echo "Recorded $(ls "$media" | grep -v '\.tape$' | tr '\n' ' ')"

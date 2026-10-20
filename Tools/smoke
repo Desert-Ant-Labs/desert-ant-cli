@@ -21,6 +21,10 @@ xnnpack="INFO: Created TensorFlow Lite XNNPACK delegate for CPU."
 # stderr lines a passing command may print: TFLite's, the skipped-files note, and on a
 # Mac without a Neural Engine, Redact's note that it finds no names there.
 allowed=(-e "^$xnnpack" -e "^Skipped " -e "^Written as ")
+# A virtual Mac has no hardware scaler, and VideoToolbox says so on stderr.
+if [[ "$(uname -s)" == Darwin && "$(sysctl -n kern.hv_vmm_present 2>/dev/null)" == 1 ]]; then
+  allowed+=(-e "^IOServiceMatchingfailed for: ")
+fi
 
 passed=0 failed=0
 ok() { echo "ok    $1"; passed=$((passed + 1)); }
