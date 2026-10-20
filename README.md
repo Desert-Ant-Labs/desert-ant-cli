@@ -52,35 +52,23 @@ Ran 5 steps in 2.6s.
 
 ## Install
 
-desertant runs on Apple silicon Macs with macOS 14 or later, and on Linux on x86_64 and arm64.
-
-### Install script
+desertant runs on Apple silicon Macs with macOS 14 or later, and on Linux on x86_64 and arm64. Install it with the script, Homebrew, or mise:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
 ```
 
-Update with `da update`.
-
-### Homebrew
-
 ```sh
 brew install desert-ant-labs/tap/desertant
 ```
-
-Update with `brew upgrade desertant`.
-
-### mise
 
 ```sh
 mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"
 ```
 
-Update with `mise upgrade`.
+Update with `da update`, `brew upgrade desertant`, or `mise upgrade`, the same way you installed.
 
-### Linux requirements
-
-desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 41, and libcurl. ffmpeg reads compressed audio, video, and images, and libheif reads HEIC photos:
+On Linux, desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 41, and libcurl. ffmpeg reads compressed audio, video, and images, and libheif reads HEIC photos:
 
 ```sh
 sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
