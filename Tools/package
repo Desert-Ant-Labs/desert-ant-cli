@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build a release binary on this machine and tar it as a release asset,
-# dist/desertant-<target>.tar.gz: `desertant`, the resource bundles, and mlx.metallib
-# on macOS or libLiteRt.so and its notices on Linux. The release workflow runs this
-# on each platform.
+# dist/desertant-<target>.tar.gz: `desertant`, the resource bundles, the caption fonts,
+# the notices, and mlx.metallib on macOS or libLiteRt.so on Linux. The release workflow
+# runs this on each platform.
 #
 #   Tools/package <darwin-arm64|linux-x86_64|linux-arm64>
 set -euo pipefail
@@ -38,9 +38,12 @@ binary="$(swift build -c release --show-bin-path ${linker[@]+"${linker[@]}"})/de
 stage="dist/stage-$target"
 rm -rf "$stage" && mkdir -p "$stage" dist
 install -m 755 "$binary" "$stage/desertant"
+install -m 644 THIRD_PARTY_NOTICES.md "$stage/THIRD_PARTY_NOTICES.md"
+# Burned-in captions look for fonts/ beside the binary.
+mkdir -p "$stage/fonts"
+install -m 644 fonts/*.ttf fonts/OFL.txt "$stage/fonts/"
 if [[ -n "$litert" ]]; then
   install -m 644 "$litert/libLiteRt.so" "$stage/libLiteRt.so"
-  install -m 644 THIRD_PARTY_NOTICES.md "$stage/THIRD_PARTY_NOTICES.md"
   # The static Swift runtime brings its debug info along; a download does not need it.
   strip "$stage/desertant"
   if readelf -V -W "$stage/desertant" | grep -q CURL_; then

@@ -9,6 +9,9 @@ struct MediaInfo: Sendable {
     let hasVideo: Bool
     let hasAudio: Bool
     let durationSec: Double
+    /// The picture as it plays, turned the way the file says to show it.
+    var width = 0
+    var height = 0
 }
 
 protocol MediaCutter: Sendable {
@@ -16,6 +19,8 @@ protocol MediaCutter: Sendable {
     func probe(_ source: URL) async throws -> MediaInfo
     /// Lay `ranges` of `source` end to end and write them to `destination`.
     func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws
+    /// The ranges with `captions` drawn into the picture, which re-encodes the video.
+    func cut(_ source: URL, ranges: [TimeRange], burning captions: BurnedCaptions, frame: CaptionFrame, to destination: URL) async throws
     /// `video`'s picture with `audio` as its sound, written to `destination`.
     func replaceAudio(of video: URL, with audio: URL, to destination: URL) async throws
 }
@@ -31,10 +36,17 @@ struct AVFoundationCutter: MediaCutter {
         guard try await asset.load(.isReadable) else {
             throw RunError("\(source.lastPathComponent) is not a media file this machine can read")
         }
+        let video = try await asset.loadTracks(withMediaType: .video).first
+        var size = CGSize.zero
+        if let video {
+            let (natural, transform) = try await video.load(.naturalSize, .preferredTransform)
+            size = natural.applying(transform)
+        }
         return MediaInfo(
-            hasVideo: try await !asset.loadTracks(withMediaType: .video).isEmpty,
+            hasVideo: video != nil,
             hasAudio: try await !asset.loadTracks(withMediaType: .audio).isEmpty,
-            durationSec: try await asset.load(.duration).seconds
+            durationSec: try await asset.load(.duration).seconds,
+            width: Int(abs(size.width).rounded()), height: Int(abs(size.height).rounded())
         )
     }
 
@@ -114,7 +126,7 @@ struct AVFoundationCutter: MediaCutter {
         }
     }
 
-    private static func composition(of asset: AVAsset, keeping ranges: [TimeRange]) async throws -> AVComposition {
+    static func composition(of asset: AVAsset, keeping ranges: [TimeRange]) async throws -> AVComposition {
         let composition = AVMutableComposition()
         let sourceVideo = try await asset.loadTracks(withMediaType: .video).first
         let sourceAudio = try await asset.loadTracks(withMediaType: .audio).first
@@ -154,7 +166,9 @@ struct FFmpegCutter: MediaCutter {
 
     func probe(_ source: URL) async throws -> MediaInfo {
         let info = try FFmpeg.probe(source.path, tools: tools)
-        return MediaInfo(hasVideo: info.hasVideo, hasAudio: info.hasAudio, durationSec: info.durationSec)
+        let turned = abs(info.rotation) % 180 == 90
+        return MediaInfo(hasVideo: info.hasVideo, hasAudio: info.hasAudio, durationSec: info.durationSec,
+                         width: turned ? info.height : info.width, height: turned ? info.width : info.height)
     }
 
     func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws {

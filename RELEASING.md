@@ -52,8 +52,9 @@ later one; until then `info` says the model has no runner on this platform.
 ## What a release tarball holds
 
 `desertant` and what the binary needs beside it: the SwiftPM resource bundles
-(Tongue's weights among them), `mlx.metallib` on macOS (Title runs on MLX, which looks
-for it next to the binary), and `libLiteRt.so` with `THIRD_PARTY_NOTICES.md` on Linux.
+(Tongue's weights among them), `fonts/` with the caption font and its license,
+`THIRD_PARTY_NOTICES.md`, `mlx.metallib` on macOS (Title runs on MLX, which looks for
+it next to the binary), and `libLiteRt.so` on Linux.
 The script and the formula keep them together in a private directory
 (`~/.local/share/desertant`, Homebrew's `libexec`) and symlink `desertant` and `da`
 into `bin`.

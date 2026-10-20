@@ -364,7 +364,10 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 ```
 
 Clips come back best first. `file` is left out under `--select-only`. `transcript` is
-the transcript file that was used, and is left out when Voz transcribed.
+the transcript file that was used, and is left out when Voz transcribed. With
+`--captions srt`, `captions` on each clip is the .srt file beside it. `notes` lists
+what changed from what was asked, such as captions written as .srt for a recording
+with no picture, and is left out when nothing did.
 
 ## Flows
 

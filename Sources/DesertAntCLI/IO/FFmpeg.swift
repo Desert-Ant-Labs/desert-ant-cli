@@ -55,6 +55,12 @@ enum FFmpeg {
         return "your package manager"
     }
 
+    /// Whether this ffmpeg draws subtitles, which needs libass.
+    static func hasSubtitles(_ tools: Tools) -> Bool {
+        let filters = (try? run(tools.ffmpeg, ["-hide_banner", "-filters"], file: "filters")) ?? Data()
+        return String(decoding: filters, as: UTF8.self).contains(" subtitles ")
+    }
+
     // MARK: - Probe
 
     struct Probe: Sendable, Equatable {
@@ -64,12 +70,14 @@ enum FFmpeg {
         var channels = 0
         var width = 0
         var height = 0
+        /// Degrees the player turns the picture.
+        var rotation = 0
     }
 
     static func probe(_ path: String, tools: Tools) throws -> Probe {
         let data = try run(tools.ffprobe, [
             "-v", "error", "-print_format", "json",
-            "-show_entries", "stream=codec_type,channels,width,height:format=duration", path,
+            "-show_entries", "stream=codec_type,channels,width,height:stream_side_data=rotation:format=duration", path,
         ], file: path)
         guard let probe = parseProbe(data) else {
             throw RunError("could not read \(name(path)) as a media file.")
@@ -89,6 +97,9 @@ enum FFmpeg {
                 if !probe.hasVideo {
                     probe.width = stream["width"] as? Int ?? 0
                     probe.height = stream["height"] as? Int ?? 0
+                    for side in stream["side_data_list"] as? [[String: Any]] ?? [] {
+                        if let r = side["rotation"] as? Int { probe.rotation = r }
+                    }
                 }
                 probe.hasVideo = true
             default: break

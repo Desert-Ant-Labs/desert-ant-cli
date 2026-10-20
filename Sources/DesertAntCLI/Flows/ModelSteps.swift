@@ -13,7 +13,7 @@ import Uhm
 
 enum ModelSteps {
     static var all: [StepDef] {
-        var steps = [who, clear, ear, tongue, redact, gist, emo, uhm, captions]
+        var steps = [who, clear, ear, tongue, redact, gist, emo, uhm, captions, clips]
         #if canImport(Voz)
         steps.insert(voz, at: 0)
         #endif
@@ -284,6 +284,56 @@ enum ModelSteps {
         }
         let cues = Captions.captions(from: words, sentences: Sentence.sentences(from: words))
         return ["srt": .text(TranscriptFile.srt(cues)), "vtt": .text(TranscriptFile.vtt(cues))]
+    }
+
+    static let clips = StepDef(
+        type: "clips", summary: "Cuts the moments worth sharing out of a recording, with captions burned in or written beside each clip.",
+        category: .model, model: "clips",
+        inputs: [Port(id: "audio", type: .audio), Port(id: "words", type: .any, list: true)],
+        outputs: [Port(id: "clips", type: .any, each: true), Port(id: "files", type: .any)],
+        defaults: ["count": .null, "captions": "off", "position": "bottom", "align": "center", "font": .null, "size": .null,
+                   "weight": "bold", "color": "white", "style": "outline", "quality": "high"],
+        primary: "files"
+    ) { run in
+        let media = try audio(run)
+        let p = run.params
+        var request = ClipPipeline.Request(media: URL(fileURLWithPath: media))
+        request.words = timedWords(run.inputs["words"])
+        request.count = p["count"]?.int
+        let mode = p["captions"]?.string ?? "off"
+        guard let captions = CaptionMode(rawValue: mode) else { throw StepError("captions is burn, srt, or off, not \(mode).") }
+        request.captions = captions
+        request.style = try CaptionStyle.parse(
+            position: p["position"]?.string, align: p["align"]?.string, font: p["font"]?.string, size: p["size"]?.string,
+            weight: p["weight"]?.string, color: p["color"]?.string, look: p["style"]?.string, quality: p["quality"]?.string)
+        request.outputDirectory = try run.context.scratch("clips")
+        let pipeline = await run.context.run.models.model("clips") { ClipPipeline() }
+        let report = try await pipeline.run(request) { phase in
+            switch phase {
+            case .downloading(let model, let f): run.context.progress("downloading \(model)", f)
+            case .loading(let model): run.context.progress("loading \(model)")
+            case .transcribing(let f): run.context.progress("transcribing", f)
+            case .selecting: run.context.progress("selecting")
+            case .cutting(let done, let of): run.context.progress("\(captions == .burn ? "captioning" : "cutting") \(min(done + 1, of)) of \(of)", Double(done) / Double(max(of, 1)))
+            }
+        }
+        run.context.note = report.notes?.joined(separator: " ")
+        func clip(_ path: String) -> Value { RunInputKind.isVideo(path) ? .video(path) : .audio(path) }
+        var files: [Value] = []
+        for pick in report.clips {
+            if let file = pick.file { files.append(clip(file)) }
+            if let srt = pick.captions { files.append(.file(srt)) }
+        }
+        return [
+            "clips": .list(report.clips.map { pick in
+                var fields: [(String, Value)] = [("id", .number(Double(pick.id))), ("start", .number(pick.start)), ("end", .number(pick.end)),
+                                                 ("durationSec", .number(pick.durationSec)), ("text", .text(pick.text)), ("score", .number(pick.score))]
+                if let file = pick.file { fields.append(("file", clip(file))) }
+                if let srt = pick.captions { fields.append(("captions", .file(srt))) }
+                return .record(fields)
+            }),
+            "files": .list(files),
+        ]
     }
 
     /// The audio or video file a step reads.

@@ -1,6 +1,6 @@
 # Third-party notices
 
-The Linux release of desertant ships `libLiteRt.so` beside the binary and links a few open source Swift packages into it. This file names each one, its license, and where its source lives. desert-ant-core is covered in [LICENSE.md](LICENSE.md).
+The Linux release of desertant ships `libLiteRt.so` beside the binary. Every release links a few open source Swift packages into the binary and ships a font in `fonts/` for burned-in captions. This file names each one, its license, and where its source lives. desert-ant-core is covered in [LICENSE.md](LICENSE.md).
 
 ## LiteRT
 
@@ -13,6 +13,38 @@ These are licensed under the Apache License 2.0 with the Runtime Library Excepti
 - Swift standard library and Foundation: https://github.com/swiftlang
 - Swift Argument Parser: https://github.com/apple/swift-argument-parser
 - Swift Numerics: https://github.com/apple/swift-numerics
+
+## Yams
+
+Reads and writes flow files. Licensed under the MIT License. Source: https://github.com/jpsim/Yams
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2016 JP Simard.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## Atkinson Hyperlegible
+
+The default font for burned-in captions, by the Braille Institute of America, shipped as `fonts/AtkinsonHyperlegible-Regular.ttf` and `fonts/AtkinsonHyperlegible-Bold.ttf`. Licensed under the SIL Open Font License 1.1, which ships beside the fonts as `fonts/OFL.txt`. Source: https://github.com/google/fonts/tree/main/ofl/atkinsonhyperlegible
 
 ## Apache License 2.0
 

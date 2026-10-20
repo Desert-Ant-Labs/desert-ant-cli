@@ -34,7 +34,7 @@ enum Captions {
     }
 
     /// Words as a caption: one line, or two balanced lines.
-    static func layout(_ words: [TimedWord]) -> String {
+    static func layout(_ words: [TimedWord], lineLength: Int = lineLength) -> String {
         let text = join(words)
         guard text.count > lineLength else { return text }
         let ws = words.map { $0.text.trimmingCharacters(in: .whitespaces) }
@@ -71,12 +71,12 @@ enum Captions {
         return text.count <= lineLength || layout(words).contains("\n") && layout(words).split(separator: "\n").allSatisfy { $0.count <= lineLength }
     }
 
-    private static func join(_ words: [TimedWord]) -> String {
+    static func join(_ words: [TimedWord]) -> String {
         words.map { $0.text.trimmingCharacters(in: .whitespaces) }.joined(separator: " ")
     }
 
-    /// No overlaps, short cues held for at least a second, tiny gaps closed.
-    private static func settle(_ cues: [Caption]) -> [Caption] {
+    /// No overlaps, short cues held for at least `minDuration`, tiny gaps closed.
+    static func settle(_ cues: [Caption], minDuration: Double = minDuration, closeGap: Double = closeGap) -> [Caption] {
         var out: [Caption] = []
         for (i, cue) in cues.enumerated() {
             var start = cue.start, end = max(cue.end, cue.start + minDuration)

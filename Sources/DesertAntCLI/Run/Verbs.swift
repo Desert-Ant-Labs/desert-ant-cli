@@ -238,18 +238,36 @@ struct WhoVerb: AsyncParsableCommand {
 struct ClipsVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "clips", abstract: Manifest.summary("clips"),
-        discussion: "Transcribes with Voz, picks the moments with Clips, and writes one file per clip beside the input. Pass a transcript to skip transcribing, or --select-only for timestamps alone.")
+        discussion: "Transcribes with Voz, picks the moments with Clips, and writes one file per clip beside the input. Pass a transcript to skip transcribing, or --select-only for timestamps alone. --captions burn draws the words into each clip, styled with the --caption options.")
     @Argument(help: "The video or audio files, or a folder of them.") var files: [String]
     @Option(help: "How many clips to look for. Default: the model sizes it to the recording.") var count: Int?
     @Option(name: .customLong("output-dir"), help: "Where the clip files go. Default: beside the input.") var outputDir: String?
     @Option(help: "An .srt, .vtt, or .json transcript instead of transcribing; `-` reads one from stdin.") var transcript: String?
     @Flag(name: .customLong("select-only"), help: "Report the moments as timestamps without writing files.") var selectOnly = false
     @Flag(help: "Replace existing clip files instead of stepping aside to new names.") var force = false
+    @Option(help: "burn to draw captions into each clip, srt to write <clip>.srt beside it, or off.") var captions: String?
+    @Option(name: .customLong("caption-position"), help: "bottom, center, or top.") var captionPosition: String?
+    @Option(name: .customLong("caption-align"), help: "left, center, or right.") var captionAlign: String?
+    @Option(name: .customLong("caption-font"), help: "A font family, or a .ttf or .otf file.") var captionFont: String?
+    @Option(name: .customLong("caption-size"), help: "The text's height as a share of the frame's height, as 0.06.") var captionSize: String?
+    @Option(name: .customLong("caption-weight"), help: "regular, medium, semibold, bold, black, or 100 to 900.") var captionWeight: String?
+    @Option(name: .customLong("caption-color"), help: "A name such as white or yellow, or a hex color such as #ffcc00.") var captionColor: String?
+    @Option(name: .customLong("caption-style"), help: "outline, box, or shadow.") var captionStyle: String?
+    @Option(help: "The video quality of a clip with burned captions: low, medium, or high.") var quality: String?
     @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
         var args = RunArguments()
+        args.set("captions", captions)
+        args.set("caption-position", captionPosition)
+        args.set("caption-align", captionAlign)
+        args.set("caption-font", captionFont)
+        args.set("caption-size", captionSize)
+        args.set("caption-weight", captionWeight)
+        args.set("caption-color", captionColor)
+        args.set("caption-style", captionStyle)
+        args.set("quality", quality)
         args.set("count", count)
         args.set("output-dir", outputDir)
         args.set("transcript", transcript)
