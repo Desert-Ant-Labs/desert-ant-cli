@@ -29,7 +29,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
-        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "3.5.0", traits: mlx ? ["MLX"] : []),
+        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", from: "4.1.0", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
         .executableTarget(
@@ -45,10 +45,10 @@ let package = Package(
                 .product(name: "Tongue", package: core),
                 // Audio decode for the models that take samples (ear, uhm).
                 .product(name: "AudioIO", package: core),
-                // The clips pipeline: selection everywhere, Voz on Apple platforms.
+                // The clips pipeline: selection everywhere, Voz on Apple platforms and Windows.
                 .product(name: "Clips", package: core),
                 .product(name: "Transcript", package: core),
-                .product(name: "Voz", package: core, condition: .when(platforms: [.macOS])),
+                .product(name: "Voz", package: core, condition: .when(platforms: [.macOS, .windows])),
                 .product(name: "Uhm", package: core, condition: .when(platforms: [.macOS])),
                 // Moderator runs everywhere, but decoding an image file needs ImageIO.
                 .product(name: "Moderator", package: core, condition: .when(platforms: [.macOS])),

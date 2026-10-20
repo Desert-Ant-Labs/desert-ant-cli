@@ -1,12 +1,15 @@
-#if canImport(CoreML) && canImport(AVFoundation)
+#if canImport(Voz)
+#if canImport(AVFoundation)
 import AVFoundation
+#endif
 import Foundation
 import Transcript
 import Voz
 
-// Voz with word timestamps, for the `voz` command and the clips pipeline. Apple
-// platforms only, since Voz drives Core ML directly. A video container is exported to
-// a temporary audio file first, since Voz reads audio.
+// Voz with word timestamps, for the `voz` command and the clips pipeline: Core ML on
+// Apple, ONNX Runtime on Windows. On Apple a video container is exported to a
+// temporary audio file first, since Voz reads audio; elsewhere the file goes to Voz
+// as given, and off Apple core decodes WAV only.
 
 actor VozTranscriber: Transcriber {
     nonisolated let name = "voz"
@@ -55,6 +58,9 @@ actor VozTranscriber: Transcriber {
     /// The media itself when it is already audio, else its audio track exported to a
     /// temporary m4a.
     static func audioOnly(_ media: URL) async throws -> URL {
+        #if !canImport(AVFoundation)
+        return media
+        #else
         let asset = AVURLAsset(url: media)
         guard try await !asset.loadTracks(withMediaType: .audio).isEmpty else {
             throw RunError("\(media.lastPathComponent) has no audio track")
@@ -67,6 +73,7 @@ actor VozTranscriber: Transcriber {
             .appendingPathComponent("desertant-\(UUID().uuidString).m4a")
         try await session.export(to: url, as: .m4a)
         return url
+        #endif
     }
 }
 #endif

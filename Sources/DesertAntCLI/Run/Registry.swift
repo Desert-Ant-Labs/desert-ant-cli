@@ -6,7 +6,7 @@
 enum Runners {
     static let all: [String: any ModelRunner] = {
         var registry: [String: any ModelRunner] = [:]
-        for runner in portable + appleOnly {
+        for runner in portable + platformGated {
             registry[runner.id] = runner
         }
         return registry
@@ -24,11 +24,15 @@ enum Runners {
         ClipsRunner(),
     ]
 
-    /// Models whose frameworks exist only on Apple platforms.
-    private static let appleOnly: [any ModelRunner] = {
+    /// Models whose frameworks exist only on some platforms.
+    private static let platformGated: [any ModelRunner] = {
         var runners: [any ModelRunner] = []
+        // Core ML on Apple, ONNX Runtime on Windows.
+        #if canImport(Voz)
+        runners.append(VozRunner())
+        #endif
         #if canImport(CoreML) && canImport(AVFoundation)
-        runners += [VozRunner(), UhmRunner()]
+        runners.append(UhmRunner())
         #endif
         #if TITLE
         runners.append(TitleRunner())

@@ -1,4 +1,4 @@
-#if canImport(CoreML) && canImport(AVFoundation)
+#if canImport(Voz)
 import Foundation
 import Transcript
 
