@@ -42,6 +42,6 @@ struct Search: ParsableCommand {
             out.line(p.model(m.id))
             out.line("  \(m.tagline)")
         }
-        out.note("\n\(hits.count) of \(Manifest.shared.models.count) models match.")
+        out.note("\(hits.count) of \(Manifest.shared.models.count) models match.")
     }
 }

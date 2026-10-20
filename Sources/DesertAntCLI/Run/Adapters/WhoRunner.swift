@@ -134,7 +134,7 @@ struct WhoRunner: ModelRunner {
             return
         }
         guard format == .text else {
-            print(try render(format, files: files), terminator: "")
+            out.text(try render(format, files: files))
             return
         }
         show(speakers, lines: lines, duration: result.duration, names: settings.names, out: out)

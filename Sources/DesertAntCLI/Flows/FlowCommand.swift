@@ -143,7 +143,7 @@ struct FlowRunCommand: AsyncParsableCommand {
         }
         let done = report.steps.count { $0.status == "done" }
         let skipped = report.steps.count { $0.status == "skipped" }
-        out.note("\nRan \(done) step\(done == 1 ? "" : "s") in \(Format.elapsed(elapsed))\(skipped > 0 ? ", and skipped \(skipped)" : "").")
+        out.note("Ran \(done) step\(done == 1 ? "" : "s") in \(Format.elapsed(elapsed))\(skipped > 0 ? ", and skipped \(skipped)" : "").")
     }
 
     /// A path under the current folder as the reader would type it; JSON keeps it absolute.
@@ -279,7 +279,7 @@ struct FlowShowCommand: ParsableCommand {
         if out.isJSON {
             out.emit(Shown(name: t.name, yaml: t.yaml))
         } else {
-            print(t.yaml.hasSuffix("\n") ? t.yaml : t.yaml + "\n", terminator: "")
+            out.text(t.yaml)
         }
     }
 }
@@ -367,7 +367,7 @@ struct FlowCheckCommand: ParsableCommand {
                 out.line(Steps.problem(s.type) == nil ? row : p.dim(row))
             }
             if !parsed.steps.flatMap(\.implied).isEmpty {
-                out.note("\nInputs without `uses` take the nearest earlier output of the same name, else of the same type.")
+                out.note("Inputs without `uses` take the nearest earlier output of the same name, else of the same type.")
             }
             if !parsed.problems.isEmpty {
                 out.line()

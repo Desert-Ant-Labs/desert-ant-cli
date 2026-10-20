@@ -6,7 +6,7 @@
 
 Transcribe a recording and label who said what, cut the best moments into captioned clips, clean up the audio, find, rank, and crop photos, redact personal data from text, name the language of a line, flag nudity in a photo, or tag a topic, with [Desert Ant Labs](https://desertant.com) models running on your own machine. Run one model, or several in one command as a flow. Weights download once. Nothing leaves the device.
 
-<img src="docs/media/flow-run.gif" width="800" alt="The terminal runs da flow run podcast-clips episode.mp4, which prints the path of one captioned clip and reports 5 steps in 2.6s, then time reports 2.939s.">
+<img src="docs/media/flow-run.gif" width="800" alt="The terminal runs da flow run podcast-clips episode.mp4, which prints the path of one captioned clip and reports 5 steps in 2.6s, then time reports 2.914s.">
 
 `da flow run podcast-clips episode.mp4` cleans up the sound of a 27s recording, transcribes it, picks the moment worth sharing, and writes it as a clip with the captions burned in. On an M3 Ultra, with the models already loaded once, the whole flow took 2.9s. The first run on a machine downloads the models and prepares them for the Neural Engine.
 

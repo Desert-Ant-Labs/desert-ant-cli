@@ -410,7 +410,7 @@ struct EyeRunner: SetRunner {
                 try await self.video(video, s, out: each)
             }
             if total > 0 {
-                out.note("\n\(kept.count) of \(total) photo\(total == 1 ? "" : "s") match.")
+                out.note("\(kept.count) of \(total) photo\(total == 1 ? "" : "s") match.")
             }
 
         case .duplicates:
@@ -430,7 +430,7 @@ struct EyeRunner: SetRunner {
                 for other in g.others { out.line(p.dim(other)) }
             }
             let extra = groups.reduce(0) { $0 + $1.others.count }
-            out.note("\n\(groups.isEmpty ? "No" : "\(groups.count)") group\(groups.count == 1 ? "" : "s") of near-duplicates in \(kept.count) photos"
+            out.note("\(groups.isEmpty ? "No" : "\(groups.count)") group\(groups.count == 1 ? "" : "s") of near-duplicates in \(kept.count) photos"
                      + (extra > 0 ? ". \(extra) could go." : "."))
 
         case .best:

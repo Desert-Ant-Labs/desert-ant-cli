@@ -95,7 +95,7 @@ struct ClipsRunner: ModelRunner {
             if let srt = pick.captions { out.line("    \(p.dim(srt))") }
         }
         let elapsed = Date().timeIntervalSince(started)
-        out.note("\n\(report.clips.count) clip\(report.clips.count == 1 ? "" : "s") from \(Format.spoken(report.materialSec)) in \(Format.elapsed(elapsed)).")
+        out.note("\(report.clips.count) clip\(report.clips.count == 1 ? "" : "s") from \(Format.spoken(report.materialSec)) in \(Format.elapsed(elapsed)).")
     }
 
 }

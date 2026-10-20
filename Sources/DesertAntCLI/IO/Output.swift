@@ -29,10 +29,21 @@ struct Output {
     var palette: Palette { options.palette }
     var isJSON: Bool { options.json }
 
-    /// A line of human text. Suppressed under --json.
+    /// A line of human text. Suppressed under --json. An empty line asks for a break
+    /// before whatever prints next; see `Spacing`.
     func line(_ s: String = "") {
         guard !isJSON else { return }
-        print(s.isEmpty ? s : indent + s)
+        guard !s.isEmpty else { return Spacing.shared.breakNext() }
+        Spacing.shared.open(.result)
+        print(indent + s)
+    }
+
+    /// Text that is already laid out, such as a transcript or an .srt, printed as it is.
+    /// Printed under --json too, since a format the reader asked for wins.
+    func text(_ s: String) {
+        guard !s.isEmpty else { return }
+        Spacing.shared.open(.result)
+        print(s, terminator: s.hasSuffix("\n") ? "" : "\n")
     }
 
     /// A message for the person on stderr, whatever stdout carries: a file that failed
@@ -41,20 +52,19 @@ struct Output {
         FileHandle.standardError.write(Data((s + "\n").utf8))
     }
 
-    /// A blank line on a terminal, so a result stands apart from the prompt and the
-    /// notes. Nothing in a pipe, under --json, or with --quiet.
+    /// End a block: whatever prints next starts after one blank line.
     func space() {
-        guard !isJSON, !options.quiet, isatty(STDOUT_FILENO) != 0 else { return }
-        print()
+        guard !isJSON else { return }
+        Spacing.shared.breakNext()
     }
 
     /// A note, dimmed and wrapped at the terminal's width. Suppressed under --json or
-    /// --quiet. A leading newline is kept as a blank line before the note.
+    /// --quiet. Notes in a row form one block, set apart from the result.
     func note(_ s: String) {
         guard !isJSON, !options.quiet else { return }
-        if s.hasPrefix("\n") { print() }
         let text = s.trimmingCharacters(in: .newlines)
         guard !text.isEmpty else { return }
+        Spacing.shared.open(.note)
         for line in wrap(text, width: min(Terminal.columns, 100) - indent.count) { print(indent + palette.dim(line)) }
     }
 
@@ -118,7 +128,7 @@ extension Output {
         let commands = rows.map { "\(Invocation.name) \($0.command)" }
         let keyWidth = commands.map(displayWidth).max() ?? 0
         let room = max(24, min(Terminal.columns, 110) - indent.count - keyWidth - 4)
-        print()
+        Spacing.shared.open(.hints)
         for (command, row) in zip(commands, rows) {
             let pad = String(repeating: " ", count: keyWidth - displayWidth(command))
             for (i, text) in wrap(row.does, width: room).enumerated() {
@@ -126,5 +136,34 @@ extension Output {
                 print(indent + "  " + p.dim(key) + "  " + p.faint(text))
             }
         }
+    }
+}
+
+/// The blank lines between blocks of text output, decided in one place: one blank line
+/// between a result, its notes, and the hints, and none before the first line or after
+/// the last, so the output sits right under the command and the prompt follows it.
+final class Spacing: @unchecked Sendable {
+    enum Block { case result, note, hints }
+
+    static let shared = Spacing()
+    private let lock = NSLock()
+    private var last: Block?
+    private var pending = false
+
+    /// Ask for a blank line before the next block. Nothing prints if nothing follows.
+    func breakNext() {
+        lock.lock()
+        pending = true
+        lock.unlock()
+    }
+
+    /// About to print a line of `block`: put a blank line first when it starts a new
+    /// block after earlier output.
+    func open(_ block: Block) {
+        lock.lock()
+        defer { lock.unlock() }
+        if let last, pending || last != block { print() }
+        last = block
+        pending = false
     }
 }

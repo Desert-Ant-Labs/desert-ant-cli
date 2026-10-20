@@ -54,7 +54,7 @@ struct UhmRunner: ModelRunner {
             out.line("\(p.time(Format.stamp(f.start)))  \(f.type?.rawValue ?? "filler")  \(p.dim(Format.elapsed(f.duration)))")
         }
         let count = result.fillers.count
-        out.note("\n\(count == 0 ? "No fillers" : "\(count) filler\(count == 1 ? "" : "s")") in \(Format.spoken(result.audioDuration)) of audio.")
+        out.note("\(count == 0 ? "No fillers" : "\(count) filler\(count == 1 ? "" : "s")") in \(Format.spoken(result.audioDuration)) of audio.")
     }
 }
 #endif

@@ -123,7 +123,7 @@ struct VozRunner: ModelRunner {
                 }
             }
         } else {
-            print(try render(input: input, format, t, sentences, cues, voices, files: files, loadSec: loadSec), terminator: "")
+            out.text(try render(input: input, format, t, sentences, cues, voices, files: files, loadSec: loadSec))
         }
         out.space()
         for (ext, path) in files.sorted(by: { $0.key < $1.key }) { out.note("\(ext)  \(path)") }
