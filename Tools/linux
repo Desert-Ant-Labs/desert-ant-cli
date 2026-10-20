@@ -39,19 +39,12 @@ if [[ "$(docker image inspect -f '{{index .Config.Labels "stamp"}}' "$image" 2>/
   printf '%s\n' "$dockerfile" | docker build -q --platform "$platform" --label "stamp=$stamp" -t "$image" - >/dev/null
 fi
 
-# The Linux graph has no MLX, so SwiftPM would rewrite the committed Package.resolved.
-# Each arch resolves into its own copy instead.
-state="${XDG_CACHE_HOME:-$HOME/.cache}/desertant-linux"
-mkdir -p "$state"
-[[ -f "$state/Package.resolved.$arch" ]] || cp "$here/Package.resolved" "$state/Package.resolved.$arch"
-
 tty=(); [[ -t 0 && -t 1 ]] && tty=(-it)
 [[ $# -eq 0 ]] && set -- bash
 exec docker run --rm ${tty[@]+"${tty[@]}"} --platform "$platform" \
   -v "$here:/src/desert-ant-cli" \
   -v "$core:/src/desert-ant-core" \
   -v "desertant-build-$arch:/src/desert-ant-cli/.build" \
-  -v "$state/Package.resolved.$arch:/src/desert-ant-cli/Package.resolved" \
   -v "desertant-swiftpm-$arch:/root/.cache/org.swift.swiftpm" \
   -v "desertant-uv-$arch:/root/.cache/uv" \
   -v "desertant-models-$arch:/root/.cache/desert-ant-models" \

@@ -61,7 +61,7 @@ struct Output {
     /// Whether notes and hints show: on a terminal, without --json or --quiet. In a pipe
     /// or a file, stdout carries the result alone, so `voz --format srt > a.srt` stays
     /// a valid .srt.
-    var decorates: Bool { !isJSON && !options.quiet && isatty(STDOUT_FILENO) != 0 }
+    var decorates: Bool { !isJSON && !options.quiet && Terminal.isTTY(STDOUT_FILENO) }
 
     /// A note, dimmed and wrapped at the terminal's width, shown only when `decorates`.
     /// Notes in a row form one block, set apart from the result.
@@ -117,7 +117,7 @@ struct AnyEncodable: Encodable {
 
 /// Read all of stdin as text, or nil when stdin is a terminal (nothing piped).
 func readStdin() -> String? {
-    guard isatty(STDIN_FILENO) == 0 else { return nil }
+    guard !Terminal.isTTY(STDIN_FILENO) else { return nil }
     let data = FileHandle.standardInput.readDataToEndOfFile()
     let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
     return (text?.isEmpty ?? true) ? nil : text
