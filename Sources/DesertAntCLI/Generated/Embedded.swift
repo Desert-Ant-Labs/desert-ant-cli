@@ -2,7 +2,7 @@
 // templates/. Do not edit by hand.
 
 enum Embedded {
-    static let version = "0.4.0"
+    static let version = "0.5.0"
 
     static let manifest = ###"""
 {
