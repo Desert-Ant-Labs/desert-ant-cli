@@ -113,8 +113,9 @@ final class FlowEngineTests: XCTestCase {
         XCTAssertEqual(value.json(pretty: false), #"{"clip":{"video":"/a/b.mp4"},"gone":[null,"t"],"n":2,"x":0.5}"#)
     }
 
-    func testSentencesSplitWithoutNaturalLanguage() {
-        let pieces = Segment.sentences("It works. Does it? Yes! \"Quoted.\" Then 3 more.\nNew line").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    func testSentencesSplitByPunctuation() {
+        let pieces = Segment.sentences.split("It works. Does it? Yes! \"Quoted.\" Then 3 more.\nNew line")
         XCTAssertEqual(pieces, ["It works.", "Does it?", "Yes!", "\"Quoted.\"", "Then 3 more.", "New line"])
+        XCTAssertEqual(Segment.sentences.split("Dr. Smith is in. ok then."), ["Dr.", "Smith is in. ok then."])
     }
 }

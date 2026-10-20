@@ -1,13 +1,10 @@
 # JSON contracts
 
-What every command writes to stdout under `--json`. Keys are stable within a major
-version; a new key may appear, an existing one won't change meaning or type. Numbers
-are JSON numbers, seconds are seconds, paths are absolute. Examples are real output.
+What every command writes to stdout under `--json`. Keys are stable within a major version; a new key may appear, an existing one won't change meaning or type. Numbers are JSON numbers, seconds are seconds, paths are absolute. Examples are real output.
 
 ## Discovery
 
-`desertant models --json`: an array, one entry per model that runs on this machine,
-A-Z by id. `--all` adds the rest of the catalog; `--group audio|text|vision` filters.
+`desertant models --json` prints an array, one entry per model that runs on this machine, A-Z by id. `--all` adds the rest of the catalog; `--group audio|text|vision` filters.
 
 ```json
 [
@@ -27,20 +24,17 @@ A-Z by id. `--all` adds the rest of the catalog; `--group audio|text|vision` fil
 ]
 ```
 
-`group` is `audio`, `text`, or `vision`. `ships` is true when any SDK is live.
-`platforms` is where core's Swift SDK runs, from the manifest; `runnableHere` is
-whether this CLI runs the model on this machine.
+`group` is `audio`, `text`, or `vision`. `ships` is true when any SDK is live. `platforms` is where core's Swift SDK runs, from the manifest; `runnableHere` is whether this CLI runs the model on this machine.
 
-`desertant search <query> --json`: an array of `{id, name, tagline, summary}`.
+`desertant search <query> --json` prints an array of `{id, name, tagline, summary}`.
 
-`desertant home --json`: the verbs that run on this machine, in the order the help
-lists them.
+`desertant home --json` prints the verbs that run on this machine, in the order the help lists them.
 
 ```json
 [{"command": "emo", "input": "\"<text>\"", "does": "Suggest emoji for a line of text."}]
 ```
 
-`desertant info <id> --json`: one object. Everything in a `models` entry plus:
+`desertant info <id> --json` prints one object, with everything in a `models` entry and these keys:
 
 ```json
 {
@@ -58,7 +52,7 @@ lists them.
 
 `downloaded` is null when the model has no runner on this machine.
 
-`desertant schema --json`: the tool catalog.
+`desertant schema --json` prints the tool catalog.
 
 ```json
 {
@@ -81,17 +75,11 @@ lists them.
 }
 ```
 
-`input` is `text`, `file` (a recording), `image`, or `visual` (a photo or a video),
-or null when the model has no runner on this machine. Every
-`options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option
-count=3`). Each entry also carries `emits` (the document kind its `--json` result is,
-or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's
-`accepts.kind` feeds it through that option, as a file or as `-` for stdin. See
-[pipelines.md](pipelines.md).
+`input` is `text`, `file` (a recording), `image`, or `visual` (a photo or a video), or null when the model has no runner on this machine. Every `options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option count=3`). Each entry also carries `emits` (the document kind its `--json` result is, or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's `accepts.kind` feeds it through that option, as a file or as `-` for stdin. See [pipelines.md](pipelines.md).
 
 `flowSteps` lists every step type a flow file can use, as `{"type", "summary", "category", "model", "inputs", "outputs", "settings", "runsHere"}`. Each input and output is `{"id", "type"}`, where `type` is `text`, `audio` (a video goes on an audio port too), `image`, or `any`. An input has `"list": true` when it takes a whole list and `"optional": true` when it may be left unwired, and an output has `"each": true` when it is a list the next step takes item by item. `settings` maps each setting to its default, or null where it has none. `flows` says how a flow file is written; [flows.md](flows.md) has the rest.
 
-`desertant doctor --json`:
+`desertant doctor --json` prints an object like this one.
 
 ```json
 {
@@ -111,23 +99,21 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 
 ## Weights
 
-`desertant pull <id> --json`: `{"model": "emo", "downloaded": true}`.
+`desertant pull <id> --json` prints `{"model": "emo", "downloaded": true}`.
 
-`desertant cache --json`: `{"path", "sizeBytes", "size", "downloaded": [ids]}`;
-`--clean --force --json` returns `{"cleaned": true}`.
+`desertant cache --json` prints `{"path", "sizeBytes", "size", "downloaded": [ids]}`; `--clean --force --json` returns `{"cleaned": true}`.
 
-`desertant update --check --json`: `{"current", "latest", "updateAvailable",
-"installedVia", "updateCommand"}`.
+`desertant update --check --json` prints `{"current", "latest", "updateAvailable", "installedVia", "updateCommand"}`.
 
 ## Models
 
-`desertant emo "<text>" --json`: an array, best first.
+`desertant emo "<text>" --json` prints an array, best first.
 
 ```json
 [{"emoji": "💰", "confidence": 0.63}, {"emoji": "📅", "confidence": 0.20}]
 ```
 
-`desertant redact "<text>" --json`: the redacted text and every replacement.
+`desertant redact "<text>" --json` prints the redacted text and every replacement.
 
 ```json
 {
@@ -139,19 +125,15 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 }
 ```
 
-To restore originals in a reply, replace each `placeholder` with its `original`.
-Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`,
-`CREDIT_CARD`, `IP_ADDRESS`, `URL`, and the rest of that set. On a Mac without a
-Neural Engine, such as a virtual Mac, Redact finds no names, addresses, or cities, and
-says so on stderr; emails, cards, and IBANs are still redacted.
+To restore originals in a reply, replace each `placeholder` with its `original`. Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`, `CREDIT_CARD`, `IP_ADDRESS`, `URL`, and the rest of that set. On a Mac without a Neural Engine, such as a virtual Mac, Redact finds no names, addresses, or cities, and says so on stderr; emails, cards, and IBANs are still redacted.
 
-`desertant gist "<text>" --json`: an array of topics, best first.
+`desertant gist "<text>" --json` prints an array of topics, best first.
 
 ```json
 [{"slug": "finance", "name": "Personal Finance & Investing", "score": 0.98}]
 ```
 
-`desertant tongue "<text>" --json`: the language the text is written in.
+`desertant tongue "<text>" --json` prints the language the text is written in.
 
 ```json
 {
@@ -162,15 +144,11 @@ says so on stderr; emails, cards, and IBANs are still redacted.
 }
 ```
 
-`language` is an ISO 639 code, and is left out when there was nothing to read. `reliability`
-is `confident`, `likely`, `tentative`, or `empty`, judged from the text's length and
-the lead over the runner-up rather than the probability alone. `tooCloseToCall` is
-true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
+`language` is an ISO 639 code, and is left out when there was nothing to read. `reliability` is `confident`, `likely`, `tentative`, or `empty`, judged from the text's length and the lead over the runner-up rather than the probability alone. `tooCloseToCall` is true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
 
-`desertant title "<text>" --json`: `{"title", "description"}`, on Apple silicon
-builds.
+`desertant title "<text>" --json` prints `{"title", "description"}`, on Apple silicon builds.
 
-`desertant moderator <image> --json`: the nudity score. On Linux, reading the image needs ffmpeg.
+`desertant moderator <image> --json` prints the nudity score. On Linux, reading the image needs ffmpeg.
 
 ```json
 {
@@ -184,12 +162,9 @@ builds.
 }
 ```
 
-`score` is the highest region the policy counts, and `nsfw` is whether that score reaches
-`threshold`. Under `allow-topless` a bare chest alone does not count. Regions are
-decision scores in 0...1, not calibrated probabilities.
+`score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores in 0...1, not calibrated probabilities.
 
-`desertant eye <photo> --json`: what the photo is, its scores, and what is in it. On
-Linux, reading the photo needs ffmpeg.
+`desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux, reading the photo needs ffmpeg.
 
 ```json
 {
@@ -209,16 +184,9 @@ Linux, reading the photo needs ffmpeg.
 }
 ```
 
-`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag
-that is missing scored below it; `--all-tags` holds every confidence. `kind` is the
-most likely photo type. `scores` are percentiles in 0...1 against Eye's calibration
-set. Boxes are in 0...1 of the upright image, from the top left. `rotation` (90, 180,
-or 270) appears when the photo is turned clockwise by that much. `crop` appears with
-`--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`.
-`embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts`
-leaves its keys out.
+`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag that is missing scored below it; `--all-tags` holds every confidence. `kind` is the most likely photo type. `scores` are percentiles in 0...1 against Eye's calibration set. Boxes are in 0...1 of the upright image, from the top left. `rotation` (90, 180, or 270) appears when the photo is turned clockwise by that much. `crop` appears with `--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`. `embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts` leaves its keys out.
 
-`desertant eye <video> --json`: the frames, the thumbnail, and the tags that hold.
+`desertant eye <video> --json` prints the frames, the thumbnail, and the tags that hold.
 
 ```json
 {
@@ -232,29 +200,17 @@ leaves its keys out.
 }
 ```
 
-`tags` maps each tag to the share of frames it holds in. `frames` holds one photo
-document per frame, each with its `time`. With `--has` or `--not`, `matches` lists the
-stretches where every frame matches, as `[{"start", "end"}]` in seconds.
+`tags` maps each tag to the share of frames it holds in. `frames` holds one photo document per frame, each with its `time`. With `--has` or `--not`, `matches` lists the stretches where every frame matches, as `[{"start", "end"}]` in seconds.
 
-With `--has` or `--not` and several photos, the result is an array of the photo
-documents that match. The questions return their own shapes:
+With `--has` or `--not` and several photos, the result is an array of the photo documents that match. The questions return their own shapes:
 
 - `--duplicates`: `{"photos": 15, "groups": [{"keep": "trip/IMG_3615.HEIC", "others": ["trip/IMG_3619.HEIC"]}]}`.
 - `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
 - `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
 
-`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, and `eye` take several paths, or a
-folder, and `--recursive` looks inside its folders. One path returns the document
-below. Several paths or a folder return an array of those documents, in the order the
-files ran, each with its `input`. A file the model does not read is skipped, with a
-note on stderr. A file that fails is left out, with its message on stderr, and the
-exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name
-one file's document, so a batch refuses them. Each output lands beside its input, and
-a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files
-the first run wrote.
+`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, and `eye` take several paths, or a folder, and `--recursive` looks inside its folders. One path returns the document below. Several paths or a folder return an array of those documents, in the order the files ran, each with its `input`. A file the model does not read is skipped, with a note on stderr. A file that fails is left out, with its message on stderr, and the exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name one file's document, so a batch refuses them. desertant writes each output beside its input, and a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files the first run wrote.
 
-`desertant voz <file> --json`: the transcript document. `clips --transcript` reads
-this file as is.
+`desertant voz <file> --json` prints the transcript document. `clips --transcript` reads this file as is.
 
 ```json
 {
@@ -273,12 +229,10 @@ that run on the device."}],
 
 `captions` are the cues SRT and VTT are written from (a newline inside `text` is a line break). `files` maps each extension written to its path, empty when none was.
 
-With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order the
-speakers first speak, and a sentence two people share is split where the speaker
-changes. The document adds `speakers` and `turns`, as `who` writes them below.
+With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order the speakers first speak, and a sentence two people share is split where the speaker changes. The document adds `speakers` and `turns`, as `who` writes them below.
 
 
-`desertant uhm <file> --json`: the filler words, in order.
+`desertant uhm <file> --json` prints the filler words, in order.
 
 ```json
 {
@@ -288,7 +242,7 @@ changes. The document adds `speakers` and `turns`, as `who` writes them below.
 }
 ```
 
-`desertant ear <file> --json`: the language spoken.
+`desertant ear <file> --json` prints the language spoken.
 
 ```json
 {
@@ -299,10 +253,9 @@ changes. The document adds `speakers` and `turns`, as `who` writes them below.
 }
 ```
 
-`language` is an ISO code, or null when there was nothing to listen to. Candidates
-under 0.01 are left out.
+`language` is an ISO code, or null when there was nothing to listen to. Candidates under 0.01 are left out.
 
-`desertant who <file> --json`: who spoke when.
+`desertant who <file> --json` prints who spoke when.
 
 ```json
 {
@@ -320,14 +273,9 @@ under 0.01 are left out.
 }
 ```
 
-Speakers are numbered from 0 in the order they first speak, and `speakers` lists the
-most heard first. `name` is from `--names`, else `Speaker 1` and on. `share` is the
-speaker's time against the whole recording. `turns` are joined across pauses up to
-`--join` seconds (1 by default) and sorted by start; turns of two speakers can
-overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
-"speaker", "text"}]`. `files` maps the format written with `-o` to its path.
+Speakers are numbered from 0 in the order they first speak, and `speakers` lists the most heard first. `name` is from `--names`, else `Speaker 1` and on. `share` is the speaker's time against the whole recording. `turns` are joined across pauses up to `--join` seconds (1 by default) and sorted by start; turns of two speakers can overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end", "speaker", "text"}]`. `files` maps the format written with `-o` to its path.
 
-`desertant clear <file> --json`: where the enhanced file landed.
+`desertant clear <file> --json` prints the path of the enhanced file.
 
 ```json
 {
@@ -338,10 +286,9 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 }
 ```
 
-`output` is the path actually written, which may have stepped aside to
-`talk_clear-2.mp4`.
+`output` is the path actually written, which may have stepped aside to `talk_clear-2.mp4`.
 
-`desertant clips <file> --json`: the report.
+`desertant clips <file> --json` prints the report.
 
 ```json
 {
@@ -365,15 +312,11 @@ overlap. With `--transcript`, `lines` lists the transcript as `[{"start", "end",
 }
 ```
 
-Clips come back best first. `file` is left out under `--select-only`. `transcript` is
-the transcript file that was used, and is left out when Voz transcribed. With
-`--captions srt`, `captions` on each clip is the .srt file beside it. `notes` lists
-what changed from what was asked, such as captions written as .srt for a recording
-with no picture, and is left out when nothing did.
+Clips come back best first. `file` is left out under `--select-only`. `transcript` is the transcript file that was used, and is left out when Voz transcribed. With `--captions srt`, `captions` on each clip is the .srt file beside it. `notes` lists what changed from what was asked, such as captions written as .srt for a recording with no picture, and is left out when nothing did.
 
 ## Flows
 
-`desertant flow run <flow> [files] --json`: what the run did, step by step.
+`desertant flow run <flow> [files] --json` prints what the run did, step by step.
 
 ```json
 {
@@ -389,16 +332,9 @@ with no picture, and is left out when nothing did.
 }
 ```
 
-`status` is `done`, `skipped` when an input the step needs brought nothing, or
-`failed`, with the message in `note`. A step that ran on a list notes how many items
-failed. `outputs` holds what each view and table step shows, by step id. A value is
-text, a number, or a bool, a record is an object, and a list is an array with `null`
-where a branch skipped an item. A media value is an object naming its kind:
-`{"audio": "/work/talk.wav"}`, or `video`, `image`, or `file`. `files` lists every
-file the run wrote. When the flow runs once per input, the result is an array of
-these, in input order.
+`status` is `done`, `skipped` when an input the step needs brought nothing, or `failed`, with the message in `note`. A step that ran on a list notes how many items failed. `outputs` holds what each view and table step shows, by step id. A value is text, a number, or a bool, a record is an object, and a list is an array with `null` where a branch skipped an item. A media value is an object naming its kind: `{"audio": "/work/talk.wav"}`, or `video`, `image`, or `file`. `files` lists every file the run wrote. When the flow runs once per input, the result is an array of these, in input order.
 
-`desertant flow check <flow> --json`: the steps and how they connect.
+`desertant flow check <flow> --json` prints the steps and how they connect.
 
 ```json
 {
@@ -413,15 +349,10 @@ these, in input order.
 }
 ```
 
-`uses` maps each input to the output it reads. `implied` lists the inputs desertant
-wired because the file left them out. `problem` on a step and `problems` say why the
-flow can't run here; the exit code is then 1.
+`uses` maps each input to the output it reads. `implied` lists the inputs desertant wired because the file left them out. `problem` on a step and `problems` say why the flow can't run here; the exit code is then 1.
 
-`desertant flow templates --json`: `[{"name", "title", "summary", "steps", "runsHere"}]`,
-where `steps` lists the step types in order. `flow show <template> --json` is
-`{"name", "yaml"}`, and `flow new <template> --json` is `{"template", "file"}`.
+`desertant flow templates --json` prints `[{"name", "title", "summary", "steps", "runsHere"}]`, where `steps` lists the step types in order. `flow show <template> --json` is `{"name", "yaml"}`, and `flow new <template> --json` is `{"template", "file"}`.
 
 ## Errors
 
-Nothing is written to stdout on failure. The message is on stderr, prefixed
-`Error:`, and the exit code is `1` for a runtime error or `64` for a usage error.
+Nothing is written to stdout on failure. The message is on stderr, prefixed `Error:`, and the exit code is `1` for a runtime error or `64` for a usage error.

@@ -23,7 +23,7 @@ struct CaptionFont: Sendable, Equatable {
     func baseline(lineHeight: Double) -> Double { lineHeight * ascent / (ascent + descent) }
 
     /// The font desertant ships, beside the binary in `fonts/`.
-    static let bundledName = "Atkinson Hyperlegible"
+    static let bundledName = "Inclusive Sans"
 
     static func resolve(_ name: String?, weight: Int) throws -> CaptionFont {
         guard let name else { return try bundled(weight: weight) }
@@ -37,7 +37,7 @@ struct CaptionFont: Sendable, Equatable {
     }
 
     static func bundled(weight: Int) throws -> CaptionFont {
-        let file = weight >= 600 ? "AtkinsonHyperlegible-Bold.ttf" : "AtkinsonHyperlegible-Regular.ttf"
+        let file = weight >= 600 ? "InclusiveSans-Bold.ttf" : "InclusiveSans-Regular.ttf"
         guard let folder = fontsFolder else {
             throw RunError("could not find the fonts folder that ships beside desertant. Reinstall desertant, or pass --caption-font with a font file.")
         }
@@ -49,7 +49,7 @@ struct CaptionFont: Sendable, Equatable {
         guard var dir = Bundle.main.executableURL?.resolvingSymlinksInPath().deletingLastPathComponent() else { return nil }
         for _ in 0..<6 {
             let candidate = dir.appendingPathComponent("fonts")
-            if FileManager.default.fileExists(atPath: candidate.appendingPathComponent("AtkinsonHyperlegible-Bold.ttf").path) {
+            if FileManager.default.fileExists(atPath: candidate.appendingPathComponent("InclusiveSans-Bold.ttf").path) {
                 return candidate
             }
             dir = dir.deletingLastPathComponent()

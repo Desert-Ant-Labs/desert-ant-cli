@@ -4,7 +4,7 @@ The Linux release of desertant ships `libLiteRt.so` beside the binary. Every rel
 
 ## LiteRT
 
-Google's on-device inference runtime, version 2.1.6, shipped as `libLiteRt.so` in the Linux release. Licensed under the Apache License 2.0, printed in full below. Source: https://github.com/google-ai-edge/LiteRT
+Google's on-device inference runtime, version 2.2.0, shipped as `libLiteRt.so` in the Linux release. Licensed under the Apache License 2.0, printed in full below. Source: https://github.com/google-ai-edge/LiteRT
 
 ## Swift packages linked into the binary
 
@@ -42,9 +42,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## Atkinson Hyperlegible
+## Inclusive Sans
 
-The default font for burned-in captions, by the Braille Institute of America, shipped as `fonts/AtkinsonHyperlegible-Regular.ttf` and `fonts/AtkinsonHyperlegible-Bold.ttf`. Licensed under the SIL Open Font License 1.1, which ships beside the fonts as `fonts/OFL.txt`. Source: https://github.com/google/fonts/tree/main/ofl/atkinsonhyperlegible
+The default font for burned-in captions, by the Inclusive Sans Project Authors, shipped as `fonts/InclusiveSans-Regular.ttf` and `fonts/InclusiveSans-Bold.ttf`: the Regular (400) and Bold (700) instances of the variable font, version 2.004. Licensed under the SIL Open Font License 1.1, which ships beside the fonts as `fonts/OFL.txt`. Source: https://github.com/LivKing/Inclusive-Sans
 
 ## Apache License 2.0
 

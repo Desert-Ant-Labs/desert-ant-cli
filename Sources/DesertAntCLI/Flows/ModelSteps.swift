@@ -292,7 +292,8 @@ enum ModelSteps {
         inputs: [Port(id: "audio", type: .audio), Port(id: "words", type: .any, list: true)],
         outputs: [Port(id: "files", type: .any), Port(id: "clips", type: .any, each: true)],
         defaults: ["count": .null, "captions": "off", "position": "bottom", "align": "center", "font": .null, "size": .null,
-                   "weight": "bold", "color": "white", "style": "outline", "quality": "high"]
+                   "weight": "bold", "color": "white", "style": "outline", "quality": "high",
+                   "lines": .null, "words": .null]
     ) { run in
         let media = try audio(run)
         let p = run.params
@@ -304,7 +305,8 @@ enum ModelSteps {
         request.captions = captions
         request.style = try CaptionStyle.parse(
             position: p["position"]?.string, align: p["align"]?.string, font: p["font"]?.string, size: p["size"]?.string,
-            weight: p["weight"]?.string, color: p["color"]?.string, look: p["style"]?.string, quality: p["quality"]?.string)
+            weight: p["weight"]?.string, color: p["color"]?.string, look: p["style"]?.string, quality: p["quality"]?.string,
+            lines: p["lines"]?.string, words: p["words"]?.string)
         request.outputDirectory = try run.context.scratch("clips")
         let pipeline = await run.context.run.models.model("clips") { ClipPipeline() }
         let report = try await pipeline.run(request) { phase in

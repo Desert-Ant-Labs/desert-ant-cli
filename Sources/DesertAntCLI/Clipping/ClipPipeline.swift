@@ -68,7 +68,7 @@ struct ClipPipeline {
         var transcript: URL?
         /// How many clips to look for; nil lets the model size it to the material.
         var count: Int?
-        /// Where the clip files go. Default: beside the input.
+        /// Where the clip files go, or nil for beside the input.
         var outputDirectory: URL?
         /// Report the moments without writing files.
         var selectOnly = false
@@ -162,7 +162,7 @@ struct ClipPipeline {
                 switch captions {
                 case .burn:
                     let frame = CaptionFrame(width: info?.width ?? 0, height: info?.height ?? 0, style: request.style)
-                    let burned = BurnedCaptions(cues: ClipCaptions.social(shifted, lineLength: frame.lineLength),
+                    let burned = BurnedCaptions(cues: ClipCaptions.social(shifted, pacing: frame.pacing),
                                                 style: request.style, font: font!)
                     try await cutter.cut(request.media, ranges: ranges, burning: burned, frame: frame, to: URL(fileURLWithPath: destination))
                 case .srt:

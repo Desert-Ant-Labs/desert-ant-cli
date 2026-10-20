@@ -141,21 +141,22 @@ An `if` step sends each item down `yes` or `no` and leaves a gap on the other si
 | `rename` | New names for files from a pattern. Needs `--apply`. | `pattern`, `mode`: copy or rename, `folder` |
 | `copy` | Copies or moves files into a folder. Needs `--apply`. | `mode`: copy or move, `folder`, `subfolder` |
 
-An `if` checks with `op`: `equals`, `notEquals`, `oneOf` (a comma-separated `operand`), `contains`, `above`, `below`, `truthy`, `falsy`, or `empty`. It checks the value itself, or its `test` input when one is wired, as a photo against Eye's `type`. A `list` takes `op`: `desc` or `asc` (sorted by its `by` input when wired), `sort`, `most`, `firstN`, `lastN`, `item`, `count`, `unique`, `reverse`, or `compact`.
+An `if` checks with `op`: `equals`, `notEquals`, `oneOf` (a comma-separated `operand`), `contains`, `above`, `below`, `truthy`, `falsy`, or `empty`. An `if` checks the value itself, or its `test` input when one is wired, as a photo against Eye's `type`. A `list` takes `op`: `desc` or `asc` (sorted by its `by` input when wired), `sort`, `most`, `firstN`, `lastN`, `item`, `count`, `unique`, `reverse`, or `compact`.
 
 The eye step gives `subject`, `scenes`, `type`, `animal`, `people`, `pets`, `keeper`, `reason`, `aesthetic`, `cover`, `sharp`, `blur`, `sensitive`, `faces`, `smile`, `eyesOpen`, `looking`, `expression`, `shot`, `crop`, and `detail`, the document `da eye --json` writes. `reason` is `keeper`, or why a photo isn't worth keeping: blurry, taken by accident, nothing special, and so on.
 
-The clips step takes the caption settings `da clips` takes, without the `caption-` in front: `captions` (burn, srt, or off), `position`, `align`, `font`, `size`, `weight`, `color`, `style`, and `quality`. [clips.md](clips.md) explains each.
+The clips step takes the caption settings `da clips` takes, without the `caption-` in front: `captions` (burn, srt, or off), `position`, `align`, `font`, `size`, `weight`, `color`, `style`, `lines`, `words`, and `quality`. `quality` is `high` unless you set it, in the file or with `--set clips.quality=medium`, and every level keeps the source's size and frame rate. [clips.md](clips.md) explains each setting.
 
 ## Saved files
 
 A `folder` step saves text as `.txt`, captions as `.srt` or `.vtt`, text with Markdown in it as `.md`, a list of records as `.csv`, and anything else as `.json`, named by its `name` setting. `{{name}}` in it is the first input's name without its extension, so `"{{name}}_notes"` saves `standup_notes.md` beside `standup.m4a`. Audio, video, and photos keep their own names, as `talk_clear.wav` or `talk_clear_clip-1.mp4`. A bare `folder` setting, as `Receipts`, is a folder beside the input or inside `--output-dir`.
 
-A file a step makes along the way, as clear's clean audio, is kept only when a `folder` or `view` step takes it. A `view` saves it beside the input and prints its path.
+A file a step makes along the way, as clear's clean audio, is kept only when a `folder` or `view` step takes it. A `view` of such a file saves it beside the input, or into `--output-dir`, and prints the path of the saved copy.
 
 ## Limits
 
 - Steps run one after another, in file order. Each model loads once per command.
+- A text splits into sentences at a period, question mark, or exclamation mark before a capital, a digit, or a line break, the same way on macOS and Linux. An abbreviation such as "Dr." before a name ends a sentence.
 - A flow file holds at most 8MB and a million values.
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.

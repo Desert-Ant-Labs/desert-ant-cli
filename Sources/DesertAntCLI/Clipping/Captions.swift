@@ -75,8 +75,8 @@ enum Captions {
         words.map { $0.text.trimmingCharacters(in: .whitespaces) }.joined(separator: " ")
     }
 
-    /// No overlaps, short cues held for at least `minDuration`, tiny gaps closed.
-    static func settle(_ cues: [Caption], minDuration: Double = minDuration, closeGap: Double = closeGap) -> [Caption] {
+    /// No overlaps, short cues held for at least a second, tiny gaps closed.
+    private static func settle(_ cues: [Caption]) -> [Caption] {
         var out: [Caption] = []
         for (i, cue) in cues.enumerated() {
             var start = cue.start, end = max(cue.end, cue.start + minDuration)

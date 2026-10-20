@@ -28,6 +28,10 @@ struct CaptionStyle: Sendable, Equatable {
     var color = RGBA.white
     var look = Look.outline
     var quality = Quality.high
+    /// Lines on screen, 1 or 2. Nil follows the frame's shape.
+    var lines: Int?
+    /// The most words in one caption. Nil follows the frame's shape.
+    var words: Int?
 
     struct RGBA: Sendable, Equatable {
         var r, g, b, a: Double
@@ -64,7 +68,7 @@ struct CaptionStyle: Sendable, Equatable {
 
     /// The style from command-line text, each value checked.
     static func parse(position: String?, align: String?, font: String?, size: String?, weight: String?,
-                      color: String?, look: String?, quality: String?) throws -> CaptionStyle {
+                      color: String?, look: String?, quality: String?, lines: String? = nil, words: String? = nil) throws -> CaptionStyle {
         var s = CaptionStyle()
         func pick<T: RawRepresentable & CaseIterable>(_ text: String?, _ name: String) throws -> T? where T.RawValue == String {
             guard let text else { return nil }
@@ -99,33 +103,67 @@ struct CaptionStyle: Sendable, Equatable {
             }
             s.color = c
         }
+        if let lines {
+            guard let v = Int(lines), v == 1 || v == 2 else { throw RunError("caption-lines is 1 or 2, not \(lines).") }
+            s.lines = v
+        }
+        if let words {
+            guard let v = Int(words), (1...20).contains(v) else { throw RunError("caption-words is a whole number from 1 to 20, not \(words).") }
+            s.words = v
+        }
         return s
     }
 }
 
+/// How captions are cut for a frame: few short words on a tall phone video, two
+/// lines of a sentence on a wide one.
+struct Pacing: Sendable, Equatable {
+    /// 1 or 2.
+    let lines: Int
+    /// The most characters on a line.
+    let lineLength: Int
+    /// The most words in one caption, if there is a limit.
+    let words: Int?
+    /// The longest a caption stays on screen while the words go on.
+    let maxDuration: Double
+    /// A pause longer than this starts a new caption.
+    let pause: Double
+}
+
 /// Where captions go in one frame size: the text's pixel height, the margins, and how
-/// many characters fit on a line.
+/// the captions are paced.
 struct CaptionFrame: Sendable, Equatable {
+    enum Shape: String, Sendable { case vertical, square, landscape }
+
     let width: Int
     let height: Int
+    let shape: Shape
     /// The height of a line of text, in pixels.
     let lineHeight: Double
     let marginX: Double
     let marginY: Double
-    /// The most characters on a line.
-    let lineLength: Int
+    let pacing: Pacing
 
     init(width: Int, height: Int, style: CaptionStyle) {
         self.width = width
         self.height = height
         let w = Double(width), h = Double(height)
+        let aspect = h > 0 ? w / h : 16.0 / 9
+        shape = aspect < 0.8 ? .vertical : aspect <= 1.25 ? .square : .landscape
         // Sized to the short side, so a portrait clip gets the size a landscape one does.
         lineHeight = ((style.size ?? 0.07 * min(w, h) / h) * h).rounded()
         marginX = (w * 0.06).rounded()
         // Social apps put their buttons over the bottom and top of a tall video.
         marginY = (h * (h > w ? 0.16 : 0.08)).rounded()
-        let fit = Int((w - 2 * marginX) / (lineHeight * 0.5))
-        lineLength = max(12, min(32, fit))
+        let fit = max(8, Int((w - 2 * marginX) / (lineHeight * 0.5)))
+        switch shape {
+        case .vertical:
+            pacing = Pacing(lines: style.lines ?? 1, lineLength: min(20, fit), words: style.words ?? 5, maxDuration: 1.5, pause: 0.4)
+        case .square:
+            pacing = Pacing(lines: style.lines ?? 2, lineLength: min(26, fit), words: style.words, maxDuration: 2.5, pause: 0.7)
+        case .landscape:
+            pacing = Pacing(lines: style.lines ?? 2, lineLength: min(42, fit), words: style.words, maxDuration: 5, pause: 0.7)
+        }
     }
 
     /// The outline, padding, or shadow offset for a look, in pixels.
@@ -154,31 +192,52 @@ enum ClipCaptions {
         return out
     }
 
-    /// Short cues for a phone screen: at most two lines of `lineLength`, at most 3.5s,
-    /// a new cue at the end of a sentence or after a pause. A cue stays up through a
-    /// pause under a second, so the screen does not flicker between cues.
-    static func social(_ words: [TimedWord], lineLength: Int) -> [Caption] {
+    /// Cues paced for the frame: at most `pacing.lines` lines and `pacing.words` words,
+    /// a new cue at the end of a sentence, after a pause, or when a cue has been up for
+    /// its longest, timed by `settle`.
+    static func social(_ words: [TimedWord], pacing: Pacing) -> [Caption] {
         var cues: [Caption] = []
         var current: [TimedWord] = []
+        let lineLength = pacing.lineLength
+        func text(_ ws: [TimedWord]) -> String {
+            pacing.lines == 1 ? Captions.join(ws) : Captions.layout(ws, lineLength: lineLength)
+        }
         func fits(_ ws: [TimedWord]) -> Bool {
-            let lines = Captions.layout(ws, lineLength: lineLength).split(separator: "\n")
-            return lines.count <= 2 && lines.allSatisfy { $0.count <= lineLength }
+            if let limit = pacing.words, ws.count > limit { return false }
+            let lines = text(ws).split(separator: "\n")
+            return lines.count <= pacing.lines && lines.allSatisfy { $0.count <= lineLength }
         }
         func flush() {
             guard let first = current.first, let last = current.last else { return }
-            cues.append(Caption(start: first.start, end: last.end, text: Captions.layout(current, lineLength: lineLength)))
+            cues.append(Caption(start: first.start, end: last.end, text: text(current)))
             current = []
         }
         for word in words {
             if let first = current.first, let last = current.last,
-               word.start - last.end > 0.7 || word.end - first.start > 3.5 || !fits(current + [word]) {
+               word.start - last.end > pacing.pause || word.end - first.start > pacing.maxDuration || !fits(current + [word]) {
                 flush()
             }
             current.append(word)
             if let end = word.text.trimmingCharacters(in: .whitespaces).last, ".?!".contains(end) { flush() }
         }
         flush()
-        return Captions.settle(cues, minDuration: 0.6, closeGap: 1)
+        return settle(cues)
+    }
+
+    /// Timing from subtitle practice. A cue stays up after its last word for the silence
+    /// that follows, at most 0.5s: a gap under 0.5s is held to the next cue, so the
+    /// screen doesn't flicker, and a longer one clears 0.5s after the speech. Every cue
+    /// is up at least 0.8s, never past the next cue's start.
+    static func settle(_ cues: [Caption]) -> [Caption] {
+        var out: [Caption] = []
+        for (i, cue) in cues.enumerated() {
+            let start = max(cue.start, out.last?.end ?? 0)
+            let next = i + 1 < cues.count ? cues[i + 1].start : Double.infinity
+            var end = cue.end + min(max(next - cue.end, 0), 0.5)
+            end = min(max(end, start + 0.8), max(next, start))
+            out.append(Caption(start: start, end: max(end, start + 0.01), text: cue.text))
+        }
+        return out
     }
 
     /// Words spread evenly over each sentence, for a transcript with times on sentences
@@ -276,48 +335,180 @@ import CoreText
 import QuartzCore
 
 extension AVFoundationCutter {
-    /// The ranges laid end to end, with each cue drawn by Core Text into a layer that
-    /// shows for the cue's time. Re-encodes the video.
+    /// The ranges laid end to end with each cue drawn in by Core Text. High quality
+    /// exports with Apple's highest quality preset. Medium and low write H.264 at a
+    /// lower bit rate, at the source's own size and frame rate.
     func cut(_ source: URL, ranges: [TimeRange], burning captions: BurnedCaptions, frame _: CaptionFrame, to destination: URL) async throws {
         let composition = try await Self.composition(of: AVURLAsset(url: source), keeping: ranges)
         let video = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: composition)
         let size = video.renderSize
         let frame = CaptionFrame(width: Int(size.width), height: Int(size.height), style: captions.style)
+        let renderer = try CaptionRenderer(font: captions.font, frame: frame, style: captions.style)
+        let drawn = captions.cues.compactMap { cue in renderer.image(cue).map { DrawnCue(cue: cue, image: $0.image, rect: $0.rect) } }
+        let type: AVFileType = destination.pathExtension.lowercased() == "mov" ? .mov : .mp4
+        do {
+            switch captions.style.quality {
+            case .high: try await export(composition, video, drawn, as: type, to: destination)
+            case .medium: try await CaptionWriter.write(composition, video, drawn, bitsPerPixel: 0.05, as: type, to: destination)
+            case .low: try await CaptionWriter.write(composition, video, drawn, bitsPerPixel: 0.025, as: type, to: destination)
+            }
+        } catch {
+            try? FileManager.default.removeItem(at: destination)
+            throw RunError("could not write \(destination.lastPathComponent): \(error.localizedDescription)")
+        }
+    }
+
+    /// Each cue as a layer that shows for the cue's time, over the video.
+    private func export(_ composition: AVComposition, _ video: AVMutableVideoComposition, _ drawn: [DrawnCue],
+                        as type: AVFileType, to destination: URL) async throws {
         let parent = CALayer()
-        parent.frame = CGRect(origin: .zero, size: size)
+        parent.frame = CGRect(origin: .zero, size: video.renderSize)
         let picture = CALayer()
         picture.frame = parent.frame
         parent.addSublayer(picture)
-        let renderer = try CaptionRenderer(font: captions.font, frame: frame, style: captions.style)
-        for cue in captions.cues {
-            guard let layer = renderer.layer(cue) else { continue }
+        for d in drawn {
+            let layer = CALayer()
+            layer.contents = d.image
+            layer.frame = d.rect
+            layer.opacity = 0
             let show = CABasicAnimation(keyPath: "opacity")
             show.fromValue = 1
             show.toValue = 1
-            show.beginTime = cue.start <= 0 ? AVCoreAnimationBeginTimeAtZero : cue.start
-            show.duration = cue.end - cue.start
+            show.beginTime = d.cue.start <= 0 ? AVCoreAnimationBeginTimeAtZero : d.cue.start
+            show.duration = d.cue.end - d.cue.start
             show.isRemovedOnCompletion = false
             layer.add(show, forKey: "show")
             parent.addSublayer(layer)
         }
         video.animationTool = AVVideoCompositionCoreAnimationTool(postProcessingAsVideoLayer: picture, in: parent)
-
-        let preset = switch captions.style.quality {
-        case .low: AVAssetExportPresetMediumQuality
-        case .medium: AVAssetExportPreset1920x1080
-        case .high: AVAssetExportPresetHighestQuality
-        }
-        guard let session = AVAssetExportSession(asset: composition, presetName: preset) else {
+        guard let session = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
             throw RunError("could not start an export for \(destination.lastPathComponent).")
         }
         session.videoComposition = video
-        let type: AVFileType = destination.pathExtension.lowercased() == "mov" ? .mov : .mp4
-        do {
-            try await session.export(to: destination, as: type)
-        } catch {
-            try? FileManager.default.removeItem(at: destination)
-            throw RunError("could not write \(destination.lastPathComponent): \(error.localizedDescription)")
+        try await session.export(to: destination, as: type)
+    }
+}
+
+/// A cue drawn once, and where it goes in the frame, bottom-left origin.
+struct DrawnCue: @unchecked Sendable {
+    let cue: Caption
+    let image: CGImage
+    let rect: CGRect
+}
+
+/// Reads the composed frames, draws the cue that is showing into each, and writes them
+/// as H.264 at a bit rate set by `bitsPerPixel`, with the audio as AAC. Apple's export
+/// presets below the highest one shrink the picture, so the smaller sizes are written
+/// here instead.
+final class CaptionWriter: @unchecked Sendable {
+    private let reader: AVAssetReader
+    private let writer: AVAssetWriter
+    private let videoOut: AVAssetReaderVideoCompositionOutput
+    private let videoIn: AVAssetWriterInput
+    private let adaptor: AVAssetWriterInputPixelBufferAdaptor
+    private let audio: (out: AVAssetReaderOutput, in: AVAssetWriterInput)?
+    private let drawn: [DrawnCue]
+
+    static func write(_ composition: AVComposition, _ video: AVVideoComposition, _ drawn: [DrawnCue],
+                      bitsPerPixel: Double, as type: AVFileType, to destination: URL) async throws {
+        let videoTracks = try await composition.loadTracks(withMediaType: .video)
+        let audioTracks = try await composition.loadTracks(withMediaType: .audio)
+        let frameRate = video.frameDuration.seconds > 0 ? 1 / video.frameDuration.seconds : 30
+        try await CaptionWriter(composition, video, videoTracks, audioTracks, drawn, bitsPerPixel: bitsPerPixel,
+                                frameRate: frameRate, as: type, to: destination).run()
+    }
+
+    private init(_ composition: AVComposition, _ video: AVVideoComposition, _ videoTracks: [AVAssetTrack], _ audioTracks: [AVAssetTrack],
+                 _ drawn: [DrawnCue], bitsPerPixel: Double, frameRate: Double, as type: AVFileType, to destination: URL) throws {
+        reader = try AVAssetReader(asset: composition)
+        videoOut = AVAssetReaderVideoCompositionOutput(videoTracks: videoTracks,
+                                                       videoSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
+        videoOut.videoComposition = video
+        reader.add(videoOut)
+        writer = try AVAssetWriter(outputURL: destination, fileType: type)
+        let width = Int(video.renderSize.width), height = Int(video.renderSize.height)
+        videoIn = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: width, AVVideoHeightKey: height,
+            AVVideoCompressionPropertiesKey: [
+                AVVideoAverageBitRateKey: Int(bitsPerPixel * Double(width * height) * frameRate),
+                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+            ],
+        ])
+        videoIn.expectsMediaDataInRealTime = false
+        adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: videoIn, sourcePixelBufferAttributes: nil)
+        writer.add(videoIn)
+        if !audioTracks.isEmpty {
+            let out = AVAssetReaderAudioMixOutput(audioTracks: audioTracks, audioSettings: [
+                AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2,
+                AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false, AVLinearPCMIsBigEndianKey: false, AVLinearPCMIsNonInterleaved: false,
+            ])
+            reader.add(out)
+            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+                AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2, AVEncoderBitRateKey: 192_000,
+            ])
+            input.expectsMediaDataInRealTime = false
+            writer.add(input)
+            audio = (out, input)
+        } else {
+            audio = nil
         }
+        self.drawn = drawn
+    }
+
+    private func run() async throws {
+        guard writer.startWriting() else { throw writer.error ?? RunError("could not start writing.") }
+        guard reader.startReading() else { throw reader.error ?? RunError("could not read the clip.") }
+        writer.startSession(atSourceTime: .zero)
+        async let pictures: Void = pump(videoIn, label: "video") { [self] in
+            guard let sample = videoOut.copyNextSampleBuffer() else { return false }
+            guard let buffer = CMSampleBufferGetImageBuffer(sample) else { return true }
+            let time = CMSampleBufferGetPresentationTimeStamp(sample)
+            draw(into: buffer, at: time.seconds)
+            adaptor.append(buffer, withPresentationTime: time)
+            return true
+        }
+        async let sound: Void = copyAudio()
+        _ = await (pictures, sound)
+        if reader.status == .failed { throw reader.error ?? RunError("could not read the clip.") }
+        await writer.finishWriting()
+        if writer.status != .completed { throw writer.error ?? RunError("could not finish writing.") }
+    }
+
+    private func copyAudio() async {
+        guard let audio else { return }
+        await pump(audio.in, label: "audio") { [self] in
+            guard let sample = self.audio?.out.copyNextSampleBuffer() else { return false }
+            self.audio?.in.append(sample)
+            return true
+        }
+    }
+
+    /// Feeds an input whenever it is ready, until `next` runs out.
+    private func pump(_ input: AVAssetWriterInput, label: String, _ next: @escaping @Sendable () -> Bool) async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            input.requestMediaDataWhenReady(on: DispatchQueue(label: "desertant.captions.\(label)")) {
+                while input.isReadyForMoreMediaData {
+                    if !next() {
+                        input.markAsFinished()
+                        done.resume()
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    private func draw(into buffer: CVPixelBuffer, at seconds: Double) {
+        let showing = drawn.filter { seconds >= $0.cue.start && seconds < $0.cue.end }
+        guard !showing.isEmpty else { return }
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+        guard let context = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: CVPixelBufferGetWidth(buffer),
+                                      height: CVPixelBufferGetHeight(buffer), bitsPerComponent: 8,
+                                      bytesPerRow: CVPixelBufferGetBytesPerRow(buffer), space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
+        else { return }
+        for d in showing { context.draw(d.image, in: d.rect) }
     }
 }
 
@@ -380,9 +571,9 @@ struct CaptionRenderer {
         }
     }
 
-    /// The cue as a layer the size of what it draws, bottom-left origin as video
-    /// composition layers use.
-    func layer(_ cue: Caption) -> CALayer? {
+    /// The cue drawn the size of what it draws, and where that goes in the frame,
+    /// bottom-left origin as video frames and composition layers use.
+    func image(_ cue: Caption) -> (image: CGImage, rect: CGRect)? {
         let lines = lines(cue.text)
         guard !lines.isEmpty else { return nil }
         let border = frame.border(style.look)
@@ -432,11 +623,7 @@ struct CaptionRenderer {
             }
         }
         guard let image = context.makeImage() else { return nil }
-        let layer = CALayer()
-        layer.contents = image
-        layer.frame = CGRect(x: box.minX, y: Double(frame.height) - box.maxY, width: box.width, height: box.height)
-        layer.opacity = 0
-        return layer
+        return (image, CGRect(x: box.minX, y: Double(frame.height) - box.maxY, width: box.width, height: box.height))
     }
 }
 #endif

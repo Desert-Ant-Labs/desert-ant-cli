@@ -1,6 +1,6 @@
 flow: 1
 title: Find receipts
-description: Finds the receipts among your photos and copies them into a Receipts folder for an expense report. Prints the plan first; pass --apply to copy.
+description: This flow finds the receipts among your photos and copies them into a Receipts folder, for an expense report. Without --apply, the flow prints what it would copy and changes nothing.
 summary: Copy the receipts out of a folder of photos.
 steps:
   - type: photos

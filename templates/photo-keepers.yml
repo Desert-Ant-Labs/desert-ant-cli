@@ -1,6 +1,6 @@
 flow: 1
 title: Photo keepers
-description: Picks the photos worth keeping from a folder. Leaves out the blurry, accidental, and forgettable shots, keeps the best of each set of near-duplicates, and copies the keepers into a Keepers folder. Prints the plan first; pass --apply to copy.
+description: This flow picks the photos worth keeping from a folder. The flow leaves out blurry shots, accidental ones, and ones with nothing special in them, keeps the best of each set of near-duplicates, and copies the keepers into a Keepers folder. Without --apply, the flow prints what it would copy and changes nothing.
 summary: Copy the photos worth keeping into one folder.
 steps:
   - type: photos

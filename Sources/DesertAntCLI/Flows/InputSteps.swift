@@ -1,7 +1,4 @@
 import Foundation
-#if canImport(NaturalLanguage)
-import NaturalLanguage
-#endif
 
 /// The pieces a text splits into.
 enum Segment {
@@ -16,20 +13,14 @@ enum Segment {
         case .paragraphs:
             pieces = text.split(separator: #/\n\s*\n/#).map(trimmed)
         case .sentences:
-            #if canImport(NaturalLanguage)
-            let tokenizer = NLTokenizer(unit: .sentence)
-            tokenizer.string = text
-            pieces = tokenizer.tokens(for: text.startIndex..<text.endIndex).map { trimmed(text[$0]) }
-            #else
             pieces = Self.sentences(text).map(trimmed)
-            #endif
         }
         return pieces.filter { !$0.isEmpty }
     }
 
-    /// Ends of sentences without NaturalLanguage: a period, question mark, or
-    /// exclamation mark, with any closing quotes, before a space and a capital or a
-    /// digit, or a line break.
+    /// The same rule on every platform, so a flow splits a text the same way on macOS
+    /// and Linux: a sentence ends at a period, question mark, or exclamation mark, with
+    /// any closing quotes, before a space and a capital or a digit, or a line break.
     static func sentences(_ text: String) -> [Substring] {
         var out: [Substring] = []
         var start = text.startIndex

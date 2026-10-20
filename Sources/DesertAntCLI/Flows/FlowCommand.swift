@@ -70,7 +70,7 @@ struct FlowRunCommand: AsyncParsableCommand {
 
     @Argument(help: "A flow file, or the name of a template.") var flow: String
     @Argument(help: "The files or folders the flow runs on.") var inputs: [String] = []
-    @Option(name: .customLong("output-dir"), help: "Where saved files go. Default: beside the first input.") var outputDir: String?
+    @Option(name: .customLong("output-dir"), help: "Where saved files go. Without it, they go beside the first input.") var outputDir: String?
     @Option(name: .customLong("set"), help: "Change a step's setting for this run, as step.setting=value. Repeatable.") var sets: [String] = []
     @Flag(help: "Let rename and copy steps change files. Without it they print what they would do.") var apply = false
     @Flag(help: "Replace existing files instead of stepping aside to new names.") var force = false
@@ -138,7 +138,7 @@ struct FlowRunCommand: AsyncParsableCommand {
         for file in files { out.line(file) }
         for step in report.steps where step.status == "done" { if let note = step.note { out.note("\(step.id): \(note)") } }
         if run.shown.isEmpty, report.files.isEmpty, report.failed.isEmpty {
-            out.note("The flow ran. It has no view, table, or folder step, so it shows and saves nothing.")
+            out.note("The flow has no view, table, or folder step, so it ran without showing or saving anything.")
         }
     }
 
@@ -266,7 +266,7 @@ struct FlowNewCommand: ParsableCommand {
         commandName: "new", abstract: "Copy a template to a flow file you can edit.",
         discussion: "The copy names every step and every wire, and lists each step's settings with their defaults.")
     @Argument(help: "The template's name.") var template: String
-    @Argument(help: "Where to write it. Default: <template>.flow in the current folder.") var path: String?
+    @Argument(help: "Where to write it. Without it, desertant writes <template>.flow in the current folder.") var path: String?
     @Flag(help: "Replace an existing file instead of stepping aside to a new name.") var force = false
     @OptionGroup var global: GlobalOptions
 

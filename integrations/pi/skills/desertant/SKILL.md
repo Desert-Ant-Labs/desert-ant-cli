@@ -7,14 +7,14 @@ description: Run Desert Ant Labs on-device models through the desertant CLI, one
 
 The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machine, one at a time or chained in a flow. Weights download once and cache, and nothing leaves the device when a model runs. Call it with the bash tool.
 
-Discover what is available:
+These commands show what is available here.
 
 - `desertant schema --json` is the tool catalog: every model, whether it runs here, its input, and its options, plus `flowSteps`, every step a flow file can use. Read it once instead of guessing flags.
 - `desertant models --json` lists the models that run on this machine, and `--all` the full catalog.
 - `desertant flow templates --json` lists the flows that ship.
 - `desertant docs <page>` prints a page offline: `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`.
 
-Run a model. Every command takes `--json` and reads stdin when given no argument. Exit code 0 on success, 1 on a runtime error, 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON.
+To run a model, call its command. Every command takes `--json` and reads stdin when given no argument. The exit code is 0 on success, 1 on a runtime error, and 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON.
 
 - `desertant redact "<text>" --json` replaces names, emails, and numbers with placeholders and returns the map. Redact before sending sensitive text to any remote service.
 - `desertant emo "<text>" --json` suggests emoji.
@@ -27,7 +27,7 @@ Run a model. Every command takes `--json` and reads stdin when given no argument
 - `desertant uhm <file> --json` finds the filler words (Apple silicon).
 - `desertant ear <file> --json` names the language spoken.
 - `desertant clips <file> --json` cuts the moments worth sharing into clips and reports each clip's start, end, text, and file. `--count 5` sets how many, `--select-only` gives timestamps only, and `--transcript <file>` skips transcribing.
-- `desertant clips <file> --captions burn --json` draws the captions into each clip. Set the look with `--caption-style outline|box|shadow`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color`, `--caption-weight`, `--caption-size`, `--caption-font`, and `--quality`. `--captions srt` writes an `.srt` beside each clip instead.
+- `desertant clips <file> --captions burn --json` draws the captions into each clip. Set the look with `--caption-style outline|box|shadow`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color`, `--caption-weight`, `--caption-size`, and `--caption-font`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one, and `--caption-lines` and `--caption-words` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead.
 - `desertant moderator <image> --json` scores an image for nudity and says whether the score crosses the threshold.
 - `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags, faces, people, and pets. On a folder, `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates, `--best` picks one, and `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame. Use `--strict` before moving or deleting anything. Eye needs `HF_TOKEN` during its beta.
 

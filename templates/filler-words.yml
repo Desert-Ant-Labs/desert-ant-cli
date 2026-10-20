@@ -1,6 +1,6 @@
 flow: 1
 title: Filler words
-description: Finds each uh, um, and hmm in a recording and lists them with their times. Runs on macOS.
+description: This flow finds each uh, um, and hmm in a recording and lists them with their times. The flow runs on macOS.
 summary: List the filler words in a recording.
 steps:
   - type: audio
