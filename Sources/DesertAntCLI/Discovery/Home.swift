@@ -6,7 +6,7 @@ import ArgumentParser
 struct Home: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "home",
-        abstract: "What you can do on this machine.",
+        abstract: "Show what you can do on this machine.",
         shouldDisplay: false
     )
 
@@ -44,7 +44,7 @@ struct Home: AsyncParsableCommand {
             ("docs", "the docs, offline; docs pipelines for how commands fit"),
             ("--help", "every command and flag"),
         ]
-        let keys = verbs.map { "\(me) \($0.command) \($0.input)" } + others.map { "\(me) \($0.0)" }
+        let keys = verbs.map { "\(me) \($0.command) \($0.input)" } + others.map { "\(me) \($0.0)" } + ["\(me) flow run <template> <files>"]
         let keyWidth = (keys.map(\.count).max() ?? 0) + 2
         let width = min(Terminal.columns, 110) - 2
         let indent = "  "
@@ -64,6 +64,14 @@ struct Home: AsyncParsableCommand {
             }
             out.line()
         }
+
+        out.line(p.faint("Flows"))
+        for (command, does) in [("flow templates", "ready-made flows to run or copy"),
+                                ("flow run <template> <files>", "several models on your files in one command")] {
+            let key = "\(me) \(command)"
+            for line in column(key, keyWidth: keyWidth, text: does, width: width, palette: p) { out.line(indent + p.dim(line)) }
+        }
+        out.line()
 
         out.line(p.faint("Chain"))
         out.line(indent + "\(me) \(p.model("voz")) talk.mp4 --json | \(me) \(p.model("clips")) talk.mp4 --transcript -")

@@ -39,7 +39,7 @@ struct CaptionFont: Sendable, Equatable {
     static func bundled(weight: Int) throws -> CaptionFont {
         let file = weight >= 600 ? "InclusiveSans-Bold.ttf" : "InclusiveSans-Regular.ttf"
         guard let folder = fontsFolder else {
-            throw RunError("could not find the fonts folder that ships beside desertant. Reinstall desertant, or pass --caption-font with a font file.")
+            throw RunError("could not find the fonts folder beside desertant. Reinstall desertant, or pass --caption-font with a font file.")
         }
         return try read(folder.appendingPathComponent(file), index: 0)
     }

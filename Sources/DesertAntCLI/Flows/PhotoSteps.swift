@@ -50,7 +50,7 @@ enum PhotoSteps {
         defaults: ["fields": .null]
     ) { run in
         let path = try photo(run)
-        run.context.progress("looking")
+        run.context.progress("analyzing")
         let reading = EyeReading(try await reading(path, run), input: path)
         var out: [String: Value] = [:]
         for field in EyeFields.all { out[field.id] = field.read(reading) }
@@ -68,7 +68,7 @@ enum PhotoSteps {
         let model = await run.context.run.models.model("moderator") { Moderator() }
         let threshold = run.params["threshold"]?.number ?? 0.5
         guard (0...1).contains(threshold) else { throw StepError("threshold must be between 0 and 1.") }
-        run.context.progress("looking")
+        run.context.progress("analyzing")
         let result = try await ModeratorRunner.check(path, threshold: threshold, with: model)
         return ["safe": .bool(!result.nsfw), "score": .number(result.score), "image": .image(path)]
     }
@@ -86,7 +86,7 @@ enum PhotoSteps {
         }
         var analyses: [Analysis] = []
         for (i, path) in photos.enumerated() {
-            run.context.progress("looking at \(i + 1) of \(photos.count)", Double(i) / Double(max(photos.count, 1)))
+            run.context.progress("analyzing \(i + 1) of \(photos.count)", Double(i) / Double(max(photos.count, 1)))
             analyses.append(try await reading(path, run))
         }
         let dates = photos.map(Pictures.captureDate)
@@ -222,7 +222,7 @@ enum EyeFields {
         Field(id: "faces") { .number(Double($0.faces.count)) },
         Field(id: "smile") { score($0.faces.map(\.smile).max().map { max(0, $0) }) },
         Field(id: "eyesOpen") { score($0.faces.map(\.eyesOpen).min()) },
-        Field(id: "looking") { score($0.faces.map(\.looking).max()) },
+        Field(id: "analyzing") { score($0.faces.map(\.looking).max()) },
         Field(id: "expression") { .text(words(top($0.faces.first?.expression))) },
         Field(id: "shot") { .text(words(top($0.layout?.shot))) },
         Field(id: "crop") { r in

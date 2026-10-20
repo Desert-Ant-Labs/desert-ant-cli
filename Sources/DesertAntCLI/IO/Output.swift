@@ -5,13 +5,13 @@ import Foundation
 
 /// Flags carried by every subcommand.
 struct GlobalOptions: ParsableArguments {
-    @Flag(name: .long, help: "Machine-readable JSON output.")
+    @Flag(name: .long, help: "Print the result as JSON, for scripts and agents.")
     var json = false
 
-    @Flag(name: .long, help: "Only the result, no headings or notes.")
+    @Flag(name: .long, help: "Print only the result, without headings, notes, or progress.")
     var quiet = false
 
-    @Flag(name: .customLong("no-color"), help: "Never colorize, even on a terminal.")
+    @Flag(name: .customLong("no-color"), help: "Print without color, even on a terminal.")
     var noColor = false
 
     /// The painting decision for this run.
@@ -106,4 +106,25 @@ func readStdin() -> String? {
     let data = FileHandle.standardInput.readDataToEndOfFile()
     let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
     return (text?.isEmpty ?? true) ? nil : text
+}
+
+extension Output {
+    /// What to type next: each command and what it does, in two aligned columns, the
+    /// command named the way the reader started this one. Left out under --json and
+    /// --quiet, which want the result alone.
+    func hints(_ rows: [(command: String, does: String)]) {
+        guard !isJSON, !options.quiet, !rows.isEmpty else { return }
+        let p = palette
+        let commands = rows.map { "\(Invocation.name) \($0.command)" }
+        let keyWidth = commands.map(displayWidth).max() ?? 0
+        let room = max(24, min(Terminal.columns, 110) - indent.count - keyWidth - 4)
+        print()
+        for (command, row) in zip(commands, rows) {
+            let pad = String(repeating: " ", count: keyWidth - displayWidth(command))
+            for (i, text) in wrap(row.does, width: room).enumerated() {
+                let key = i == 0 ? command + pad : String(repeating: " ", count: keyWidth)
+                print(indent + "  " + p.dim(key) + "  " + p.faint(text))
+            }
+        }
+    }
 }

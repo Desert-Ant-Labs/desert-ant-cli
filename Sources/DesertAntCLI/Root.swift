@@ -11,14 +11,16 @@ struct DesertAnt: AsyncParsableCommand {
         commandName: "desertant",
         abstract: "Run Desert Ant Labs on-device models from the terminal.",
         discussion: """
-        Small, focused models that run on your own machine: emoji suggestions, PII \
-        redaction, topic tagging, speech enhancement. Weights download once and \
-        cache; nothing leaves the device when a model runs.
+        desertant runs small, focused models on your own machine. They suggest emoji, \
+        redact personal details, transcribe speech, cut clips, and sort photos. Each \
+        model downloads once, and nothing leaves the device when it runs.
 
-        Browse the catalog with `models`, `search`, and `info`. Run a model by its verb \
-        (`desertant emo "pay my bills"`) or uniformly with `run`. Add `--json` to any \
-        command for a machine-readable result. `docs` prints the docs offline; \
-        `docs agents` is the contract for a coding agent.
+        Run a model by its verb, such as `desertant emo "pay my bills"`, or by its id \
+        with `run`. `flow run` chains several models in one command, and \
+        `flow templates` lists the ready-made flows. Browse the catalog with `models`, \
+        `search`, and `info`. Add `--json` to any command for a machine-readable \
+        result. `docs` prints the docs offline, and `docs agents` is the guide for \
+        coding agents.
         """,
         // The CLI and the core SDK move separately; a bug report needs both.
         version: Version.full,

@@ -6,23 +6,23 @@ import ArgumentParser
 struct Run: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "run",
-        abstract: "Run any model uniformly, for scripts and agents.",
-        discussion: "Options per model are listed by `desertant schema`."
+        abstract: "Run any model by its id, with the same flags for every model.",
+        discussion: "`desertant schema` lists each model's options."
     )
 
-    @Argument(help: "The model id, e.g. emo.")
+    @Argument(help: "The model id, such as emo.")
     var model: String
 
-    @Option(name: .long, help: "Text input for a text model. Omit to read stdin.")
+    @Option(name: .long, help: "Text for a text model. Without it, desertant reads stdin.")
     var input: String?
 
-    @Option(name: .long, help: "A file for an audio, video, or image model, or a folder of them. Repeatable.")
+    @Option(name: .long, help: "A file for an audio, video, or image model, or a folder of them. Pass --file once per file.")
     var file: [String] = []
 
-    @Flag(help: "Also run the files in a folder's subfolders.")
+    @Flag(help: "Also include the files in subfolders.")
     var recursive = false
 
-    @Option(name: .customLong("option"), help: "A k=v option, repeatable.")
+    @Option(name: .customLong("option"), help: "A model option as key=value. Pass --option once per option.")
     var options: [String] = []
 
     @OptionGroup var global: GlobalOptions

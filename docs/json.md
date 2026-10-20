@@ -60,7 +60,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
   "version": "0.1.1",
   "coreVersion": "3.1.0",
   "invocation": "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
-  "globalFlags": [{"flag": "--json", "help": "Machine-readable JSON output."}],
+  "globalFlags": [{"flag": "--json", "help": "Print the result as JSON, for scripts and agents."}],
   "exitCodes": [{"code": 0, "meaning": "success"}, {"code": 1, "meaning": "runtime error, message on stderr"}, {"code": 64, "meaning": "usage error, message on stderr"}],
   "models": [
     {
@@ -162,7 +162,7 @@ To restore originals in a reply, replace each `placeholder` with its `original`.
 }
 ```
 
-`score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores in 0...1, not calibrated probabilities.
+`score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores from 0 to 1, not calibrated probabilities.
 
 `desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux, reading the photo needs ffmpeg.
 
@@ -184,7 +184,7 @@ To restore originals in a reply, replace each `placeholder` with its `original`.
 }
 ```
 
-`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag that is missing scored below it; `--all-tags` holds every confidence. `kind` is the most likely photo type. `scores` are percentiles in 0...1 against Eye's calibration set. Boxes are in 0...1 of the upright image, from the top left. `rotation` (90, 180, or 270) appears when the photo is turned clockwise by that much. `crop` appears with `--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`. `embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts` leaves its keys out.
+`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag that is missing scored below it; `--all-tags` holds every confidence. `kind` is the most likely photo type. `scores` are percentiles from 0 to 1 against Eye's calibration set. Boxes are fractions of the upright image, from 0 to 1, measured from the top left. `rotation` (90, 180, or 270) appears when the photo is turned clockwise by that much. `crop` appears with `--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`. `embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts` leaves its keys out.
 
 `desertant eye <video> --json` prints the frames, the thumbnail, and the tags that hold.
 

@@ -12,8 +12,7 @@ The catalog of every shipping model: its id, whether it runs on this machine, wh
 
 `desertant home --json` is the short form: the verbs that run on this machine, each with its input kind and a line of help. The bare `desertant` shows a person the same list.
 
-`desertant models --json` lists the models that run on this machine; `--all` lists the full catalog, including models with no runner on this machine. `desertant info
-<id> --json` is one model's card with `runnableHere` and `downloaded`.
+`desertant models --json` lists the models that run on this machine; `--all` lists the full catalog, including models with no runner on this machine. `desertant info <id> --json` is one model's card with `runnableHere` and `downloaded`.
 
 `desertant setup` writes your own setup: a skill for Claude Code or Pi, a marked section in `AGENTS.md` for Codex, in the current project (`--global` for the user). `desertant docs skill` and `desertant docs codex` print the same text.
 
@@ -36,7 +35,7 @@ A text model reads its text from the argument, or from stdin when no argument is
 
 ## Run a flow
 
-A flow runs several models on a file in one command. `desertant flow templates --json` lists the flows that ship, and `desertant flow run <template or file> <files> --json` runs one and lists every file it wrote. To write your own, read `flowSteps` in the schema, write the YAML, and run `desertant flow check <file> --json` first: it shows how each input is wired and names any step that can't run here. Steps that rename or copy the user's files print a plan and change nothing until `--apply`, so pass it only when the user asks. See [flows.md](flows.md).
+A flow runs several models on a file in one command. `desertant flow templates --json` lists ready-made flows, and `desertant flow run <template or file> <files> --json` runs one and lists every file it wrote. To write your own, read `flowSteps` in the schema, write the YAML, and run `desertant flow check <file> --json` first: it shows how each input is wired and names any step that can't run here. Steps that rename or copy the user's files print a plan and change nothing until `--apply`, so pass it only when the user asks. See [flows.md](flows.md).
 
 ## What comes back
 

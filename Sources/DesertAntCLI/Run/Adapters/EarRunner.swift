@@ -27,11 +27,11 @@ struct EarRunner: ModelRunner {
     }
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
-        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
+        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         progress.update(nil, label: "reading audio")
         let samples = try await Media.decodeMono(input, sampleRate: 16_000)
-        progress.update(nil, label: "listening")
+        progress.update(nil, label: "analyzing")
         let detection = try await model.identify(samples: samples, sampleRate: 16_000)
         progress.finish()
 

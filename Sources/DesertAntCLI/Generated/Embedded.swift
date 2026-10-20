@@ -783,7 +783,7 @@ enum Embedded {
 
 > desertant runs Desert Ant Labs on-device models from the terminal: transcribe a recording, cut short clips from a talk, clean up the audio, find filler words, name the spoken language, label who said what, redact personal data, suggest emoji, tag a text's topic, name the language of a short text, flag nudity in an image, find, rank, and crop photos, pick a video's thumbnail, and write a title. Weights download once and cache; nothing leaves the device when a model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
-A flow file chains several models into one command, for example to clean up a recording, transcribe it, and cut captioned clips. `desertant flow templates` lists the flows that ship, and `flowSteps` in the schema lists every step a flow file can use.
+A flow file chains several models into one command, for example to clean up a recording, transcribe it, and cut captioned clips. `desertant flow templates` lists ready-made flows, and `flowSteps` in the schema lists every step a flow file can use.
 
 Start with `desertant schema --json`: it lists every runnable model, its input, and its options, and it's generated from the same code the commands run, so it can't be stale. `desertant models --json` lists the models that run on this machine, and `--all` lists the full catalog. Every page below is also inside the binary: `desertant docs` prints this index, `desertant docs agents` a page, and `--json` gives either as data, all offline.
 
@@ -830,8 +830,7 @@ The catalog of every shipping model: its id, whether it runs on this machine, wh
 
 `desertant home --json` is the short form: the verbs that run on this machine, each with its input kind and a line of help. The bare `desertant` shows a person the same list.
 
-`desertant models --json` lists the models that run on this machine; `--all` lists the full catalog, including models with no runner on this machine. `desertant info
-<id> --json` is one model's card with `runnableHere` and `downloaded`.
+`desertant models --json` lists the models that run on this machine; `--all` lists the full catalog, including models with no runner on this machine. `desertant info <id> --json` is one model's card with `runnableHere` and `downloaded`.
 
 `desertant setup` writes your own setup: a skill for Claude Code or Pi, a marked section in `AGENTS.md` for Codex, in the current project (`--global` for the user). `desertant docs skill` and `desertant docs codex` print the same text.
 
@@ -854,7 +853,7 @@ A text model reads its text from the argument, or from stdin when no argument is
 
 ## Run a flow
 
-A flow runs several models on a file in one command. `desertant flow templates --json` lists the flows that ship, and `desertant flow run <template or file> <files> --json` runs one and lists every file it wrote. To write your own, read `flowSteps` in the schema, write the YAML, and run `desertant flow check <file> --json` first: it shows how each input is wired and names any step that can't run here. Steps that rename or copy the user's files print a plan and change nothing until `--apply`, so pass it only when the user asks. See [flows.md](flows.md).
+A flow runs several models on a file in one command. `desertant flow templates --json` lists ready-made flows, and `desertant flow run <template or file> <files> --json` runs one and lists every file it wrote. To write your own, read `flowSteps` in the schema, write the YAML, and run `desertant flow check <file> --json` first: it shows how each input is wired and names any step that can't run here. Steps that rename or copy the user's files print a plan and change nothing until `--apply`, so pass it only when the user asks. See [flows.md](flows.md).
 
 ## What comes back
 
@@ -899,7 +898,7 @@ Voz transcribes the recording with a time on every word, and Clips reads the sen
 - `--transcript talk.srt` uses a transcript instead of transcribing: SRT, VTT, or JSON as `[{"start": 1.0, "end": 4.5, "text": "..."}]` in seconds. `-` reads one from stdin.
 - `--select-only` reports the moments as timestamps and text, and writes nothing.
 - `--output-dir clips/` puts the files in that folder.
-- `--force` replaces existing clip files instead of stepping aside to new names.
+- `--force` replaces existing clip files instead of writing `name-2.ext`.
 - `--captions burn` draws the captions into each clip. `--captions srt` writes `talk_clip-1.srt` beside each clip instead, and `off`, the default, writes no captions.
 - `--json` prints the report, described in [json.md](json.md).
 
@@ -1379,7 +1378,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
   "version": "0.1.1",
   "coreVersion": "3.1.0",
   "invocation": "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
-  "globalFlags": [{"flag": "--json", "help": "Machine-readable JSON output."}],
+  "globalFlags": [{"flag": "--json", "help": "Print the result as JSON, for scripts and agents."}],
   "exitCodes": [{"code": 0, "meaning": "success"}, {"code": 1, "meaning": "runtime error, message on stderr"}, {"code": 64, "meaning": "usage error, message on stderr"}],
   "models": [
     {
@@ -1481,7 +1480,7 @@ To restore originals in a reply, replace each `placeholder` with its `original`.
 }
 ```
 
-`score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores in 0...1, not calibrated probabilities.
+`score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores from 0 to 1, not calibrated probabilities.
 
 `desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux, reading the photo needs ffmpeg.
 
@@ -1503,7 +1502,7 @@ To restore originals in a reply, replace each `placeholder` with its `original`.
 }
 ```
 
-`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag that is missing scored below it; `--all-tags` holds every confidence. `kind` is the most likely photo type. `scores` are percentiles in 0...1 against Eye's calibration set. Boxes are in 0...1 of the upright image, from the top left. `rotation` (90, 180, or 270) appears when the photo is turned clockwise by that much. `crop` appears with `--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`. `embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts` leaves its keys out.
+`tags` holds every tag at or above the cutoff (0.5, or 0.9 under `--strict`), so a tag that is missing scored below it; `--all-tags` holds every confidence. `kind` is the most likely photo type. `scores` are percentiles from 0 to 1 against Eye's calibration set. Boxes are fractions of the upright image, from 0 to 1, measured from the top left. `rotation` (90, 180, or 270) appears when the photo is turned clockwise by that much. `crop` appears with `--crop`: `{"aspect": "1:1", "box": {...}, "file": "/work/IMG_0056_crop.jpeg"}`. `embedding` (512 numbers) appears with `--embedding`. A part left out with `--parts` leaves its keys out.
 
 `desertant eye <video> --json` prints the frames, the thumbnail, and the tags that hold.
 
@@ -1740,7 +1739,7 @@ Most of a pipeline is analysis: filler-word spans from uhm, a transcript from vo
 
 A passthrough cut starts on a keyframe, so a `--precise` option would re-encode video when a cut has to start on the exact frame. And enhance, fillers, and transcribe each decode audio; running fillers and transcribe on the one enhanced audio file trims that to one extraction.
 
-`desertant voz` (the transcript), `desertant who` (the speakers' turns), and `desertant uhm` (the filler spans) ship today. A final `desertant export` that renders once from the documents is planned.
+`desertant voz` (the transcript), `desertant who` (the speakers' turns), and `desertant uhm` (the filler spans) work today. A final `desertant export` that renders once from the documents is planned.
 
 ## Large files
 
@@ -1756,7 +1755,7 @@ da flow run podcast-clips episode.mp4
 
 The file is YAML that a person or an agent writes: a list of steps, each with a type, the outputs it uses, and its settings. desertant ships templates for the common chains, and `da schema --json` lists every step type for an agent that writes its own. [flows.md](flows.md) has the format.
 
-`da flow run`, `templates`, `show`, `new`, and `check` ship today, with the steps for audio, text, photos, and logic.
+`da flow run`, `templates`, `show`, `new`, and `check` work today, with the steps for audio, text, photos, and logic.
 """###),
         (name: "voz", markdown: ###"""
 # Transcripts and captions
@@ -1915,7 +1914,7 @@ The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machi
 
 - `desertant schema --json` is the tool catalog: every model, whether it runs here, its input, and its options, plus `flowSteps`, every step a flow file can use. Read it once per session instead of guessing flags.
 - `desertant models --json` lists the models that run on this machine, and `--all` the full catalog. `desertant info <id> --json` is one model's card.
-- `desertant flow templates --json` lists the flows that ship.
+- `desertant flow templates --json` lists ready-made flows.
 - `desertant docs <page>` prints a page offline: `agents`, `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`, `files`.
 
 ## Run a model
@@ -1943,7 +1942,7 @@ The uniform form for any model is `desertant run <id> --input "<text>"` or `dese
 
 ## Run a flow
 
-A flow runs several models on a file in one command. Reach for one when the user wants a chain, such as notes from a meeting or captioned clips from a podcast. The flows that ship:
+A flow runs several models on a file in one command. Reach for one when the user wants a chain, such as notes from a meeting or captioned clips from a podcast. desertant comes with these ready-made flows:
 
 - `studio-sound`: clean up a recording's sound. A video keeps its picture.
 - `transcript-and-captions`: a transcript as text, SRT, and WebVTT.
@@ -2032,7 +2031,7 @@ These commands show what is available here.
 
 - `desertant schema --json` is the tool catalog: every model, whether it runs here, its input, and its options, plus `flowSteps`, every step a flow file can use. Read it once instead of guessing flags.
 - `desertant models --json` lists the models that run on this machine, and `--all` the full catalog.
-- `desertant flow templates --json` lists the flows that ship.
+- `desertant flow templates --json` lists ready-made flows.
 - `desertant docs <page>` prints a page offline: `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`.
 
 To run a model, call its command. Every command takes `--json` and reads stdin when given no argument. The exit code is 0 on success, 1 on a runtime error, and 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON.
@@ -2054,7 +2053,7 @@ To run a model, call its command. Every command takes `--json` and reads stdin w
 
 A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 
-Run a flow when the user wants several models on a file in one go. The flows that ship are `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words` (macOS), `photo-keepers`, `find-receipts`, and `redact-a-document`:
+Run a flow when the user wants several models on a file in one go. desertant comes with these ready-made flows: `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words` (macOS), `photo-keepers`, `find-receipts`, and `redact-a-document`:
 
 ```
 desertant flow run meeting-notes standup.m4a --json

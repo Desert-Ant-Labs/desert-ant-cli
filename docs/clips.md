@@ -14,7 +14,7 @@ Voz transcribes the recording with a time on every word, and Clips reads the sen
 - `--transcript talk.srt` uses a transcript instead of transcribing: SRT, VTT, or JSON as `[{"start": 1.0, "end": 4.5, "text": "..."}]` in seconds. `-` reads one from stdin.
 - `--select-only` reports the moments as timestamps and text, and writes nothing.
 - `--output-dir clips/` puts the files in that folder.
-- `--force` replaces existing clip files instead of stepping aside to new names.
+- `--force` replaces existing clip files instead of writing `name-2.ext`.
 - `--captions burn` draws the captions into each clip. `--captions srt` writes `talk_clip-1.srt` beside each clip instead, and `off`, the default, writes no captions.
 - `--json` prints the report, described in [json.md](json.md).
 

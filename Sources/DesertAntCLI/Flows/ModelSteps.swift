@@ -51,7 +51,7 @@ enum ModelSteps {
     ) { run in
         let media = try audio(run)
         let model = await run.context.run.models.model("who") { Who() }
-        run.context.progress("listening for speakers")
+        run.context.progress("finding the speakers")
         let result = try await model.labels(of: media)
         let names = Speakers.names(run.params["names"]?.string)
         let turns = LabeledTurns(result.turns.map { SpeakerTurn(start: $0.start, end: $0.end, speaker: $0.speaker) },
@@ -140,7 +140,7 @@ enum ModelSteps {
     ) { run in
         let media = try audio(run)
         let model = await run.context.run.models.model("ear") { Ear() }
-        run.context.progress("listening")
+        run.context.progress("analyzing")
         let samples = try await Media.decodeMono(media, sampleRate: 16_000)
         let d = try await model.identify(samples: samples, sampleRate: 16_000)
         return [
@@ -243,7 +243,7 @@ enum ModelSteps {
         let model = await run.context.run.models.model("uhm") { Uhm() }
         run.context.progress("reading audio")
         let samples = try await Media.decodeMono(media, sampleRate: 16_000)
-        let result = try await model.analyze(samples: samples, sampleRate: 16_000) { run.context.progress("listening", $0) }
+        let result = try await model.analyze(samples: samples, sampleRate: 16_000) { run.context.progress("analyzing", $0) }
         return [
             "fillers": .list(result.fillers.map {
                 .record([("type", .text($0.type?.rawValue ?? "filler")), ("start", .number($0.start)),

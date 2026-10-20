@@ -9,23 +9,23 @@ struct EyeRunner: SetRunner {
     let id = "eye"
     let inputKind = RunInputKind.visual
     let options = [
-        RunOption(name: "has", help: "Only the photos with all of these tags, comma-separated: \"dog,beach\". On a video, the moments that have them."),
-        RunOption(name: "not", help: "Leave out the photos with any of these tags: \"blurry,screenshot\"."),
-        RunOption(name: "strict", help: "Count a tag at confidence 0.9 instead of 0.5, for anything that acts without asking."),
-        RunOption(name: "duplicates", help: "Group the photos into near-duplicates, the one to keep first."),
-        RunOption(name: "best", help: "The one photo to keep from the set: nobody's eyes closed, then the best faces, then the keeper score."),
+        RunOption(name: "has", help: "Keep only the photos with all of these tags, comma-separated, such as \"dog,beach\". On a video, list the moments with them."),
+        RunOption(name: "not", help: "Leave out the photos with any of these tags, such as \"blurry,screenshot\"."),
+        RunOption(name: "strict", help: "Count a tag only at confidence 0.9 instead of 0.5. Use it before moving or deleting files."),
+        RunOption(name: "duplicates", help: "Group near-duplicate photos, the photo to keep first in each group."),
+        RunOption(name: "best", help: "Pick the photo to keep from the set: eyes open first, then the best faces, then the keeper score."),
         RunOption(name: "similar-to", help: "Rank the photos by how alike they are to this photo."),
         RunOption(name: "sort", help: "Rank the photos by aesthetic, keeper, cover, sharpness, or a tag's confidence."),
         RunOption(name: "limit", help: "With --sort or --similar-to, how many photos to list."),
-        RunOption(name: "crop", help: "Also write the best crop at this aspect beside the input: 1:1, 16:9, 4:5. On a video, crops the thumbnail."),
+        RunOption(name: "crop", help: "Also write the best crop at this aspect ratio, such as 1:1, 16:9, or 4:5. On a video, Eye crops the thumbnail."),
         RunOption(name: "thumbnail", help: "On a video, also write the frame that makes the best thumbnail, as <input>_thumbnail.jpg."),
-        RunOption(name: "every", help: "On a video, look at a frame every this many seconds. Default: 1 per second, at most 100 frames."),
-        RunOption(name: "output-dir", help: "Where crops and thumbnails go. Default: beside the input."),
-        RunOption(name: "force", help: "Replace an existing file instead of stepping aside."),
-        RunOption(name: "parts", help: "What to compute, comma-separated: photo, layout, faces, sharpness. Default all; fewer is faster."),
-        RunOption(name: "max-faces", help: "The most faces to read per photo, most confident first. Default 20."),
-        RunOption(name: "tags", help: "How many tags a line on screen shows. Default 8. JSON has every tag that reaches the cutoff."),
-        RunOption(name: "all-tags", help: "Put every tag's confidence in the JSON, not only the ones that reach the cutoff."),
+        RunOption(name: "every", help: "On a video, the seconds between the frames Eye analyzes. Default 1, at most 100 frames."),
+        RunOption(name: "output-dir", help: "Where crops and thumbnails go. By default, they go beside the input."),
+        RunOption(name: "force", help: "Replace an existing file instead of writing name-2.ext."),
+        RunOption(name: "parts", help: "What Eye computes, comma-separated: photo, layout, faces, or sharpness. Default all four. Fewer parts run faster."),
+        RunOption(name: "max-faces", help: "The most faces to analyze per photo, most confident first. Default 20."),
+        RunOption(name: "tags", help: "How many tags to print per photo. Default 8. The JSON has every tag above the cutoff."),
+        RunOption(name: "all-tags", help: "Put every tag's confidence in the JSON, also those below the cutoff."),
         RunOption(name: "embedding", help: "Put the 512-number embedding in the JSON, to compare photos later."),
     ]
 
@@ -175,7 +175,7 @@ struct EyeRunner: SetRunner {
         }
         s.question = questions.first
         if case .similar(let path) = s.question, !FileManager.default.fileExists(atPath: path) {
-            throw RunError("no file at \(path)")
+            throw RunError("no file at \(path).")
         }
         if let n = arguments["limit"] {
             guard let limit = Int(n), limit > 0 else { throw RunError("limit must be a whole number above 0.") }
@@ -212,14 +212,14 @@ struct EyeRunner: SetRunner {
     }
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
-        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
+        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         let s = try settings(arguments)
         if RunInputKind.isVideo(input) {
             try await video(input, s, out: out)
             return
         }
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
-        progress.update(nil, label: "looking")
+        progress.update(nil, label: "analyzing")
         let pixels = try Pictures.pixels(input)
         let analysis = try await analyze(pixels, input: input, s)
         progress.finish()
@@ -267,7 +267,7 @@ struct EyeRunner: SetRunner {
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         var seen: [(time: Double, analysis: Analysis)] = []
         for (i, t) in times.enumerated() {
-            progress.update(Double(i) / Double(times.count), label: "looking at frame \(i + 1) of \(times.count)")
+            progress.update(Double(i) / Double(times.count), label: "analyzing frame \(i + 1) of \(times.count)")
             guard let frame = try? await frames.frame(at: t) else { continue }
             seen.append((frame.time, try await analyze(frame.pixels, input: input, s)))
         }
@@ -365,7 +365,7 @@ struct EyeRunner: SetRunner {
         var analyzed: [(input: String, analysis: Analysis)] = []
         var failed = 0
         for (i, photo) in photos.enumerated() {
-            progress.update(Double(i) / Double(photos.count), label: "looking at \(i + 1) of \(photos.count)")
+            progress.update(Double(i) / Double(photos.count), label: "analyzing \(i + 1) of \(photos.count)")
             do {
                 analyzed.append((photo, try await analyze(Pictures.pixels(photo), input: photo, s)))
             } catch {

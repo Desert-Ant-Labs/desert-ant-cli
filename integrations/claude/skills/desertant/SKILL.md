@@ -11,7 +11,7 @@ The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machi
 
 - `desertant schema --json` is the tool catalog: every model, whether it runs here, its input, and its options, plus `flowSteps`, every step a flow file can use. Read it once per session instead of guessing flags.
 - `desertant models --json` lists the models that run on this machine, and `--all` the full catalog. `desertant info <id> --json` is one model's card.
-- `desertant flow templates --json` lists the flows that ship.
+- `desertant flow templates --json` lists ready-made flows.
 - `desertant docs <page>` prints a page offline: `agents`, `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`, `files`.
 
 ## Run a model
@@ -39,7 +39,7 @@ The uniform form for any model is `desertant run <id> --input "<text>"` or `dese
 
 ## Run a flow
 
-A flow runs several models on a file in one command. Reach for one when the user wants a chain, such as notes from a meeting or captioned clips from a podcast. The flows that ship:
+A flow runs several models on a file in one command. Reach for one when the user wants a chain, such as notes from a meeting or captioned clips from a podcast. desertant comes with these ready-made flows:
 
 - `studio-sound`: clean up a recording's sound. A video keeps its picture.
 - `transcript-and-captions`: a transcript as text, SRT, and WebVTT.

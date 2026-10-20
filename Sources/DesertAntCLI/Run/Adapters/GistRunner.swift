@@ -5,7 +5,7 @@ import Gist
 struct GistRunner: ModelRunner {
     let id = "gist"
     let inputKind = RunInputKind.text
-    let options = [RunOption(name: "top", help: "How many topics to return. Default 3.")]
+    let options = [RunOption(name: "top", help: "How many topics to list. Default 3.")]
 
     private let model = Gist()
 

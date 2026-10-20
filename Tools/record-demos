@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Record the README's demos with a built desertant: the demo episode from
+# Tests/Fixtures/talk.wav, the terminal recordings in docs/media/*.tape, and a still of
+# burned captions in each shape. The models run once first, so the recordings show a
+# second run. Needs ffmpeg and vhs.
+#
+#   Tools/record-demos [path-to-desertant]      default: desertant on PATH
+set -euo pipefail
+here="$(cd "$(dirname "$0")/.." && pwd)"
+da="$(cd "$(dirname "${1:-$(command -v desertant)}")" && pwd)/$(basename "${1:-desertant}")"
+demo=/Users/Shared/desertant-demo
+media="$here/docs/media"
+talk="$here/Tests/Fixtures/talk.wav"
+
+rm -rf "$demo" && mkdir -p "$demo/bin" "$media"
+ln -s "$da" "$demo/bin/da"
+export PATH="$demo/bin:$PATH" DESERTANT_NO_UPDATE_CHECK=1
+cd "$demo"
+
+# The episode: the fixture's speech over the brand's forest and dark teal, with its
+# waveform in sage and a cream playhead, in each shape.
+duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$talk")"
+episode() {
+  local name="$1" width="$2" height="$3" wave_w="$4" wave_h="$5"
+  ffmpeg -v error -y -i "$talk" -filter_complex "showwavespic=s=${wave_w}x${wave_h}:colors=0xadb49c:scale=sqrt" -frames:v 1 "wave-$name.png"
+  ffmpeg -v error -y \
+    -f lavfi -i "gradients=s=${width}x${height}:c0=0x181e1d:c1=0x1c525d:x0=0:y0=0:x1=${width}:y1=${height}:d=28:r=30:speed=0.002" \
+    -loop 1 -i "wave-$name.png" \
+    -f lavfi -i "color=c=0xfbfaf4:s=4x$((wave_h + 24)):r=30" \
+    -i "$talk" \
+    -filter_complex "[0][1]overlay=(W-w)/2:(H-h)/2-H*0.1:shortest=1[a];[a][2]overlay=x=(W-$wave_w)/2+$wave_w*t/$duration:y=(H-h)/2-H*0.1:shortest=1,format=yuv420p[v]" \
+    -map "[v]" -map 3:a -t "$duration" -c:v libx264 -crf 18 -preset medium -c:a aac -b:a 160k "$name.mp4"
+  rm "wave-$name.png"
+}
+episode episode 1920 1080 1400 280
+episode episode-square 1080 1080 900 220
+episode episode-vertical 1080 1920 900 260
+
+# A first run loads the models and prepares them for the Neural Engine.
+da flow run podcast-clips episode.mp4 --output-dir warm --quiet >/dev/null
+
+cd "$here"
+for tape in "$media"/*.tape; do vhs "$tape" >/dev/null; done
+
+# Burned captions in each shape, from one transcript so the words match.
+cd "$demo"
+da voz episode.mp4 --json > episode.json
+for name in episode episode-square episode-vertical; do
+  da clips "$name.mp4" --transcript episode.json --count 1 --captions burn --output-dir "shapes-$name" --quiet >/dev/null
+done
+frame() { ffmpeg -v error -y -ss 6 -i "shapes-$1/$1_clip-1.mp4" -frames:v 1 -vf "scale=-1:720" "$1.png"; }
+frame episode && frame episode-square && frame episode-vertical
+ffmpeg -v error -y -i episode-vertical.png -i episode-square.png -i episode.png \
+  -filter_complex "[0][1][2]hstack=inputs=3,pad=iw+48:ih+48:24:24:color=0xfbfaf4" \
+  -frames:v 1 "$media/caption-shapes.jpg"
+
+echo "Recorded $(ls "$media" | grep -v '\.tape$' | tr '\n' ' ')"

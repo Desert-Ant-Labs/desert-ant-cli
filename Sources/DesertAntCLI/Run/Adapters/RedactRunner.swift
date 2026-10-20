@@ -10,7 +10,7 @@ struct RedactRunner: ModelRunner {
     let id = "redact"
     let inputKind = RunInputKind.text
     let options = [
-        RunOption(name: "min-confidence", help: "Only redact above this confidence, 0...1. Default 0.6."),
+        RunOption(name: "min-confidence", help: "Redact only what scores above this confidence, from 0 to 1. Default 0.6."),
     ]
 
     private let model = Redact()

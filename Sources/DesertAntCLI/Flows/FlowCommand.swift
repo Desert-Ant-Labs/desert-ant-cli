@@ -70,11 +70,11 @@ struct FlowRunCommand: AsyncParsableCommand {
 
     @Argument(help: "A flow file, or the name of a template.") var flow: String
     @Argument(help: "The files or folders the flow runs on.") var inputs: [String] = []
-    @Option(name: .customLong("output-dir"), help: "Where saved files go. Without it, they go beside the first input.") var outputDir: String?
-    @Option(name: .customLong("set"), help: "Change a step's setting for this run, as step.setting=value. Repeatable.") var sets: [String] = []
-    @Flag(help: "Let rename and copy steps change files. Without it they print what they would do.") var apply = false
-    @Flag(help: "Replace existing files instead of stepping aside to new names.") var force = false
-    @Flag(help: "Also take the files in a folder's subfolders.") var recursive = false
+    @Option(name: .customLong("output-dir"), help: "Where saved files go. By default, they go beside the first input.") var outputDir: String?
+    @Option(name: .customLong("set"), help: "Change a step's setting for this run, such as clips.count=3. Pass --set once per setting.") var sets: [String] = []
+    @Flag(help: "Let rename and copy steps change files. Without --apply, those steps print what they would do.") var apply = false
+    @Flag(help: "Replace an existing file instead of writing name-2.ext.") var force = false
+    @Flag(help: "Also include the files in subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 
     func run() async throws {
@@ -102,9 +102,10 @@ struct FlowRunCommand: AsyncParsableCommand {
                 if i > 0 { out.line() }
                 out.line("\(out.palette.bold(first))  \(out.palette.dim("\(i + 1)/\(bindings.count)"))")
             }
+            let started = Date()
             let report = await Engine.run(run, name: source.name)
             reports.append(report)
-            show(run, report, out: bindings.count > 1 ? indented(out) : out)
+            show(run, report, elapsed: Date().timeIntervalSince(started), out: bindings.count > 1 ? indented(out) : out)
         }
         if out.isJSON {
             if reports.count == 1 { out.emit(reports[0]) } else { out.emit(reports) }
@@ -122,7 +123,7 @@ struct FlowRunCommand: AsyncParsableCommand {
         return each
     }
 
-    private func show(_ run: FlowRun, _ report: FlowReport, out: Output) {
+    private func show(_ run: FlowRun, _ report: FlowReport, elapsed: Double, out: Output) {
         for step in report.failed {
             let note = step.note ?? "no message"
             out.warn("\(step.id) failed: \(note)\(note.hasSuffix(".") ? "" : ".")")
@@ -130,16 +131,25 @@ struct FlowRunCommand: AsyncParsableCommand {
         guard !out.isJSON else { return }
         for (i, shown) in run.shown.enumerated() {
             if i > 0 { out.line() }
-            for line in shown.text { out.line(line) }
+            for line in shown.text { out.line(Self.display(line)) }
         }
         let shown = Set(run.shown.flatMap(\.text))
         let files = report.files.filter { !shown.contains($0) }
         if !run.shown.isEmpty, !files.isEmpty { out.line() }
-        for file in files { out.line(file) }
+        for file in files { out.line(Self.display(file)) }
         for step in report.steps where step.status == "done" { if let note = step.note { out.note("\(step.id): \(note)") } }
         if run.shown.isEmpty, report.files.isEmpty, report.failed.isEmpty {
             out.note("The flow has no view, table, or folder step, so it ran without showing or saving anything.")
         }
+        let done = report.steps.count { $0.status == "done" }
+        let skipped = report.steps.count { $0.status == "skipped" }
+        out.note("\nRan \(done) step\(done == 1 ? "" : "s") in \(Format.elapsed(elapsed))\(skipped > 0 ? ", and skipped \(skipped)" : "").")
+    }
+
+    /// A path under the current folder as the reader would type it; JSON keeps it absolute.
+    static func display(_ text: String) -> String {
+        let here = FileManager.default.currentDirectoryPath + "/"
+        return text.hasPrefix(here) ? String(text.dropFirst(here.count)) : text
     }
 
     /// `--set clips.count=3` as settings by step, each checked against the step's own.
@@ -215,6 +225,11 @@ struct FlowTemplatesCommand: ParsableCommand {
         let runsHere: Bool
     }
 
+    /// Templates grouped by what they start from, as the home screen groups the verbs.
+    static let groups: [(label: String, inputs: Set<String>)] = [
+        ("Recordings", ["audio", "watch"]), ("Text", ["text", "textlist"]), ("Photos and files", ["photos", "image", "files"]),
+    ]
+
     func run() throws {
         let out = Output(options: global)
         let entries = Templates.all.compactMap { t -> Entry? in
@@ -228,11 +243,19 @@ struct FlowTemplatesCommand: ParsableCommand {
         let p = out.palette
         let width = entries.map(\.name.count).max() ?? 0
         out.space()
-        for e in entries {
-            let name = e.name.padding(toLength: width, withPad: " ", startingAt: 0)
-            out.line("\(p.model(name))  \(e.summary)\(e.runsHere ? "" : p.dim("  macOS only"))")
+        for (i, group) in Self.groups.enumerated() {
+            let members = entries.filter { group.inputs.contains($0.steps.first ?? "") }
+            guard !members.isEmpty else { continue }
+            if i > 0 { out.line() }
+            out.line(p.faint(group.label))
+            for e in members {
+                let name = e.name.padding(toLength: width, withPad: " ", startingAt: 0)
+                out.line("  \(p.model(name))  \(e.summary)\(e.runsHere ? "" : p.dim("  macOS only"))")
+            }
         }
-        out.note("\nRun one with `desertant flow run <name> <files>`, or copy one to edit with `desertant flow new <name>`.")
+        out.hints([("flow run <template> <files>", "runs a template on your files"),
+                   ("flow new <template>", "copies a template to edit"),
+                   ("flow show <template>", "prints a template's steps")])
         out.space()
     }
 }
@@ -266,8 +289,8 @@ struct FlowNewCommand: ParsableCommand {
         commandName: "new", abstract: "Copy a template to a flow file you can edit.",
         discussion: "The copy names every step and every wire, and lists each step's settings with their defaults.")
     @Argument(help: "The template's name.") var template: String
-    @Argument(help: "Where to write it. Without it, desertant writes <template>.flow in the current folder.") var path: String?
-    @Flag(help: "Replace an existing file instead of stepping aside to a new name.") var force = false
+    @Argument(help: "Where to write the flow file. By default, desertant writes <template>.flow in the current folder.") var path: String?
+    @Flag(help: "Replace an existing file instead of writing name-2.ext.") var force = false
     @OptionGroup var global: GlobalOptions
 
     struct Written: Encodable {
@@ -293,14 +316,15 @@ struct FlowNewCommand: ParsableCommand {
             return
         }
         out.line(file)
-        out.note("Run it with `desertant flow run \(file) <files>`.")
+        out.hints([("flow check \(file)", "shows how the steps connect"),
+                   ("flow run \(file) <files>", "runs the flow on your files")])
     }
 }
 
 struct FlowCheckCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "check", abstract: "Check a flow file: its steps, how they connect, and what runs here.",
-        discussion: "Exits 1 when a step cannot run on this machine or an input has no source.")
+        discussion: "flow check exits with code 1 when a step cannot run on this machine or an input has no source.")
     @Argument(help: "A flow file, or the name of a template.") var flow: String
     @OptionGroup var global: GlobalOptions
 

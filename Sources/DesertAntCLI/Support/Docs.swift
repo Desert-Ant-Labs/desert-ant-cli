@@ -7,10 +7,10 @@ struct Docs: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "docs",
         abstract: "Read the docs, offline, from the binary.",
-        discussion: "No page prints the index. Pages: \(Embedded.docs.map(\.name).joined(separator: ", "))."
+        discussion: "The pages are \(Embedded.docs.map(\.name).joined(separator: ", "))."
     )
 
-    @Argument(help: "A page name, e.g. agents or json. Omit for the index.")
+    @Argument(help: "A page name, such as agents or json. Without it, desertant prints the index.")
     var page: String?
 
     @OptionGroup var options: GlobalOptions

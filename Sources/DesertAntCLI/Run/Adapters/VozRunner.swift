@@ -12,15 +12,15 @@ struct VozRunner: ModelRunner {
     let inputKind = RunInputKind.file
     let emits: String? = "transcript"
     let options = [
-        RunOption(name: "timestamps", help: "A time before each sentence."),
+        RunOption(name: "timestamps", help: "Print a time before each sentence."),
         RunOption(name: "srt", help: "Also write captions as <input>.srt beside the input."),
         RunOption(name: "vtt", help: "Also write captions as <input>.vtt beside the input."),
         RunOption(name: "txt", help: "Also write the transcript as <input>.txt beside the input."),
-        RunOption(name: "output", help: "Write one file at this path; the format comes from its extension: srt, vtt, txt, or json."),
-        RunOption(name: "format", help: "What stdout carries: text (default), srt, vtt, txt, or json."),
-        RunOption(name: "force", help: "Replace an existing file instead of stepping aside."),
-        RunOption(name: "speakers", help: "Label each line with who said it, through Who: names in captions and the transcript."),
-        RunOption(name: "names", help: "With --speakers, names in the order the speakers first speak, comma-separated: \"Anna,Ben\"."),
+        RunOption(name: "output", help: "Write one file at this path. Its extension sets the format: srt, vtt, txt, or json."),
+        RunOption(name: "format", help: "The format to print: text, srt, vtt, txt, or json. Default text."),
+        RunOption(name: "force", help: "Replace an existing file instead of writing name-2.ext."),
+        RunOption(name: "speakers", help: "Label each line with its speaker, using Who. Captions and the transcript show the names."),
+        RunOption(name: "names", help: "With --speakers, names in the order the speakers first speak, such as \"Anna,Ben\"."),
     ]
 
     private let transcriber = VozTranscriber()
@@ -64,7 +64,7 @@ struct VozRunner: ModelRunner {
     }
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
-        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
+        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         let format = try kind(arguments["format"] ?? (out.isJSON ? "json" : "text"))
 
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
@@ -143,7 +143,7 @@ struct VozRunner: ModelRunner {
         if !who.isDownloaded() {
             try await who.download { progress.update($0, label: "downloading who") }
         }
-        progress.update(nil, label: "listening for speakers")
+        progress.update(nil, label: "finding the speakers")
         let result = try await who.labels(of: input)
         FirstLoad.done("who")
         let turns = result.turns.map { SpeakerTurn(start: $0.start, end: $0.end, speaker: $0.speaker) }

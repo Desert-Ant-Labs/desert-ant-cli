@@ -8,7 +8,7 @@ import ArgumentParser
 struct Schema: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "schema",
-        abstract: "Emit the tool catalog for agents, as JSON."
+        abstract: "Print the tool catalog for agents, as JSON."
     )
 
     @OptionGroup var options: GlobalOptions
@@ -83,11 +83,11 @@ struct Schema: ParsableCommand {
             invocation: "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
             folders: "A file or image verb takes several paths, or a folder (--recursive walks its folders). The --json result is then an array of the single-file documents, in order. A file that fails is left out and its message goes to stderr. The exit code is 1 after the rest have run.",
             composition: "A command whose `emits` matches another's `accepts.kind` feeds it: pass the --json output as a file through that option, or `-` to read it from stdin. desertant docs pipelines explains the rest.",
-            flows: "A flow file chains steps in YAML: `flow: 1`, then `steps`, each with a `type`, an optional `id`, `uses` mapping its inputs to earlier outputs as step.output, and `with` for its settings. `flowSteps` lists the types. Run one with `desertant flow run <file> <inputs>`; `desertant docs flows` explains the rest.",
+            flows: "A flow file chains steps in YAML: `flow: 1`, then `steps`, each with a `type`, an optional `id`, `uses` mapping its inputs to earlier outputs as step.output, and `with` for its settings. `flowSteps` lists the types. `desertant flow run <file> <inputs>` runs a flow, and `desertant docs flows` explains the rest.",
             globalFlags: [
-                Flag(flag: "--json", help: "Machine-readable JSON output."),
-                Flag(flag: "--quiet", help: "Result only, no notes or progress."),
-                Flag(flag: "--no-color", help: "Never colorize."),
+                Flag(flag: "--json", help: "Print the result as JSON, for scripts and agents."),
+                Flag(flag: "--quiet", help: "Print only the result, without headings, notes, or progress."),
+                Flag(flag: "--no-color", help: "Print without color, even on a terminal."),
             ],
             exitCodes: [
                 Code(code: 0, meaning: "success"),

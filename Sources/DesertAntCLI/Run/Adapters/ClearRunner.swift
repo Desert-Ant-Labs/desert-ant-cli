@@ -8,8 +8,8 @@ struct ClearRunner: ModelRunner {
     let inputKind = RunInputKind.file
     let emits: String? = "file"
     let options = [
-        RunOption(name: "output", help: "Where to write. Default: the input with a _clear suffix."),
-        RunOption(name: "force", help: "Replace an existing output instead of stepping aside to a new name."),
+        RunOption(name: "output", help: "Where to write the result. By default, Clear adds _clear to the input's name."),
+        RunOption(name: "force", help: "Replace an existing file instead of writing name-2.ext."),
     ]
 
     private let model = Clear()
@@ -28,7 +28,7 @@ struct ClearRunner: ModelRunner {
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
         guard FileManager.default.fileExists(atPath: input) else {
-            throw RunError("no file at \(input)")
+            throw RunError("no file at \(input).")
         }
         let output = try Destination.resolve(
             requested: arguments["output"],

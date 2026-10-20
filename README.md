@@ -4,7 +4,17 @@
 
 ![Swift](https://img.shields.io/badge/Swift-macOS%20%7C%20Linux-F05138?logo=swift&logoColor=white) ![Release](https://img.shields.io/github/v/release/Desert-Ant-Labs/desert-ant-cli?color=ADB49C&label=release) ![License](https://img.shields.io/badge/license-MIT-ADB49C)
 
-Transcribe a recording and label who said what, cut the best moments into clips, clean up the audio, find, rank, and crop photos, redact personal data from text, name the language of a line, flag nudity in a photo, or tag a topic, with [Desert Ant Labs](https://desertant.com) models running on your own machine. Weights download once. Nothing leaves the device.
+Transcribe a recording and label who said what, cut the best moments into captioned clips, clean up the audio, find, rank, and crop photos, redact personal data from text, name the language of a line, flag nudity in a photo, or tag a topic, with [Desert Ant Labs](https://desertant.com) models running on your own machine. Run one model, or several in one command as a flow. Weights download once. Nothing leaves the device.
+
+<img src="docs/media/flow-run.gif" width="800" alt="The terminal runs da flow run podcast-clips episode.mp4, which prints the path of one captioned clip and "Ran 5 steps in 2.5s.", then time reports 2.853s.">
+
+`da flow run podcast-clips episode.mp4` cleans up the sound of a 27s recording, transcribes it, picks the moment worth sharing, and writes it as a clip with the captions burned in. On an M3 Ultra, with the models already loaded once, the whole flow took 2.9s. The first run on a machine downloads the models and prepares them for the Neural Engine.
+
+<img src="docs/media/caption-shapes.jpg" width="800" alt="The same moment from a vertical, a square, and a landscape clip, each with burned-in captions: one short line on the vertical clip, two lines on the others.">
+
+Captions follow the clip's shape: one short line at a time on a vertical clip, two lines on a square or wide one, in a font that comes with desertant, so a clip looks the same on macOS and Linux.
+
+Single models run from the terminal the same way:
 
 ```console
 $ da voz talk.mp4 -t
@@ -59,6 +69,72 @@ desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 
 ```sh
 sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
 ```
+
+## Flows
+
+A flow runs several models on a file in one command. desertant comes with nine ready-made flows:
+
+| Template | What it does |
+| --- | --- |
+| `podcast-clips` | Cleans up the sound, then cuts the moments worth sharing into clips with captions burned in. |
+| `meeting-notes` | Names each speaker, replaces personal data with placeholders, and tags the main topic. |
+| `transcript-and-captions` | Transcribes a recording into text, SRT, and WebVTT. |
+| `who-said-what` | Transcribes a recording and names the speaker of each line. |
+| `studio-sound` | Takes the noise and echo out of a recording and levels the voice. A video keeps its picture. |
+| `filler-words` | Lists each uh, um, and hmm with its time. Runs on macOS. |
+| `photo-keepers` | Copies the photos worth keeping into a Keepers folder, one of each near-duplicate. |
+| `find-receipts` | Copies the receipts among your photos into a Receipts folder. |
+| `redact-a-document` | Replaces the personal data in a text with placeholders and prints it. |
+
+```sh
+da flow run meeting-notes standup.m4a --set who.names="Anna,Ben"
+da flow run podcast-clips episode.mp4 --set clips.count=3 --set clips.style=box
+da flow run photo-keepers ~/Pictures/trip            # prints the plan
+da flow run photo-keepers ~/Pictures/trip --apply    # copies the keepers
+```
+
+A flow saves its files beside the input, or in `--output-dir`, and never replaces a file. Steps that copy or rename your own files print a plan and change nothing until `--apply`.
+
+To write your own flow, list the steps in YAML. An input left out of `uses` takes the nearest earlier output of the same name, so a straight chain needs no wiring:
+
+```yaml
+flow: 1
+title: Clips and captions
+steps:
+  - type: audio
+  - type: voz
+  - type: clips
+    with:
+      captions: burn
+      position: top
+      count: 3
+  - id: clipfiles
+    type: folder
+    uses:
+      value: clips.files
+    with:
+      folder: Clips
+  - type: captions
+  - id: srt
+    type: folder
+    uses:
+      value: captions.srt
+    with:
+      name: "{{name}}"
+```
+
+`da flow check clips.yml` shows how every input is wired, and `da flow new podcast-clips` copies a template out in full to edit. `da docs flows` has every step and rule.
+
+## Captioned clips
+
+`--captions burn` draws the words into each clip, for a feed where people watch without sound:
+
+```sh
+da clips talk.mp4 --captions burn
+da clips talk.mp4 --captions burn --caption-style box --caption-position top --caption-color yellow
+```
+
+`--caption-lines` and `--caption-words` change how much text a caption holds, and `--caption-align`, `--caption-font`, `--caption-size`, and `--caption-weight` set the rest of the look. `--captions srt` writes an `.srt` beside each clip instead. Burning keeps the clip's size and frame rate at the highest quality unless you pass `--quality medium` or `low`. `da docs clips` has every option.
 
 ## Models
 
@@ -160,29 +236,6 @@ jq -r '.[] | select(.kind == "receipt") | .input' photos.json
 ```
 
 Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye). `da docs eye` lists the tags and the rest of the flags.
-
-## Captioned clips
-
-`--captions burn` draws the words into each clip, for a feed where people watch without sound:
-
-```sh
-da clips talk.mp4 --captions burn
-da clips talk.mp4 --captions burn --caption-style box --caption-position top --caption-color yellow
-```
-
-The captions follow the clip's shape: a vertical clip shows one short line at a time, and a square or wide clip up to two lines. `--caption-align`, `--caption-font`, `--caption-size`, and `--caption-weight` set the rest of the look, and `--captions srt` writes an `.srt` beside each clip instead. The font, Inclusive Sans, ships with desertant, so a clip looks the same on macOS and Linux. Burning keeps the clip's size and frame rate at the highest quality unless you pass `--quality medium` or `low`. `da docs clips` has every option.
-
-## Flows
-
-A flow runs several models on a file in one command. desertant ships nine templates, such as captioned clips from a podcast:
-
-```console
-$ da flow run podcast-clips episode.mp4
-episode_clear_clip-1.mp4
-episode_clear_clip-2.mp4
-```
-
-podcast-clips cleans up the sound, transcribes the recording, and cuts the best moments into clips with captions burned in. `da flow templates` lists the others: transcripts and captions, who said what, meeting notes with personal data taken out, filler words, photo keepers, and receipts. `da flow new podcast-clips` copies a template to a YAML file you can edit, and `da docs flows` explains the format and every step.
 
 ## Chain
 

@@ -9,7 +9,7 @@ struct Info: ParsableCommand {
         abstract: "Show one model's card."
     )
 
-    @Argument(help: "The model id, e.g. emo.")
+    @Argument(help: "The model id, such as emo.")
     var model: String
 
     @OptionGroup var options: GlobalOptions

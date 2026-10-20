@@ -10,13 +10,13 @@ struct WhoRunner: ModelRunner {
     let emits: String? = "speakers"
     let accepts = [Intake(kind: "transcript", option: "transcript")]
     let options = [
-        RunOption(name: "names", help: "Names for the speakers in the order they first speak, comma-separated: \"Anna,Ben\"."),
-        RunOption(name: "min-share", help: "Leave out speakers heard for less than this share of the recording, 0...1, such as a laugh or a jingle. Default 0."),
+        RunOption(name: "names", help: "Names for the speakers in the order they first speak, such as \"Anna,Ben\"."),
+        RunOption(name: "min-share", help: "Leave out a voice that takes up less than this share of the recording, from 0 to 1, such as a laugh or a jingle. Default 0."),
         RunOption(name: "join", help: "Join a speaker's turns across pauses up to this many seconds. Default 1."),
-        RunOption(name: "transcript", help: "A transcript to label line by line: the --json of voz, or an .srt or .vtt; `-` reads it from stdin."),
-        RunOption(name: "format", help: "What stdout carries: text (default), json, rttm, or with a transcript, srt, vtt, or txt."),
-        RunOption(name: "output", help: "Write one file at this path; the format comes from its extension: rttm, json, or with a transcript, srt, vtt, or txt."),
-        RunOption(name: "force", help: "Replace an existing file instead of stepping aside."),
+        RunOption(name: "transcript", help: "A transcript to label line by line: the --json of voz, or an .srt or .vtt file. Pass - to read it from stdin."),
+        RunOption(name: "format", help: "The format to print: text, json, rttm, and with a transcript, srt, vtt, or txt. Default text."),
+        RunOption(name: "output", help: "Write one file at this path. Its extension sets the format: rttm, json, and with a transcript, srt, vtt, or txt."),
+        RunOption(name: "force", help: "Replace an existing file instead of writing name-2.ext."),
     ]
 
     private let model = Who()
@@ -82,7 +82,7 @@ struct WhoRunner: ModelRunner {
     func validate(_ arguments: RunArguments) throws { _ = try settings(arguments) }
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
-        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
+        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         let settings = try settings(arguments)
         let transcript = try arguments["transcript"].map(TranscriptFile.url(option:))
         defer { if arguments["transcript"] == "-", let transcript { try? FileManager.default.removeItem(at: transcript) } }
@@ -95,7 +95,7 @@ struct WhoRunner: ModelRunner {
         try await model.download { _ in }
         let loadSec = Date().timeIntervalSince(loading)
         FirstLoad.done(id)
-        progress.update(nil, label: "listening")
+        progress.update(nil, label: "analyzing")
         let started = Date()
         let result = try await model.labels(of: input)
         let processingSec = Date().timeIntervalSince(started)

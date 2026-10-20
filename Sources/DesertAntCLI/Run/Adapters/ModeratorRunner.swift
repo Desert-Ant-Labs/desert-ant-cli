@@ -8,9 +8,9 @@ struct ModeratorRunner: ModelRunner {
     let id = "moderator"
     let inputKind = RunInputKind.image
     let options = [
-        RunOption(name: "threshold", help: "Score at or above which the image is flagged, 0...1. Default 0.5."),
-        RunOption(name: "policy", help: "standard, or allow-topless to let a bare chest through. Default standard."),
-        RunOption(name: "quality", help: "fast, balanced, or accurate: how many crops are scored. Default accurate."),
+        RunOption(name: "threshold", help: "Flag an image when its score reaches this value, from 0 to 1. Default 0.5."),
+        RunOption(name: "policy", help: "standard, or allow-topless to allow a bare chest. Default standard."),
+        RunOption(name: "quality", help: "How many crops Moderator scores: fast, balanced, or accurate. Default accurate."),
     ]
 
     private let model = Moderator()
@@ -68,13 +68,13 @@ struct ModeratorRunner: ModelRunner {
     func validate(_ arguments: RunArguments) throws { _ = try settings(arguments) }
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
-        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
+        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         let settings = try settings(arguments)
         let opts = settings.options
 
         let pixels = try Self.pixels(input)
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
-        progress.update(nil, label: "looking")
+        progress.update(nil, label: "analyzing")
         let result = try await model.analyze(pixels, options: opts)
         progress.finish()
 

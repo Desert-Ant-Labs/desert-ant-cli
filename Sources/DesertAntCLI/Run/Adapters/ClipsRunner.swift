@@ -9,22 +9,22 @@ struct ClipsRunner: ModelRunner {
     let emits: String? = "clips"
     let accepts = [Intake(kind: "transcript", option: "transcript")]
     let options = [
-        RunOption(name: "count", help: "How many clips to look for. Without it, the model sizes the search to the recording."),
-        RunOption(name: "output-dir", help: "Where the clip files go. Without it, they go beside the input."),
-        RunOption(name: "transcript", help: "An .srt, .vtt, or .json transcript instead of transcribing; `-` reads one from stdin."),
+        RunOption(name: "count", help: "How many clips to look for. By default, Clips sizes the search to the recording."),
+        RunOption(name: "output-dir", help: "Where the clip files go. By default, they go beside the input."),
+        RunOption(name: "transcript", help: "An .srt, .vtt, or .json transcript to use instead of transcribing. Pass - to read it from stdin."),
         RunOption(name: "select-only", help: "Report the moments as timestamps without writing files."),
-        RunOption(name: "force", help: "Replace existing clip files instead of stepping aside to new names."),
-        RunOption(name: "captions", help: "burn to draw captions into each clip, srt to write <clip>.srt beside it, or off. Default off."),
+        RunOption(name: "force", help: "Replace existing clip files instead of writing name-2.ext."),
+        RunOption(name: "captions", help: "burn draws captions into each clip, srt writes <clip>.srt beside each clip, and off writes none. Default off."),
         RunOption(name: "caption-position", help: "Where burned captions go: bottom, center, or top. Default bottom."),
-        RunOption(name: "caption-align", help: "How burned caption lines line up: left, center, or right. Default center."),
-        RunOption(name: "caption-font", help: "A font family, or a .ttf or .otf file. Default Inclusive Sans, which ships with desertant."),
-        RunOption(name: "caption-size", help: "The text's height as a share of the frame's height, as 0.06. Without it, the text is 7% of the frame's short side."),
+        RunOption(name: "caption-align", help: "How burned caption lines align: left, center, or right. Default center."),
+        RunOption(name: "caption-font", help: "A font family, or a .ttf or .otf file. Default Inclusive Sans, which comes with desertant."),
+        RunOption(name: "caption-size", help: "The text's height as a share of the frame's height, such as 0.06. Default 7% of the frame's short side."),
         RunOption(name: "caption-weight", help: "The text's weight: regular, medium, semibold, bold, black, or 100 to 900. Default bold."),
         RunOption(name: "caption-color", help: "The text's color: a name such as white or yellow, or a hex color such as #ffcc00. Default white."),
-        RunOption(name: "caption-lines", help: "Lines on screen at once, 1 or 2. A vertical clip takes one by default, and a square or wide one two."),
-        RunOption(name: "caption-words", help: "The most words in one caption. A vertical clip takes 5 by default, and a square or wide one as many as fit."),
+        RunOption(name: "caption-lines", help: "Caption lines on screen at once, 1 or 2. Default 1 on a vertical clip and 2 on a square or wide clip."),
+        RunOption(name: "caption-words", help: "The most words in one caption. Default 5 on a vertical clip, and as many as fit the line on a square or wide clip."),
         RunOption(name: "caption-style", help: "How the text stands out from the picture: outline, box, or shadow. Default outline."),
-        RunOption(name: "quality", help: "How much to compress a clip with burned captions: high, medium, or low. Default high, the highest quality. Every level keeps the source's size and frame rate."),
+        RunOption(name: "quality", help: "The video quality of a clip with burned captions: high, medium, or low. Default high. Every level keeps the source's size and frame rate."),
     ]
 
     /// The caption settings from the options, checked.
@@ -50,7 +50,7 @@ struct ClipsRunner: ModelRunner {
     }
 
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
-        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input)") }
+        guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         var request = ClipPipeline.Request(media: URL(fileURLWithPath: input))
         // `-` reads the transcript from stdin, as `desertant voz --json` or an SRT.
         request.transcript = try arguments["transcript"].map(TranscriptFile.url(option:))
