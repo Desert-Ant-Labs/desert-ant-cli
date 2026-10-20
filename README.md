@@ -66,7 +66,7 @@ brew install desert-ant-labs/tap/desertant
 mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"
 ```
 
-Update with `da update`, `brew upgrade desertant`, or `mise upgrade`, the same way you installed.
+Update with `da update`, `brew upgrade desertant`, or `mise upgrade`.
 
 On Linux, desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 41, and libcurl. ffmpeg reads compressed audio, video, and images, and libheif reads HEIC photos:
 
