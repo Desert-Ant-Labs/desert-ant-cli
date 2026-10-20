@@ -47,6 +47,7 @@ struct DesertAnt: AsyncParsableCommand {
             ClipsVerb.self,
             ModeratorVerb.self,
             EyeVerb.self,
+            FlowCommand.self,
             // Agents.
             Schema.self,
             Docs.self,

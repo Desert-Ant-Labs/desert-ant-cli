@@ -29,6 +29,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
+        .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
         .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "4.1.0", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
@@ -36,6 +37,8 @@ let package = Package(
             name: "DesertAntCLI",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                // Flow files.
+                .product(name: "Yams", package: "Yams"),
                 // The CLI's selection from the catalog (see Run/Registry.swift).
                 .product(name: "Emo", package: core),
                 .product(name: "Redact", package: core),

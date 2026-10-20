@@ -17,3 +17,16 @@ func truncate(_ s: String, to width: Int) -> String {
     }
     return cut + "\u{2026}"
 }
+
+/// Columns a string takes on a terminal: two for an emoji or a wide East Asian
+/// character, one for anything else.
+func displayWidth(_ s: String) -> Int {
+    s.reduce(0) { sum, ch in
+        guard let first = ch.unicodeScalars.first else { return sum }
+        let wide = ch.unicodeScalars.contains { $0.properties.isEmojiPresentation }
+            || (0x1100...0x115F).contains(first.value) || (0x2E80...0xA4CF).contains(first.value)
+            || (0xAC00...0xD7A3).contains(first.value) || (0xF900...0xFAFF).contains(first.value)
+            || (0xFF00...0xFF60).contains(first.value) || (0xFFE0...0xFFE6).contains(first.value)
+        return sum + (wide ? 2 : 1)
+    }
+}

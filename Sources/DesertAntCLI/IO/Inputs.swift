@@ -15,6 +15,11 @@ enum Inputs {
     }
 
     static func expand(_ paths: [String], kind: RunInputKind, recursive: Bool) throws -> Expanded {
+        try expand(paths, extensions: kind.extensions, noun: kind.noun, recursive: recursive)
+    }
+
+    /// `extensions` nil takes every file in a folder.
+    static func expand(_ paths: [String], extensions: Set<String>?, noun: String, recursive: Bool) throws -> Expanded {
         let fm = FileManager.default
         var files: [String] = []
         var skipped: [String] = []
@@ -31,7 +36,7 @@ enum Inputs {
             passedFolders = passedFolders || listed.passedFolders
             for name in listed.names {
                 let ext = (name as NSString).pathExtension.lowercased()
-                if kind.extensions.contains(ext) {
+                if extensions?.contains(ext) ?? true {
                     // Joined as typed, so a relative folder stays relative on screen.
                     files.append((path as NSString).appendingPathComponent(name))
                 } else {
@@ -41,7 +46,7 @@ enum Inputs {
         }
         let isBatch = sawFolder || paths.count > 1
         if files.isEmpty, sawFolder {
-            throw RunError("no \(kind.noun) files in \(paths.joined(separator: ", "))\(passedFolders ? ". Pass --recursive to look inside its folders" : "").")
+            throw RunError("no \(noun.isEmpty ? "" : noun + " ")files in \(paths.joined(separator: ", "))\(passedFolders ? ". Pass --recursive to look inside its folders" : "").")
         }
         return Expanded(files: files, skipped: skipped, isBatch: isBatch)
     }
