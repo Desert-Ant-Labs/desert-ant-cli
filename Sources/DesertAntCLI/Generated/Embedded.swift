@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "4.1.0",
+  "sdkVersion": "4.2.1",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -676,7 +676,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/voz",
         "url": "https://huggingface.co/desert-ant-labs/voz",
-        "revision": "v0.4.0",
+        "revision": "v0.5.0",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": [
@@ -746,13 +746,13 @@ enum Embedded {
       "sdks": {
         "swift": { "status": "live", "package": "Who", "platforms": ["apple", "linux", "windows"] },
         "kotlin": { "status": "live", "package": "ai.desertant:who", "platforms": ["android"] },
-        "js": { "status": "none" }
+        "js": { "status": "live", "package": "@desert-ant-labs/who", "platforms": ["web", "node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/who",
         "url": "https://huggingface.co/desert-ant-labs/who",
-        "revision": "v0.3.1",
+        "revision": "v0.3.4",
         "license": "desert-ant-labs-source-available-1.0"
       },
       "runtime": ["coreml", "litert"],

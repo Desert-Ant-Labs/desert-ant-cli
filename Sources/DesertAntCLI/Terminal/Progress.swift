@@ -15,7 +15,7 @@ final class Progress: @unchecked Sendable {
 
     init(palette: Palette, quiet: Bool) {
         self.palette = palette
-        live = !quiet && isatty(STDERR_FILENO) != 0
+        live = !quiet && Terminal.isTTY(STDERR_FILENO)
     }
 
     /// Set what the line says. `fraction` is 0...1, or nil when the phase has no

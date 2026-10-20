@@ -76,7 +76,7 @@ struct Palette: Sendable {
     static func resolve(noColor: Bool, json: Bool) -> Palette {
         if noColor || json { return Palette(enabled: false) }
         if ProcessInfo.processInfo.environment["NO_COLOR"] != nil { return Palette(enabled: false) }
-        return Palette(enabled: isatty(STDOUT_FILENO) != 0, theme: Theme.detect())
+        return Palette(enabled: Terminal.isTTY(STDOUT_FILENO), theme: Theme.detect())
     }
 
     func bold(_ s: String) -> String {
