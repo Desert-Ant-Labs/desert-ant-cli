@@ -88,20 +88,20 @@ sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
 
 ## Coding agents
 
-One command writes a skill for every agent installed on your machine, in the current project: Claude Code and Pi get a skill file, Codex gets a section in `AGENTS.md`.
+`desertant setup` adds desertant's instructions to the coding agents you have installed, in the current project. Claude Code and Pi get a skill file, and Codex gets a section in `AGENTS.md`.
 
 ```sh
 desertant setup
 ```
 
-`desertant setup claude` does one agent, and `--global` writes where the agent looks for every project. Or paste this into the agent and let the agent do both steps:
+`desertant setup claude` sets up Claude Code alone, and `--global` sets up the agent for all your projects. To have an agent install desertant and set itself up, paste this into it:
 
 ```text
 Install the Desert Ant CLI with: curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
 Then run `desertant setup` in this project.
 ```
 
-Any other agent with a shell needs nothing more: every command returns JSON with `--json`, reads stdin, and exits 0, 1, or 64, and `da schema --json` describes each command and how they chain.
+An agent with a shell can also use desertant without setup: every command returns JSON with `--json`, reads stdin, and exits 0, 1, or 64, and `da schema --json` describes each command and how they chain.
 
 ## Models
 
