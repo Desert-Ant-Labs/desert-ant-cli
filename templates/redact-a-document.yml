@@ -1,0 +1,8 @@
+flow: 1
+title: Redact a document
+description: Replaces the names, addresses, emails, phone numbers, and card numbers in a text with placeholders, and prints the result. Pass a text file, or pipe the text in.
+summary: Take the personal data out of a text.
+steps:
+  - type: text
+  - type: redact
+  - type: view

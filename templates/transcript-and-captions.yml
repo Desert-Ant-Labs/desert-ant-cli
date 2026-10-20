@@ -1,0 +1,26 @@
+flow: 1
+title: Transcript and captions
+description: Transcribes a recording and saves the transcript as text and the captions as SRT and WebVTT, beside the recording.
+summary: Transcribe a recording into text, SRT, and WebVTT.
+steps:
+  - type: audio
+  - type: voz
+  - type: captions
+  - id: transcript
+    type: folder
+    uses:
+      value: voz.sentences
+    with:
+      name: "{{name}}"
+  - id: srt
+    type: folder
+    uses:
+      value: captions.srt
+    with:
+      name: "{{name}}"
+  - id: vtt
+    type: folder
+    uses:
+      value: captions.vtt
+    with:
+      name: "{{name}}"

@@ -1,0 +1,10 @@
+flow: 1
+title: Studio sound
+description: Takes the noise and echo out of a recording and levels the voice for podcasts. A video keeps its picture. Saves the result beside the recording.
+summary: Clean up a recording's sound.
+steps:
+  - type: audio
+  - type: clear
+    with:
+      loudness: podcast
+  - type: folder

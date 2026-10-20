@@ -16,6 +16,8 @@ protocol MediaCutter: Sendable {
     func probe(_ source: URL) async throws -> MediaInfo
     /// Lay `ranges` of `source` end to end and write them to `destination`.
     func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws
+    /// `video`'s picture with `audio` as its sound, written to `destination`.
+    func replaceAudio(of video: URL, with audio: URL, to destination: URL) async throws
 }
 
 #if canImport(AVFoundation)
@@ -61,6 +63,29 @@ struct AVFoundationCutter: MediaCutter {
             try await export(composition, preset: video ? AVAssetExportPresetHighestQuality : AVAssetExportPresetAppleM4A,
                              as: video ? .mp4 : .m4a,
                              to: destination)
+        }
+    }
+
+    func replaceAudio(of video: URL, with audio: URL, to destination: URL) async throws {
+        let picture = AVURLAsset(url: video), sound = AVURLAsset(url: audio)
+        guard let sourceVideo = try await picture.loadTracks(withMediaType: .video).first,
+              let sourceAudio = try await sound.loadTracks(withMediaType: .audio).first else {
+            throw RunError("could not read the tracks of \(video.lastPathComponent) and \(audio.lastPathComponent)")
+        }
+        let length = try await picture.load(.duration)
+        let composition = AVMutableComposition()
+        let track = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+        try track?.insertTimeRange(CMTimeRange(start: .zero, duration: length), of: sourceVideo, at: .zero)
+        track?.preferredTransform = try await sourceVideo.load(.preferredTransform)
+        let soundLength = try await sound.load(.duration)
+        try composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)?
+            .insertTimeRange(CMTimeRange(start: .zero, duration: CMTimeMinimum(length, soundLength)), of: sourceAudio, at: .zero)
+        let type = Self.fileType(for: destination.pathExtension) ?? .mp4
+        do {
+            try await export(composition, preset: AVAssetExportPresetPassthrough, as: type, to: destination)
+        } catch {
+            try? FileManager.default.removeItem(at: destination)
+            try await export(composition, preset: AVAssetExportPresetHighestQuality, as: .mp4, to: destination)
         }
     }
 
@@ -134,5 +159,12 @@ struct FFmpegCutter: MediaCutter {
 
     func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws {
         try FFmpeg.cut(source.path, ranges: ranges.map { ($0.start, $0.duration) }, to: destination.path, tools: tools)
+    }
+
+    func replaceAudio(of video: URL, with audio: URL, to destination: URL) async throws {
+        try FFmpeg.run(tools.ffmpeg, ["-v", "error", "-nostdin", "-y", "-i", video.path, "-i", audio.path,
+                                      "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+                                      "-shortest", destination.path],
+                       file: destination.path, writing: true)
     }
 }

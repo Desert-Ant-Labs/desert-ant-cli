@@ -1,0 +1,36 @@
+flow: 1
+title: Sort photos by kind
+description: A folder for each kind of photo.
+summary: A folder for each kind of photo.
+steps:
+  - id: in
+    type: photos
+    with:
+      samples:
+        - /samples/photos/001.jpg
+        - /samples/photos/002.jpg
+    at: [0, 0]
+  - id: eye
+    type: eye
+    uses:
+      image: in.photos
+    with:
+      fields:
+        - type
+    at: [330, 0]
+  - id: copy
+    type: copy
+    uses:
+      files: in.photos
+      a: eye.type
+    with:
+      mode: copy
+      subfolder: "{{a}}"
+  - id: grid
+    type: gallery
+    uses:
+      photos: in.photos
+  - id: hint
+    type: note
+    with:
+      text: Choose a folder on the copy step.

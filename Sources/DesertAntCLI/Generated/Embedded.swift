@@ -1989,6 +1989,119 @@ that project's toolkit.
 
     /// The flow templates, by file name.
     static let templates: [(name: String, yaml: String)] = [
-
+        (name: "filler-words", yaml: ###"""
+flow: 1
+title: Filler words
+description: Finds each uh, um, and hmm in a recording and lists them with their times. Runs on macOS.
+summary: List the filler words in a recording.
+steps:
+  - type: audio
+  - type: uhm
+  - type: table
+    uses:
+      a: uhm.fillers
+"""###),
+        (name: "meeting-notes", yaml: ###"""
+flow: 1
+title: Meeting notes
+description: Transcribes a meeting, names each speaker, replaces personal data with placeholders, and tags the main topic. Saves the notes beside the recording. Set names with --set who.names="Anna,Ben".
+summary: Notes from a meeting recording, with personal data taken out.
+steps:
+  - type: audio
+  - type: voz
+  - type: who
+  - type: redact
+    uses:
+      text: who.paragraphs
+  - id: line
+    type: template
+    uses:
+      a: who.speaker
+      b: redact.text
+    with:
+      template: "{{a}}: {{b}}"
+  - type: join
+    with:
+      separator: paragraph
+  - type: gist
+  - id: notes
+    type: template
+    uses:
+      a: join.text
+      b: gist.top
+    with:
+      template: "# Meeting notes\n\n{{date}}, about {{b}}\n\n{{a}}\n"
+  - type: folder
+    with:
+      name: "{{name}}_notes"
+"""###),
+        (name: "redact-a-document", yaml: ###"""
+flow: 1
+title: Redact a document
+description: Replaces the names, addresses, emails, phone numbers, and card numbers in a text with placeholders, and prints the result. Pass a text file, or pipe the text in.
+summary: Take the personal data out of a text.
+steps:
+  - type: text
+  - type: redact
+  - type: view
+"""###),
+        (name: "studio-sound", yaml: ###"""
+flow: 1
+title: Studio sound
+description: Takes the noise and echo out of a recording and levels the voice for podcasts. A video keeps its picture. Saves the result beside the recording.
+summary: Clean up a recording's sound.
+steps:
+  - type: audio
+  - type: clear
+    with:
+      loudness: podcast
+  - type: folder
+"""###),
+        (name: "transcript-and-captions", yaml: ###"""
+flow: 1
+title: Transcript and captions
+description: Transcribes a recording and saves the transcript as text and the captions as SRT and WebVTT, beside the recording.
+summary: Transcribe a recording into text, SRT, and WebVTT.
+steps:
+  - type: audio
+  - type: voz
+  - type: captions
+  - id: transcript
+    type: folder
+    uses:
+      value: voz.sentences
+    with:
+      name: "{{name}}"
+  - id: srt
+    type: folder
+    uses:
+      value: captions.srt
+    with:
+      name: "{{name}}"
+  - id: vtt
+    type: folder
+    uses:
+      value: captions.vtt
+    with:
+      name: "{{name}}"
+"""###),
+        (name: "who-said-what", yaml: ###"""
+flow: 1
+title: Who said what
+description: Transcribes a recording, tells the speakers apart, and saves a transcript with each speaker's name in front of what they said. Set names with --set who.names="Anna,Ben".
+summary: A transcript that names each speaker.
+steps:
+  - type: audio
+  - type: voz
+  - type: who
+  - type: template
+    uses:
+      a: who.text
+    with:
+      template: "# Who said what\n\n{{date}}\n\n{{a}}\n"
+  - type: folder
+    with:
+      name: "{{name}}_speakers"
+"""###),
     ]
 }

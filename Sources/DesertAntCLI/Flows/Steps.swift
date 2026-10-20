@@ -61,7 +61,7 @@ struct StepError: Error, CustomStringConvertible {
 }
 
 enum Steps {
-    static let all: [StepDef] = InputSteps.all + OutputSteps.all
+    static let all: [StepDef] = InputSteps.all + ModelSteps.all + LogicSteps.all + OutputSteps.all
 
     static let byType: [String: StepDef] = Dictionary(uniqueKeysWithValues: all.map { ($0.type, $0) })
 

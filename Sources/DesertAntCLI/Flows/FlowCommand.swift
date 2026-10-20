@@ -89,7 +89,7 @@ struct FlowRunCommand: AsyncParsableCommand {
         let bindings = try self.bindings(parsed, sets: options.sets, out: out)
 
         for model in Self.models(parsed) {
-            if let runner = Runners.runner(for: model) { try await Execute.ensureDownloaded(runner, out: out) }
+            try await Execute.ensureDownloaded(Execute.resolveRunner(model), out: out)
         }
 
         let models = FlowModels()
@@ -123,15 +123,20 @@ struct FlowRunCommand: AsyncParsableCommand {
     }
 
     private func show(_ run: FlowRun, _ report: FlowReport, out: Output) {
-        for step in report.failed { out.warn("\(step.id) failed: \(step.note ?? "no message").") }
+        for step in report.failed {
+            let note = step.note ?? "no message"
+            out.warn("\(step.id) failed: \(note)\(note.hasSuffix(".") ? "" : ".")")
+        }
         for step in report.steps where step.status == "done" { if let note = step.note { out.note("\(step.id): \(note)") } }
         guard !out.isJSON else { return }
         for (i, shown) in run.shown.enumerated() {
             if i > 0 { out.line() }
             for line in shown.text { out.line(line) }
         }
-        if !run.shown.isEmpty, !report.files.isEmpty { out.line() }
-        for file in report.files { out.line(file) }
+        let shown = Set(run.shown.flatMap(\.text))
+        let files = report.files.filter { !shown.contains($0) }
+        if !run.shown.isEmpty, !files.isEmpty { out.line() }
+        for file in files { out.line(file) }
         if run.shown.isEmpty, report.files.isEmpty, report.failed.isEmpty {
             out.note("The flow ran. It has no view, table, or folder step, so it shows and saves nothing.")
         }
@@ -175,7 +180,8 @@ struct FlowRunCommand: AsyncParsableCommand {
             if hasOwn { return [nil] }
             if ["text", "textlist"].contains(input.type), let text = readStdin() { return [.text(text)] }
             let what = ["text", "textlist"].contains(input.type) ? "text on stdin, or a file" : "a file or a folder"
-            throw RunError("this flow starts with a \(input.type) step. Pass \(what) after the flow's name.")
+            let article = "aeiou".contains(input.type.prefix(1)) ? "an" : "a"
+            throw RunError("this flow starts with \(article) \(input.type) step. Pass \(what) after the flow's name.")
         }
         let expanded = try Inputs.expand(inputs, extensions: InputSteps.extensions(for: input.type),
                                          noun: input.type == "audio" ? "audio or video" : input.type == "image" || input.type == "photos" ? "image" : "",

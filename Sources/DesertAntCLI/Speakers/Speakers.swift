@@ -233,7 +233,7 @@ enum SpeakerFile {
         }
     }
 
-    private struct Paragraph {
+    struct Paragraph {
         let speaker: Int
         var lines: [SpokenLine]
         var start: Double { lines.first?.start ?? 0 }
@@ -241,7 +241,7 @@ enum SpeakerFile {
         var text: String { lines.map(\.text).joined(separator: " ") }
     }
 
-    private static func paragraphs(_ lines: [SpokenLine]) -> [Paragraph] {
+    static func paragraphs(_ lines: [SpokenLine]) -> [Paragraph] {
         var out: [Paragraph] = []
         for line in lines {
             if out.last?.speaker == line.speaker { out[out.count - 1].lines.append(line) } else { out.append(Paragraph(speaker: line.speaker, lines: [line])) }

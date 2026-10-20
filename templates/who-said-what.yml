@@ -1,0 +1,16 @@
+flow: 1
+title: Who said what
+description: Transcribes a recording, tells the speakers apart, and saves a transcript with each speaker's name in front of what they said. Set names with --set who.names="Anna,Ben".
+summary: A transcript that names each speaker.
+steps:
+  - type: audio
+  - type: voz
+  - type: who
+  - type: template
+    uses:
+      a: who.text
+    with:
+      template: "# Who said what\n\n{{date}}\n\n{{a}}\n"
+  - type: folder
+    with:
+      name: "{{name}}_speakers"

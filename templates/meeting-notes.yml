@@ -1,0 +1,32 @@
+flow: 1
+title: Meeting notes
+description: Transcribes a meeting, names each speaker, replaces personal data with placeholders, and tags the main topic. Saves the notes beside the recording. Set names with --set who.names="Anna,Ben".
+summary: Notes from a meeting recording, with personal data taken out.
+steps:
+  - type: audio
+  - type: voz
+  - type: who
+  - type: redact
+    uses:
+      text: who.paragraphs
+  - id: line
+    type: template
+    uses:
+      a: who.speaker
+      b: redact.text
+    with:
+      template: "{{a}}: {{b}}"
+  - type: join
+    with:
+      separator: paragraph
+  - type: gist
+  - id: notes
+    type: template
+    uses:
+      a: join.text
+      b: gist.top
+    with:
+      template: "# Meeting notes\n\n{{date}}, about {{b}}\n\n{{a}}\n"
+  - type: folder
+    with:
+      name: "{{name}}_notes"

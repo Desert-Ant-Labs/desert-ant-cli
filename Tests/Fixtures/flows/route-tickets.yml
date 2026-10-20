@@ -1,0 +1,51 @@
+flow: 1
+title: Route tickets by language
+steps:
+  - id: in
+    type: textlist
+    with:
+      items:
+        - Hello, my order never arrived.
+        - Hola, no puedo entrar en mi cuenta.
+  - id: redact
+    type: redact
+    uses:
+      text: in.items
+  - id: tongue
+    type: tongue
+    uses:
+      text: in.items
+  - id: if
+    type: if
+    uses:
+      value: redact.text
+      test: tongue.language
+    with:
+      op: equals
+      operand: en
+  - id: route
+    type: template
+    uses:
+      a: if.no
+      b: tongue.language
+    with:
+      template: Send to the {{b|lang}} team
+  - id: reply
+    type: template
+    uses:
+      a: if.yes
+    with:
+      template: Reply
+  - id: merge
+    type: merge
+    uses:
+      a: reply.text
+      b: route.text
+  - id: table
+    type: table
+    uses:
+      a: redact.text
+      b: tongue.language
+      c: merge.value
+    with:
+      columns: Ticket, Language, Next step
