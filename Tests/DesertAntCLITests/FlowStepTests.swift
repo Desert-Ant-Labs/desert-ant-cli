@@ -171,4 +171,12 @@ final class FlowStepTests: XCTestCase {
         ]))
         XCTAssertEqual(words.map(\.text), ["Hi", " you"])
     }
+
+    func testEveryDocumentedEyeOutputExists() throws {
+        // docs/flows.md names the eye step's outputs; a renamed output breaks every flow that uses it.
+        let documented = ["subject", "scenes", "type", "animal", "people", "pets", "keeper", "reason", "aesthetic", "cover", "sharp",
+                          "blur", "sensitive", "faces", "smile", "eyesOpen", "looking", "expression", "shot", "crop", "detail"]
+        let eye = try XCTUnwrap(Steps.byType["eye"])
+        XCTAssertEqual(Set(documented).subtracting(eye.outputs.map(\.id)), [])
+    }
 }

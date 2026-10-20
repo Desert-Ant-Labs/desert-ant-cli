@@ -146,21 +146,21 @@ enum InputSteps {
         var paths = try run.context.bound?.paths ?? listed(run.params)
         if paths.isEmpty, let folder = given(run.params["folder"]) { paths = try contents(of: folder) }
         guard !paths.isEmpty else { return [:] }
+        // Each list lines up with files, with a gap where a file is another kind, so a
+        // step that reads photos can be paired with one that reads files.
         var photos: [Value?] = [], audio: [Value?] = [], texts: [Value?] = []
         for path in paths {
             let ext = (path as NSString).pathExtension.lowercased()
-            if RunInputKind.image.extensions.contains(ext) {
-                photos.append(.image(path))
-            } else if RunInputKind.file.extensions.contains(ext) {
-                audio.append(RunInputKind.isVideo(path) ? .video(path) : .audio(path))
-            } else if textExtensions.contains(ext), let t = try? read(path) {
-                texts.append(.text(t))
-            }
+            let image = RunInputKind.image.extensions.contains(ext)
+            let sound = !image && RunInputKind.file.extensions.contains(ext)
+            photos.append(image ? .image(path) : nil)
+            audio.append(sound ? (RunInputKind.isVideo(path) ? .video(path) : .audio(path)) : nil)
+            texts.append(!image && !sound && textExtensions.contains(ext) ? (try? read(path)).map { .text($0) } : nil)
         }
         var out: [String: Value] = ["files": .list(paths.map(asFile))]
-        if !photos.isEmpty { out["photos"] = .list(photos) }
-        if !audio.isEmpty { out["audio"] = .list(audio) }
-        if !texts.isEmpty { out["text"] = .list(texts) }
+        if photos.contains(where: { $0 != nil }) { out["photos"] = .list(photos) }
+        if audio.contains(where: { $0 != nil }) { out["audio"] = .list(audio) }
+        if texts.contains(where: { $0 != nil }) { out["text"] = .list(texts) }
         return out
     }
 

@@ -64,7 +64,8 @@ struct ClearRunner: ModelRunner {
             return
         }
         out.line(output)
-        if let note = MediaFormat.changeNote(from: input, to: output) { out.note(note) }
+        // A warning, not a note, so it shows in a pipe too: the file is not the format asked for.
+        if let note = MediaFormat.changeNote(from: input, to: output), !out.options.quiet { out.warn(note) }
         out.note("\(Format.spoken(result.durationSec)) of audio in \(Format.elapsed(result.processingSec)), "
                  + Format.realtime(material: result.durationSec, elapsed: result.processingSec) + ".")
     }

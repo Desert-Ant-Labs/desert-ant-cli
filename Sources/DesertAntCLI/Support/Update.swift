@@ -33,7 +33,7 @@ struct Update: AsyncParsableCommand {
         if out.isJSON {
             out.emit(Report(current: Version.cli, latest: latest, updateAvailable: newer,
                             installedVia: label(source), updateCommand: source.updateCommand))
-            if !check { out.note(action(for: source, newer: newer)) }
+            if !check { out.line(action(for: source, newer: newer)) }
             return
         }
 
@@ -55,7 +55,7 @@ struct Update: AsyncParsableCommand {
 
         switch source {
         case .script(let binDir):
-            out.note("Installing \(latest) into \(binDir).")
+            out.line("Installing \(latest) into \(binDir).")
             try await runInstaller(binDir: binDir)
         case .homebrew, .mise, .source:
             out.line("This copy is managed by \(label(source)). Run \(p.bold(source.updateCommand)).")

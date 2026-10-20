@@ -222,7 +222,7 @@ enum EyeFields {
         Field(id: "faces") { .number(Double($0.faces.count)) },
         Field(id: "smile") { score($0.faces.map(\.smile).max().map { max(0, $0) }) },
         Field(id: "eyesOpen") { score($0.faces.map(\.eyesOpen).min()) },
-        Field(id: "analyzing") { score($0.faces.map(\.looking).max()) },
+        Field(id: "looking") { score($0.faces.map(\.looking).max()) },
         Field(id: "expression") { .text(words(top($0.faces.first?.expression))) },
         Field(id: "shot") { .text(words(top($0.layout?.shot))) },
         Field(id: "crop") { r in

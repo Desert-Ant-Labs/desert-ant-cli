@@ -58,10 +58,15 @@ struct Output {
         Spacing.shared.breakNext()
     }
 
-    /// A note, dimmed and wrapped at the terminal's width. Suppressed under --json or
-    /// --quiet. Notes in a row form one block, set apart from the result.
+    /// Whether notes and hints show: on a terminal, without --json or --quiet. In a pipe
+    /// or a file, stdout carries the result alone, so `voz --format srt > a.srt` stays
+    /// a valid .srt.
+    var decorates: Bool { !isJSON && !options.quiet && isatty(STDOUT_FILENO) != 0 }
+
+    /// A note, dimmed and wrapped at the terminal's width, shown only when `decorates`.
+    /// Notes in a row form one block, set apart from the result.
     func note(_ s: String) {
-        guard !isJSON, !options.quiet else { return }
+        guard decorates else { return }
         let text = s.trimmingCharacters(in: .newlines)
         guard !text.isEmpty else { return }
         Spacing.shared.open(.note)
@@ -120,10 +125,9 @@ func readStdin() -> String? {
 
 extension Output {
     /// What to type next: each command and what it does, in two aligned columns, the
-    /// command named the way the reader started this one. Left out under --json and
-    /// --quiet, which want the result alone.
+    /// command named the way the reader started this one. Shown only when `decorates`.
     func hints(_ rows: [(command: String, does: String)]) {
-        guard !isJSON, !options.quiet, !rows.isEmpty else { return }
+        guard decorates, !rows.isEmpty else { return }
         let p = palette
         let commands = rows.map { "\(Invocation.name) \($0.command)" }
         let keyWidth = commands.map(displayWidth).max() ?? 0

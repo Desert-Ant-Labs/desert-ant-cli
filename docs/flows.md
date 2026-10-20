@@ -141,7 +141,7 @@ An `if` step sends each item down `yes` or `no` and leaves a gap on the other si
 | `rename` | New names for files from a pattern. Needs `--apply`. | `pattern`, `mode`: copy or rename, `folder` |
 | `copy` | Copies or moves files into a folder. Needs `--apply`. | `mode`: copy or move, `folder`, `subfolder` |
 
-An `if` checks with `op`: `equals`, `notEquals`, `oneOf` (a comma-separated `operand`), `contains`, `above`, `below`, `truthy`, `falsy`, or `empty`. An `if` checks the value itself, or its `test` input when one is wired, as a photo against Eye's `type`. A `list` takes `op`: `desc` or `asc` (sorted by its `by` input when wired), `sort`, `most`, `firstN`, `lastN`, `item`, `count`, `unique`, `reverse`, or `compact`.
+An `if` checks with `op`: `equals`, `notEquals`, `oneOf` (a comma-separated `operand`), `contains`, `above`, `below`, `truthy`, `falsy`, or `empty`. An `if` checks the value itself, or its `test` input when one is wired, as a photo against Eye's `type`. A `list` takes `op`: `desc` or `asc` (sorted by its `by` input when wired), `sort`, `most`, `firstN`, `lastN`, `item`, `count`, `unique`, `reverse`, or `compact`. A sort keeps the whole list unless `n` is set, and `firstN`, `lastN`, and `item` take 3 by default.
 
 The eye step gives `subject`, `scenes`, `type`, `animal`, `people`, `pets`, `keeper`, `reason`, `aesthetic`, `cover`, `sharp`, `blur`, `sensitive`, `faces`, `smile`, `eyesOpen`, `looking`, `expression`, `shot`, `crop`, and `detail`, the document `da eye --json` writes. `reason` is `keeper`, or why a photo isn't worth keeping: blurry, taken by accident, nothing special, and so on.
 

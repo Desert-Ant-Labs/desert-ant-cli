@@ -157,7 +157,8 @@ struct CaptionFont: Sendable, Equatable {
         }
         guard unitsPerEm > 0, ascent + descent > 0 else { throw RunError("\(url.lastPathComponent) has no metrics to size text by.") }
 
-        // The typographic family (16) before the legacy one (1), Windows Unicode first.
+        // The legacy family (1) before the typographic one (16), Windows Unicode first:
+        // libass finds a face by its legacy family, so a SemiBold file is "Inter SemiBold".
         let storage = name + u16(name + 4)
         var found: [Int: String] = [:]
         for i in 0..<u16(name + 2) {
@@ -170,7 +171,7 @@ struct CaptionFont: Sendable, Equatable {
                 : String(data: raw, encoding: .macOSRoman)
             if let text, !text.isEmpty, found[id] == nil || platform == 3 { found[id] = text }
         }
-        guard let family = found[16] ?? found[1] else { throw RunError("\(url.lastPathComponent) has no family name.") }
+        guard let family = found[1] ?? found[16] else { throw RunError("\(url.lastPathComponent) has no family name.") }
         return CaptionFont(file: url, index: index, family: family, weight: weight, unitsPerEm: unitsPerEm, ascent: ascent, descent: descent)
     }
 }

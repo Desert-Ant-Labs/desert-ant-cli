@@ -12,6 +12,9 @@ enum Binding: Sendable {
 
 struct FlowOptions: Sendable {
     var outputDir: String?
+    /// The folder the reader passed as the first input, so what a run saves goes there
+    /// and not into whichever subfolder `--recursive` reached first.
+    var inputFolder: String?
     var force = false
     /// Lets rename and copy steps touch the files they were given.
     var apply = false
@@ -48,9 +51,11 @@ final class FlowRun: @unchecked Sendable {
     var firstInput: String? { binding?.paths.first }
 
     /// Where outputs go unless a step names a folder of its own: `--output-dir`, else
-    /// beside the first input, else the current folder.
+    /// the folder passed as the first input, else beside the first file, else the
+    /// current folder.
     var outputRoot: URL {
         if let dir = options.outputDir { return URL(fileURLWithPath: (dir as NSString).expandingTildeInPath) }
+        if let folder = options.inputFolder { return URL(fileURLWithPath: folder) }
         if let first = firstInput { return URL(fileURLWithPath: first).deletingLastPathComponent() }
         return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
     }

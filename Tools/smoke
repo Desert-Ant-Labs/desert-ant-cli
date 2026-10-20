@@ -20,7 +20,7 @@ export NO_COLOR=1 DESERTANT_NO_UPDATE_CHECK=1
 xnnpack="INFO: Created TensorFlow Lite XNNPACK delegate for CPU."
 # stderr lines a passing command may print: TFLite's, the skipped-files note, and on a
 # Mac without a Neural Engine, Redact's note that it finds no names there.
-allowed=(-e "^$xnnpack" -e "^Skipped ")
+allowed=(-e "^$xnnpack" -e "^Skipped " -e "^Written as ")
 
 passed=0 failed=0
 ok() { echo "ok    $1"; passed=$((passed + 1)); }
@@ -98,7 +98,7 @@ check "voz with speakers" 0 '"speaker" : 0' "$da" voz talk.wav --speakers --json
 check "no file" 1 "no file at missing.wav" "$da" ear missing.wav
 
 # Flows: the templates, a text flow from stdin, and a recording flow on the WAV.
-check "flow templates" 0 "^transcript-and-captions " "$da" flow templates
+check "flow templates" 0 "^ *transcript-and-captions " "$da" flow templates
 check "flow check" 0 '"runnable" : true' "$da" flow check transcript-and-captions --json
 if [[ "$os" == Linux ]]; then
   check "flow check names a macOS step" 1 "uhm runs on macOS only" "$da" flow check filler-words

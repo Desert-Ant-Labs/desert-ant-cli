@@ -221,10 +221,11 @@ enum FFmpeg {
 
     /// stdout, or an error carrying ffmpeg's last line.
     @discardableResult
-    static func run(_ executable: String, _ arguments: [String], file: String, writing: Bool = false) throws -> Data {
+    static func run(_ executable: String, _ arguments: [String], file: String, writing: Bool = false, in directory: URL? = nil) throws -> Data {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
+        if let directory { process.currentDirectoryURL = directory }
         let stdout = Pipe(), stderr = Pipe()
         process.standardOutput = stdout
         process.standardError = stderr

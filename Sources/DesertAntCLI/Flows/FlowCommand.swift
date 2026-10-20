@@ -64,8 +64,8 @@ struct FlowRunCommand: AsyncParsableCommand {
         discussion: """
         Paths fill the flow's input step. A step that takes a list, such as photos or files, \
         gets every path in one run; otherwise the flow runs once per file, with each model \
-        loaded once. A text input also reads stdin. What the flow saves goes beside the first \
-        input, or into --output-dir, and never replaces a file.
+        loaded once. A text input also reads stdin. What the flow saves goes into the folder \
+        passed first, else beside the first file, or into --output-dir, and never replaces a file.
         """)
 
     @Argument(help: "A flow file, or the name of a template.") var flow: String
@@ -85,6 +85,10 @@ struct FlowRunCommand: AsyncParsableCommand {
             throw RunError("\(source.name) cannot run here:\n" + parsed.problems.map { "  \($0.message)" }.joined(separator: "\n"))
         }
         var options = FlowOptions(outputDir: outputDir, force: force, apply: apply)
+        var isFolder: ObjCBool = false
+        if let first = inputs.first, FileManager.default.fileExists(atPath: first, isDirectory: &isFolder), isFolder.boolValue {
+            options.inputFolder = first
+        }
         options.sets = try Self.settings(sets, in: parsed)
         let bindings = try self.bindings(parsed, sets: options.sets, out: out)
 

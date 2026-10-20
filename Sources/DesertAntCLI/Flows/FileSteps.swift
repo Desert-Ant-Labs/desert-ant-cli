@@ -10,10 +10,17 @@ enum FileSteps {
         category: .output,
         inputs: [Port(id: "files", type: .any, list: true), Port(id: "a", type: .any, list: true, optional: true)],
         outputs: [Port(id: "names", type: .text)],
-        defaults: ["pattern": "{{date}}-{{n}}", "mode": "copy", "folder": "", "auto": false],
+        defaults: ["pattern": "{{date}}-{{n}}", "mode": "copy", "folder": ""],
         noMap: true
     ) { run in
-        let paths = (run.inputs["files"]?.present ?? []).compactMap(\.path)
+        // Each file keeps its own a, where the files list has gaps too.
+        let items = run.inputs["files"]?.items ?? [], given = run.inputs["a"]?.items ?? []
+        var paths: [String] = [], a: [Value?] = []
+        for (i, item) in items.enumerated() {
+            guard let path = item?.path else { continue }
+            paths.append(path)
+            a.append(i < given.count ? given[i] : nil)
+        }
         guard !paths.isEmpty else { return [:] }
         let action: FileOps.Action
         switch run.params["mode"]?.string ?? "copy" {
@@ -21,7 +28,7 @@ enum FileSteps {
         case "rename": action = .move
         case let other: throw StepError("mode is copy or rename, not \(other).")
         }
-        let names = FileOps.names(for: paths, pattern: run.params["pattern"]?.string ?? "{{name}}", a: run.inputs["a"]?.items ?? [])
+        let names = FileOps.names(for: paths, pattern: run.params["pattern"]?.string ?? "{{name}}", a: a)
         let folder = run.params["folder"]?.string ?? ""
         let targets = zip(paths, names).map { path, name -> String in
             let dir = action == .move || folder.isEmpty
@@ -37,7 +44,7 @@ enum FileSteps {
         type: "copy", summary: "Copies or moves files into a folder, sorted into subfolders by a pattern such as {{a}}.",
         category: .output,
         inputs: [Port(id: "files", type: .any, list: true), Port(id: "a", type: .any, list: true, optional: true)],
-        defaults: ["mode": "copy", "subfolder": "", "folder": "", "auto": false],
+        defaults: ["mode": "copy", "subfolder": "", "folder": ""],
         noMap: true
     ) { run in
         let items = run.inputs["files"]?.items ?? []
@@ -143,11 +150,17 @@ enum FileOps {
             var to = planned
             if fm.fileExists(atPath: to) {
                 if action == .copy, fm.contentsEqual(atPath: from, andPath: to) { continue }
-                if action == .move, canonical(from).lowercased() == canonical(to).lowercased() {
-                    // Only the case changed, on a disk that ignores case: go through a temporary name.
+                if action == .move, sameFile(from, to) {
+                    // Only the case changed, on a disk that ignores case: go through a
+                    // temporary name, and back to the old one if the second move fails.
                     let temporary = (from as NSString).deletingLastPathComponent + "/.\(UUID().uuidString)"
                     try fm.moveItem(atPath: from, toPath: temporary)
-                    try fm.moveItem(atPath: temporary, toPath: to)
+                    do {
+                        try fm.moveItem(atPath: temporary, toPath: to)
+                    } catch {
+                        try? fm.moveItem(atPath: temporary, toPath: from)
+                        throw StepError("could not rename \(from) to \(to): \(error.localizedDescription)")
+                    }
                     done.append(to)
                     continue
                 }
@@ -161,6 +174,15 @@ enum FileOps {
             done.append(to)
         }
         return done
+    }
+
+    /// Whether two paths name one file, as `a.JPG` and `a.jpg` do on a disk that
+    /// ignores case. Two files that differ only in case on a disk that keeps both are not.
+    static func sameFile(_ a: String, _ b: String) -> Bool {
+        let fm = FileManager.default
+        guard let x = try? fm.attributesOfItem(atPath: a), let y = try? fm.attributesOfItem(atPath: b),
+              let file = x[.systemFileNumber] as? NSNumber, let disk = x[.systemNumber] as? NSNumber else { return false }
+        return file == y[.systemFileNumber] as? NSNumber && disk == y[.systemNumber] as? NSNumber
     }
 
     static func canonical(_ path: String) -> String {

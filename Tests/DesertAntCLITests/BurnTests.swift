@@ -186,10 +186,18 @@ final class BurnTests: XCTestCase {
         XCTAssertEqual(style.look, .shadow)
         let frame = CaptionFrame(width: 1920, height: 1080, style: style)
         let ass = ASS.file([Caption(start: 0, end: 2, text: "Two\nlines")], frame: frame, style: style, font: font)
-        // A clear 3px outline for libass to blur, a 2px drop, and a 55% black shadow.
+        // A clear 3px outline for libass to blur, a 55% black shadow, dropped 2px straight down.
         XCTAssertTrue(ass.contains("&HFF000000,&H73000000,-1,"), ass)
-        XCTAssertTrue(ass.contains(",1,3,2,2,115,115,86,1\n"), ass)
-        XCTAssertTrue(ass.contains("Default,,0,0,0,,{\\blur12}Two\\Nlines\n"), ass)
+        XCTAssertTrue(ass.contains(",1,3,0,2,115,115,86,1\n"), ass)
+        XCTAssertTrue(ass.contains("Default,,0,0,0,,{\\blur12\\xshad0\\yshad2}Two\\Nlines\n"), ass)
+    }
+
+    func testABackslashInTheTextNeverStartsAnEscape() throws {
+        let font = try CaptionFont.read(Self.fonts.appendingPathComponent("InclusiveSans-Bold.ttf"), index: 0)
+        let ass = ASS.file([Caption(start: 0, end: 1, text: "C:\\new")], frame: CaptionFrame(width: 1920, height: 1080, style: CaptionStyle()),
+                           style: CaptionStyle(), font: font)
+        XCTAssertTrue(ass.contains("C:\\\u{2060}new"), ass)
+        XCTAssertFalse(ass.contains("C:\\new"), ass)
     }
 
     func testSentencesWithoutWordTimesSpreadTheirWords() {

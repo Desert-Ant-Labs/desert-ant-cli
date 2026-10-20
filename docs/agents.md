@@ -41,7 +41,7 @@ A flow runs several models on a file in one command. `desertant flow templates -
 
 stdout carries the result and nothing else. Under `--json` stdout is one JSON value, whose shape per command is in [json.md](json.md); numbers are numbers, lists are lists, and paths are absolute. Without `--json`, stdout is text for a person.
 
-stderr carries everything that isn't the result: progress while weights download or a long file runs, and the error message when a call fails. Progress draws only when stderr is a terminal, so captured stderr holds only messages.
+stderr carries everything that isn't the result: progress while weights download or a long file runs, and the error message when a call fails. Progress draws only when stderr is a terminal, so captured stderr holds only messages. Notes, such as how long a run took, and next-step hints print only when stdout is a terminal, so in a pipe or a file stdout holds the result alone.
 
 The exit code is `0` on success, `1` on a runtime error (the message on stderr says what), and `64` on a usage error (an unknown model, a bad flag). Check the code before parsing stdout.
 

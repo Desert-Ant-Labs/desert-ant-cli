@@ -296,9 +296,10 @@ enum ASS {
             case .box: (3, border, 0, black.with(alpha: 0.7), black.with(alpha: 0.7))
             // A clear outline gives libass something to blur, so the shadow softens
             // and the text stays sharp.
-            case .shadow: (1, border, frame.shadowOffset, black.with(alpha: 0), CaptionFrame.shadowColor)
+            case .shadow: (1, border, 0, black.with(alpha: 0), CaptionFrame.shadowColor)
             }
-        let blur = style.look == .shadow ? "{\\blur\(num(frame.shadowBlur))}" : ""
+        // The style's Shadow moves it right as well as down; Core Text drops it straight down.
+        let blur = style.look == .shadow ? "{\\blur\(num(frame.shadowBlur))\\xshad0\\yshad\(num(frame.shadowOffset))}" : ""
         let fields = [
             "Default", font.family, num(frame.lineHeight), color(style.color), color(style.color), color(outlineColor), color(backColor),
             String(font.weight >= 600 ? -1 : 0), "0", "0", "0", "100", "100", "0", "0",
@@ -322,7 +323,9 @@ enum ASS {
 
         """
         for cue in cues {
-            let text = cue.text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "{", with: "\\{")
+            // libass has no escape for a backslash, so an invisible word joiner keeps one from
+            // starting \n or \N. A brace becomes \{.
+            let text = cue.text.replacingOccurrences(of: "\\", with: "\\\u{2060}").replacingOccurrences(of: "{", with: "\\{")
             guard style.look == .box else {
                 out += "Dialogue: 0,\(stamp(cue.start)),\(stamp(cue.end)),Default,,0,0,0,,\(blur)\(text.replacingOccurrences(of: "\n", with: "\\N"))\n"
                 continue
@@ -500,8 +503,7 @@ final class CaptionWriter: @unchecked Sendable {
             guard let buffer = CMSampleBufferGetImageBuffer(sample) else { return true }
             let time = CMSampleBufferGetPresentationTimeStamp(sample)
             draw(into: buffer, at: time.seconds)
-            adaptor.append(buffer, withPresentationTime: time)
-            return true
+            return adaptor.append(buffer, withPresentationTime: time)
         }
         async let sound: Void = copyAudio()
         _ = await (pictures, sound)
@@ -514,22 +516,22 @@ final class CaptionWriter: @unchecked Sendable {
         guard let audio else { return }
         await pump(audio.in, label: "audio") { [self] in
             guard let sample = self.audio?.out.copyNextSampleBuffer() else { return false }
-            self.audio?.in.append(sample)
-            return true
+            return self.audio?.in.append(sample) ?? false
         }
     }
 
-    /// Feeds an input whenever it is ready, until `next` runs out.
+    /// Feeds an input whenever it is ready, until `next` runs out or an append fails.
+    /// A failed writer is never ready again, so the pump stops when it sees one rather
+    /// than wait for a call that will not come; `run` then throws the writer's error.
     private func pump(_ input: AVAssetWriterInput, label: String, _ next: @escaping @Sendable () -> Bool) async {
         await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
-            input.requestMediaDataWhenReady(on: DispatchQueue(label: "desertant.captions.\(label)")) {
-                while input.isReadyForMoreMediaData {
-                    if !next() {
-                        input.markAsFinished()
-                        done.resume()
-                        return
-                    }
+            input.requestMediaDataWhenReady(on: DispatchQueue(label: "desertant.captions.\(label)")) { [self] in
+                while input.isReadyForMoreMediaData, writer.status == .writing {
+                    if !next() { break }
                 }
+                guard writer.status != .writing || !input.isReadyForMoreMediaData else { return }
+                if writer.status == .writing { input.markAsFinished() }
+                done.resume()
             }
         }
     }
@@ -692,29 +694,32 @@ extension FFmpegCutter {
         let subtitles = scratch.appendingPathComponent("captions.ass")
         try ASS.file(captions.cues, frame: frame, style: captions.style, font: captions.font).write(to: subtitles, atomically: true, encoding: .utf8)
 
+        let sound = try FFmpeg.probe(source.path, tools: tools).hasAudio
         var arguments = ["-v", "error", "-nostdin", "-y"]
         var graph: [String] = []
         for (i, range) in kept.enumerated() {
             arguments += ["-ss", String(format: "%.3f", range.start), "-t", String(format: "%.3f", range.duration), "-i", source.path]
-            graph.append("[\(i):v:0]setpts=PTS-STARTPTS[v\(i)];[\(i):a:0]asetpts=PTS-STARTPTS[a\(i)]")
+            graph.append("[\(i):v:0]setpts=PTS-STARTPTS[v\(i)]" + (sound ? ";[\(i):a:0]asetpts=PTS-STARTPTS[a\(i)]" : ""))
         }
-        let pairs = kept.indices.map { "[v\($0)][a\($0)]" }.joined()
-        graph.append("\(pairs)concat=n=\(kept.count):v=1:a=1[v][a]")
-        graph.append("[v]subtitles=filename=\(subtitles.path):fontsdir=\(fonts.path)[out]")
-        arguments += ["-filter_complex", graph.joined(separator: ";"), "-map", "[out]", "-map", "[a]"]
+        let pairs = kept.indices.map { "[v\($0)]" + (sound ? "[a\($0)]" : "") }.joined()
+        graph.append("\(pairs)concat=n=\(kept.count):v=1:a=\(sound ? 1 : 0)[v]" + (sound ? "[a]" : ""))
+        // ffmpeg runs inside the scratch folder, so no path has to survive the filter
+        // graph's escaping.
+        graph.append("[v]subtitles=filename=captions.ass:fontsdir=fonts[out]")
+        arguments += ["-filter_complex", graph.joined(separator: ";"), "-map", "[out]"] + (sound ? ["-map", "[a]"] : [])
         let (crf, preset) = switch captions.style.quality {
         case .low: ("28", "veryfast")
         case .medium: ("23", "fast")
         case .high: ("18", "medium")
         }
-        let audio = ["-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", destination.path]
+        let audio = (sound ? ["-c:a", "aac", "-b:a", "192k"] : []) + ["-movflags", "+faststart", destination.path]
         do {
             try FFmpeg.run(tools.ffmpeg, arguments + ["-c:v", "libx264", "-crf", crf, "-preset", preset, "-pix_fmt", "yuv420p"] + audio,
-                           file: destination.path, writing: true)
+                           file: destination.path, writing: true, in: scratch)
         } catch {
             // An ffmpeg built without libx264 encodes with its default encoder instead.
             try? FileManager.default.removeItem(at: destination)
-            try FFmpeg.run(tools.ffmpeg, arguments + ["-pix_fmt", "yuv420p"] + audio, file: destination.path, writing: true)
+            try FFmpeg.run(tools.ffmpeg, arguments + ["-pix_fmt", "yuv420p"] + audio, file: destination.path, writing: true, in: scratch)
         }
     }
 }

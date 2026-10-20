@@ -57,8 +57,8 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
 ```json
 {
   "tool": "desertant",
-  "version": "0.1.1",
-  "coreVersion": "3.1.0",
+  "version": "0.5.0",
+  "coreVersion": "4.1.0",
   "invocation": "desertant <verb> <input> [--json]  |  desertant run <id> --input <text> | --file <path> [--option k=v]",
   "globalFlags": [{"flag": "--json", "help": "Print the result as JSON, for scripts and agents."}],
   "exitCodes": [{"code": 0, "meaning": "success"}, {"code": 1, "meaning": "runtime error, message on stderr"}, {"code": 64, "meaning": "usage error, message on stderr"}],
@@ -69,7 +69,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
       "summary": "Short clips and highlights from talking video and audio: podcasts, interviews, meetings. On-device.",
       "input": "file",
       "runnableHere": true,
-      "options": [{"name": "count", "help": "How many clips to look for. Default: the model sizes it to the recording."}]
+      "options": [{"name": "count", "help": "How many clips to look for. By default, Clips sizes the search to the recording."}]
     }
   ]
 }
@@ -77,7 +77,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
 
 `input` is `text`, `file` (a recording), `image`, or `visual` (a photo or a video), or null when the model has no runner on this machine. Every `options[].name` is accepted by both the verb (`--count 3`) and `run` (`--option count=3`). Each entry also carries `emits` (the document kind its `--json` result is, or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's `accepts.kind` feeds it through that option, as a file or as `-` for stdin. See [pipelines.md](pipelines.md).
 
-`flowSteps` lists every step type a flow file can use, as `{"type", "summary", "category", "model", "inputs", "outputs", "settings", "runsHere"}`. Each input and output is `{"id", "type"}`, where `type` is `text`, `audio` (a video goes on an audio port too), `image`, or `any`. An input has `"list": true` when it takes a whole list and `"optional": true` when it may be left unwired, and an output has `"each": true` when it is a list the next step takes item by item. `settings` maps each setting to its default, or null where it has none. `flows` says how a flow file is written; [flows.md](flows.md) has the rest.
+`flowSteps` lists every step type a flow file can use, as `{"type", "summary", "category", "model", "inputs", "outputs", "settings", "runsHere"}`, where `category` is `input`, `model`, `logic`, or `output`. Each input and output is `{"id", "type"}`, where `type` is `text`, `audio` (a video goes on an audio port too), `image`, or `any`. An input has `"list": true` when it takes a whole list and `"optional": true` when it may be left unwired, and an output has `"each": true` when it is a list the next step takes item by item. `settings` maps each setting to its default, or null where it has none. `flows` says how a flow file is written; [flows.md](flows.md) has the rest.
 
 `desertant doctor --json` prints an object like this one.
 
@@ -355,4 +355,4 @@ Clips come back best first. `file` is left out under `--select-only`. `transcrip
 
 ## Errors
 
-Nothing is written to stdout on failure. The message is on stderr, prefixed `Error:`, and the exit code is `1` for a runtime error or `64` for a usage error.
+A command that fails before it has a result writes nothing to stdout. Three commands report a result and still exit `1`: `flow check` when the flow can't run here, `flow run` when a step failed, and a run on several files when one of them failed. Under `--json`, that result is on stdout, as described above. The message is on stderr, prefixed `Error:`, and the exit code is `1` for a runtime error or `64` for a usage error.

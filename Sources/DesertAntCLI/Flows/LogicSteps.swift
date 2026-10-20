@@ -60,14 +60,16 @@ enum LogicSteps {
         type: "list", summary: "Sorts, slices, or counts a list. To sort by a score, wire the score into the `by` input.", category: .logic,
         inputs: [Port(id: "items", type: .any, list: true), Port(id: "by", type: .any, list: true, optional: true)],
         outputs: [Port(id: "result", type: .any)],
-        defaults: ["op": "firstN", "n": 3],
+        // n 0 is the op's own default: a sort keeps the whole list, and the rest take 3.
+        defaults: ["op": "firstN", "n": 0],
         noMap: true
     ) { run in
         let name = run.params["op"]?.string ?? "firstN"
         guard let op = ListOp(rawValue: name) else {
             throw StepError("op is \(list: ListOp.allCases.map(\.rawValue), or: true), not \(name).")
         }
-        let n = run.params["n"]?.int ?? (op.keeps ? 0 : 1)
+        let given = run.params["n"]?.int ?? 0
+        let n = given > 0 ? given : op.keeps ? 0 : 3
         return op.run(run.inputs["items"]?.items ?? [], n: n, by: run.inputs["by"]?.items).map { ["result": $0] } ?? [:]
     }
 

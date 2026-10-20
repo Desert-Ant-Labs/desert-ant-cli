@@ -40,7 +40,7 @@ struct Cache: ParsableCommand {
         if clean {
             guard force else {
                 out.line("This deletes every downloaded model under \(root), a directory other Desert Ant apps share.")
-                out.note("Run again with --clean --force to confirm.")
+                out.line("Run again with --clean --force to confirm.")
                 return
             }
             if FileManager.default.fileExists(atPath: root) {
