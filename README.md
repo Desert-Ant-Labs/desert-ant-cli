@@ -86,6 +86,23 @@ desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 
 sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
 ```
 
+## Coding agents
+
+One command writes a skill for every agent installed on your machine, in the current project: Claude Code and Pi get a skill file, Codex gets a section in `AGENTS.md`.
+
+```sh
+desertant setup
+```
+
+`desertant setup claude` does one agent, and `--global` writes where the agent looks for every project. Or paste this into the agent and let the agent do both steps:
+
+```text
+Install the Desert Ant CLI with: curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
+Then run `desertant setup` in this project.
+```
+
+Any other agent with a shell needs nothing more: every command returns JSON with `--json`, reads stdin, and exits 0, 1, or 64, and `da schema --json` describes each command and how they chain.
+
 ## Models
 
 Each model has a page on [desertant.com](https://desertant.com/models/) with its numbers, its limits, and a live demo. `da info <model>` prints the same card.
@@ -281,23 +298,6 @@ da ear interviews/ --recursive
 ```
 
 Under `--json` the result is an array with one entry per file. A file that fails is reported on stderr and the rest still run. The exit code is 1 at the end.
-
-## Coding agents
-
-One command writes a skill for every agent installed on your machine, in the current project: Claude Code and Pi get a skill file, Codex gets a section in `AGENTS.md`.
-
-```sh
-desertant setup
-```
-
-`desertant setup claude` does one agent, and `--global` writes where the agent looks for every project. Or paste this into the agent and let the agent do both steps:
-
-```text
-Install the Desert Ant CLI with: curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
-Then run `desertant setup` in this project.
-```
-
-Any other agent with a shell needs nothing more: every command returns JSON with `--json`, reads stdin, and exits 0, 1, or 64, and `da schema --json` describes each command and how they chain.
 
 ## Docs
 
