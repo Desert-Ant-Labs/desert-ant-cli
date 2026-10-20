@@ -27,8 +27,8 @@ final class FlowExamplesTests: XCTestCase {
     func testTheFixturesReadAndNameWhatCannotRun() throws {
         let flows = try Dictionary(uniqueKeysWithValues: files(in: Self.fixtures).map { ($0.deletingPathExtension().lastPathComponent, try check($0)) })
         XCTAssertEqual(flows["sort-photos"]?.steps.map(\.id), ["in", "eye", "copy", "grid"])
-        XCTAssertEqual(flows["sort-photos"]?.problems.map(\.step), ["eye", "copy", "grid"])
-        XCTAssertEqual(flows["route-tickets"]?.problems.map(\.step), ["if", "merge"])
+        XCTAssertEqual(flows["sort-photos"]?.problems.map(\.step), ["grid"])
+        XCTAssertEqual(flows["route-tickets"]?.problems, [])
         XCTAssertEqual(flows["call-notes"]?.problems.map(\.step), ["in", "ask", "say"])
     }
 

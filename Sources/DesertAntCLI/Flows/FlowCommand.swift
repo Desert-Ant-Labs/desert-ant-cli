@@ -127,7 +127,6 @@ struct FlowRunCommand: AsyncParsableCommand {
             let note = step.note ?? "no message"
             out.warn("\(step.id) failed: \(note)\(note.hasSuffix(".") ? "" : ".")")
         }
-        for step in report.steps where step.status == "done" { if let note = step.note { out.note("\(step.id): \(note)") } }
         guard !out.isJSON else { return }
         for (i, shown) in run.shown.enumerated() {
             if i > 0 { out.line() }
@@ -137,6 +136,7 @@ struct FlowRunCommand: AsyncParsableCommand {
         let files = report.files.filter { !shown.contains($0) }
         if !run.shown.isEmpty, !files.isEmpty { out.line() }
         for file in files { out.line(file) }
+        for step in report.steps where step.status == "done" { if let note = step.note { out.note("\(step.id): \(note)") } }
         if run.shown.isEmpty, report.files.isEmpty, report.failed.isEmpty {
             out.note("The flow ran. It has no view, table, or folder step, so it shows and saves nothing.")
         }

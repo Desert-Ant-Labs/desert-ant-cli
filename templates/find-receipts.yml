@@ -1,0 +1,19 @@
+flow: 1
+title: Find receipts
+description: Finds the receipts among your photos and copies them into a Receipts folder for an expense report. Prints the plan first; pass --apply to copy.
+summary: Copy the receipts out of a folder of photos.
+steps:
+  - type: photos
+  - type: eye
+  - type: if
+    uses:
+      value: photos.photos
+      test: eye.type
+    with:
+      op: equals
+      operand: receipt
+  - type: copy
+    uses:
+      files: if.yes
+    with:
+      folder: Receipts

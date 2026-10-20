@@ -97,6 +97,14 @@ struct ModeratorRunner: ModelRunner {
         out.line(p.dim(detail.map { "\($0.0) \(String(format: "%.2f", $0.1))" }.joined(separator: "  ")))
     }
 
+    /// Whether a photo is flagged at `threshold`, and its score, for the flow step.
+    static func check(_ path: String, threshold: Double, with model: Moderator) async throws -> (nsfw: Bool, score: Double) {
+        var options = Options()
+        options.threshold = threshold
+        let result = try await model.analyze(pixels(path), options: options)
+        return (result.isNSFW, result.score)
+    }
+
     static func pixels(_ input: String) throws -> ImagePixels {
         #if canImport(ImageIO)
         do {

@@ -2004,6 +2004,27 @@ steps:
     uses:
       a: uhm.fillers
 """###),
+        (name: "find-receipts", yaml: ###"""
+flow: 1
+title: Find receipts
+description: Finds the receipts among your photos and copies them into a Receipts folder for an expense report. Prints the plan first; pass --apply to copy.
+summary: Copy the receipts out of a folder of photos.
+steps:
+  - type: photos
+  - type: eye
+  - type: if
+    uses:
+      value: photos.photos
+      test: eye.type
+    with:
+      op: equals
+      operand: receipt
+  - type: copy
+    uses:
+      files: if.yes
+    with:
+      folder: Receipts
+"""###),
         (name: "meeting-notes", yaml: ###"""
 flow: 1
 title: Meeting notes
@@ -2037,6 +2058,30 @@ steps:
   - type: folder
     with:
       name: "{{name}}_notes"
+"""###),
+        (name: "photo-keepers", yaml: ###"""
+flow: 1
+title: Photo keepers
+description: Picks the photos worth keeping from a folder. Leaves out the blurry, accidental, and forgettable shots, keeps the best of each set of near-duplicates, and copies the keepers into a Keepers folder. Prints the plan first; pass --apply to copy.
+summary: Copy the photos worth keeping into one folder.
+steps:
+  - type: photos
+  - type: eye
+  - type: if
+    uses:
+      value: photos.photos
+      test: eye.reason
+    with:
+      op: equals
+      operand: keeper
+  - type: duplicates
+    uses:
+      photos: if.yes
+  - type: copy
+    uses:
+      files: duplicates.keep
+    with:
+      folder: Keepers
 """###),
         (name: "podcast-clips", yaml: ###"""
 flow: 1

@@ -152,3 +152,36 @@ extension Value: Encodable {
         }
     }
 }
+
+/// A value from JSON: an object as a record with its keys sorted, an array as a list,
+/// null as nothing.
+struct JSONValue: Decodable {
+    let value: Value?
+
+    private struct Key: CodingKey {
+        let stringValue: String
+        var intValue: Int? { nil }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
+    }
+
+    init(from decoder: Decoder) throws {
+        if let object = try? decoder.container(keyedBy: Key.self) {
+            value = .record(try object.allKeys.sorted { $0.stringValue < $1.stringValue }.compactMap { key in
+                try object.decode(JSONValue.self, forKey: key).value.map { (key.stringValue, $0) }
+            })
+            return
+        }
+        if var array = try? decoder.unkeyedContainer() {
+            var items: [Value?] = []
+            while !array.isAtEnd { items.append(try array.decode(JSONValue.self).value) }
+            value = .list(items)
+            return
+        }
+        let single = try decoder.singleValueContainer()
+        if single.decodeNil() { value = nil }
+        else if let b = try? single.decode(Bool.self) { value = .bool(b) }
+        else if let n = try? single.decode(Double.self) { value = .number(n) }
+        else { value = .text(try single.decode(String.self)) }
+    }
+}

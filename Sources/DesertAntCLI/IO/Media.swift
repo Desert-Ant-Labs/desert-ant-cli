@@ -1,5 +1,8 @@
 import AudioIO
 import Foundation
+#if canImport(AVFoundation)
+import AVFoundation
+#endif
 
 // Audio for the file models. Off Apple, core reads and writes WAV only, so every
 // other format goes through ffmpeg.
@@ -39,6 +42,33 @@ enum Media {
         try wav.write(to: scratch)
         defer { try? FileManager.default.removeItem(at: scratch) }
         try FFmpeg.encode(wav: scratch.path, to: path, tools: tools)
+    }
+
+    /// The audio of `input` in the container `output`'s extension names, at 48kHz.
+    /// A Mac writes it with AVFoundation; elsewhere anything but WAV needs ffmpeg.
+    static func convertAudio(_ input: String, to output: String) async throws {
+        let channels = try await decodeChannels(input, sampleRate: 48_000)
+        #if canImport(AVFoundation)
+        let ext = URL(fileURLWithPath: output).pathExtension.lowercased()
+        guard ext != "wav" else { return try write(channels, sampleRate: 48_000, to: output) }
+        let settings: [String: Any] = switch ext {
+        case "m4a": [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: channels.count, AVEncoderBitRateKey: 192_000]
+        default: [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: channels.count,
+                  AVLinearPCMBitDepthKey: 16, AVLinearPCMIsBigEndianKey: ext == "aiff" || ext == "aif", AVLinearPCMIsFloatKey: false]
+        }
+        let frames = channels.first?.count ?? 0
+        let file = try AVAudioFile(forWriting: URL(fileURLWithPath: output), settings: settings)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(frames)),
+              let data = buffer.floatChannelData else { throw RunError("could not write \(URL(fileURLWithPath: output).lastPathComponent).") }
+        for (c, samples) in channels.enumerated() where c < Int(file.processingFormat.channelCount) {
+            samples.withUnsafeBufferPointer { data[c].update(from: $0.baseAddress!, count: frames) }
+        }
+        buffer.frameLength = AVAudioFrameCount(frames)
+        try file.write(from: buffer)
+        #else
+        try requireWriter(for: output)
+        try write(channels, sampleRate: 48_000, to: output)
+        #endif
     }
 
     /// Fails before any work when `path` needs ffmpeg and there is none.
