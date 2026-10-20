@@ -3,7 +3,7 @@ import XCTest
 
 /// Every flow file either reads as runnable, or names each step that cannot run. The
 /// fixtures are in the repo; `DESERTANT_FLOW_EXAMPLES` adds a folder of flow files
-/// from elsewhere.
+/// of your own.
 final class FlowExamplesTests: XCTestCase {
     private static let fixtures = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures/flows")
@@ -26,10 +26,10 @@ final class FlowExamplesTests: XCTestCase {
 
     func testTheFixturesReadAndNameWhatCannotRun() throws {
         let flows = try Dictionary(uniqueKeysWithValues: files(in: Self.fixtures).map { ($0.deletingPathExtension().lastPathComponent, try check($0)) })
-        XCTAssertEqual(flows["sort-photos"]?.steps.map(\.id), ["in", "eye", "copy", "grid"])
-        XCTAssertEqual(flows["sort-photos"]?.problems.map(\.step), ["grid"])
+        XCTAssertEqual(flows["sort-photos"]?.steps.map(\.id), ["in", "eye", "copy"])
+        XCTAssertEqual(flows["sort-photos"]?.problems, [])
         XCTAssertEqual(flows["route-tickets"]?.problems, [])
-        XCTAssertEqual(flows["call-notes"]?.problems.map(\.step), ["in", "ask", "say"])
+        XCTAssertEqual(flows["unknown-steps"]?.problems.map(\.step), ["in", "later"])
     }
 
     func testTheTemplatesRunHere() throws {
@@ -52,7 +52,7 @@ final class FlowExamplesTests: XCTestCase {
         }
     }
 
-    func testAFolderOfFlowFilesFromElsewhere() throws {
+    func testAFolderOfFlowFilesFromTheEnvironment() throws {
         guard let folder = ProcessInfo.processInfo.environment["DESERTANT_FLOW_EXAMPLES"] else {
             throw XCTSkip("Set DESERTANT_FLOW_EXAMPLES to a folder of flow files.")
         }

@@ -196,7 +196,7 @@ enum Engine {
             }
         }
         if let firstError, !results.contains(where: { $0 != nil }) { throw firstError }
-        if let firstError, failed > 0 { context.note = "\(failed) of \(todo) items failed. The first: \(message(firstError))" }
+        if let firstError, failed > 0 { context.note = "\(failed) of \(todo) items failed. The first error was \(message(firstError))" }
         var outputs: [String: Value] = [:]
         for port in def.outputs {
             outputs[port.id] = .stream(results.map { $0?[port.id] })

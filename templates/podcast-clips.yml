@@ -1,7 +1,7 @@
 flow: 1
 title: Podcast clips
 description: Cleans up the sound of a video podcast or a talk, transcribes it, and cuts the moments worth sharing into clips with the captions burned in. Saves the clips beside the recording. Change the look with --set clips.style=box or --set clips.position=top.
-summary: Captioned clips from a video podcast or a talk.
+summary: Cut captioned clips from a video podcast or a talk.
 steps:
   - type: audio
   - type: clear

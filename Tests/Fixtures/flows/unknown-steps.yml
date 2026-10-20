@@ -1,0 +1,13 @@
+flow: 1
+title: Steps desertant does not have
+steps:
+  - id: in
+    type: teleport
+  - id: gist
+    type: gist
+    uses:
+      text: in.text
+  - id: later
+    type: nosuchstep
+    uses:
+      value: gist.top

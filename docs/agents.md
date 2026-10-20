@@ -55,6 +55,10 @@ document from stdin, so `voz --json` pipes into either; see [pipelines.md](pipel
 `--similar-to` rank. Each returns one JSON value for the whole set; see
 [eye.md](eye.md).
 
+## Run a flow
+
+A flow runs several models on a file in one command. `desertant flow templates --json` lists the flows that ship, and `desertant flow run <template or file> <files> --json` runs one and lists every file it wrote. To write your own, read `flowSteps` in the schema, write the YAML, and run `desertant flow check <file> --json` first: it shows how each input is wired and names any step that can't run here. Steps that rename or copy the user's files print a plan and change nothing until `--apply`, so pass it only when the user asks. See [flows.md](flows.md).
+
 ## What comes back
 
 stdout carries the result and nothing else. Under `--json` stdout is one JSON value,

@@ -46,7 +46,7 @@ final class FlowEngineTests: XCTestCase {
         let ctx = try context()
         let out = try await Engine.runOne(double, inputs: ["n": .stream([.number(1), .number(3), .number(4)])], params: [:], context: ctx)
         XCTAssertEqual(out["n"]?.items.map { $0?.asNumber }, [2, nil, 8])
-        XCTAssertEqual(ctx.note, "1 of 3 items failed. The first: three")
+        XCTAssertEqual(ctx.note, "1 of 3 items failed. The first error was three")
     }
 
     func testTheStepFailsWhenEveryItemFails() async throws {

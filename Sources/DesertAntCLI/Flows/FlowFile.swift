@@ -176,7 +176,8 @@ enum FlowFile {
 
     /// The source of an input the file leaves unwired: the nearest earlier step with an
     /// output of the same name, else for a required input the nearest with an output of
-    /// the same type. A step with several outputs of that type gives its primary one.
+    /// the same type. A step with several outputs of that type gives its first output,
+    /// when that is one of them.
     static func implied(_ port: Port, before earlier: [FlowStep], defs: [String: StepDef] = Steps.byType) -> Implied {
         for step in earlier.reversed() {
             guard let def = defs[step.type], let out = def.outputs.first(where: { $0.id == port.id }), out.type.fits(port.type) else { continue }
@@ -188,8 +189,8 @@ enum FlowFile {
             let fit = def.outputs.filter { port.type == .any || $0.type == port.type }
             if fit.isEmpty { continue }
             if fit.count == 1 { return .wire(Wire(step: step.id, port: fit[0].id)) }
-            if let primary = def.primaryOutput, fit.contains(where: { $0.id == primary }) {
-                return .wire(Wire(step: step.id, port: primary))
+            if let first = def.outputs.first, fit.contains(where: { $0.id == first.id }) {
+                return .wire(Wire(step: step.id, port: first.id))
             }
             return .ambiguous(fit.map { Wire(step: step.id, port: $0.id) })
         }

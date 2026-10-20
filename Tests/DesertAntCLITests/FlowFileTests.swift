@@ -83,14 +83,13 @@ final class FlowFileTests: XCTestCase {
         flow: 1
         steps:
           - { id: in, type: photos }
-          - { id: grid, type: gallery, uses: { photos: in.photos } }
-          - { id: odd, type: teleport }
+          - { id: odd, type: teleport, uses: { photos: in.photos } }
+          - { id: other, type: nosuchstep }
           - { id: words, type: note }
         """)
-        XCTAssertEqual(flow.steps.map(\.id), ["in", "grid", "odd"])
-        XCTAssertEqual(flow.problems.map(\.step), ["grid", "odd"])
-        XCTAssertTrue(flow.problems[0].message.contains("gallery step shows photos"))
-        XCTAssertTrue(flow.problems[1].message.contains("no teleport step"))
+        XCTAssertEqual(flow.steps.map(\.id), ["in", "odd", "other"])
+        XCTAssertEqual(flow.problems.map(\.step), ["odd", "other"])
+        XCTAssertEqual(flow.problems[0].message, "odd: desertant has no teleport step.")
     }
 
     func testTheFileIsCapped() {
@@ -143,15 +142,15 @@ final class FlowFileTests: XCTestCase {
 
     func testTwoEquallyNearMatchesAreAProblem() {
         let port = Port(id: "x", type: .text)
-        let def = StepDef(type: "pair", summary: "", category: .logic,
-                          outputs: [Port(id: "one", type: .text), Port(id: "two", type: .text)], primary: "none") { _ in [:] }
-        // The registry has no step like this, so the rule is checked on its own.
+        // The registry has no steps like these, so the rule is checked on its own.
         let earlier = [FlowStep(id: "p", type: "pair", named: true, with: [:], uses: [:], implied: [])]
-        XCTAssertEqual(FlowFile.implied(port, before: earlier, defs: ["pair": def]),
+        let firstFits = StepDef(type: "pair", summary: "", category: .logic,
+                                outputs: [Port(id: "one", type: .text), Port(id: "two", type: .text)]) { _ in [:] }
+        XCTAssertEqual(FlowFile.implied(port, before: earlier, defs: ["pair": firstFits]), .wire(Wire(step: "p", port: "one")))
+        let firstDoesNot = StepDef(type: "pair", summary: "", category: .logic,
+                                   outputs: [Port(id: "n", type: .any), Port(id: "one", type: .text), Port(id: "two", type: .text)]) { _ in [:] }
+        XCTAssertEqual(FlowFile.implied(port, before: earlier, defs: ["pair": firstDoesNot]),
                        .ambiguous([Wire(step: "p", port: "one"), Wire(step: "p", port: "two")]))
-        let primary = StepDef(type: "pair", summary: "", category: .logic,
-                              outputs: [Port(id: "one", type: .text), Port(id: "two", type: .text)], primary: "two") { _ in [:] }
-        XCTAssertEqual(FlowFile.implied(port, before: earlier, defs: ["pair": primary]), .wire(Wire(step: "p", port: "two")))
     }
 
     // MARK: Writing

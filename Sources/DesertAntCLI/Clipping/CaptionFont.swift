@@ -65,7 +65,7 @@ struct CaptionFont: Sendable, Equatable {
         let wanted = CTFontDescriptorCreateWithAttributes([kCTFontFamilyNameAttribute: family, kCTFontTraitsAttribute: traits] as CFDictionary)
         guard let match = CTFontDescriptorCreateMatchingFontDescriptor(wanted, NSSet(object: kCTFontFamilyNameAttribute)),
               let url = CTFontDescriptorCopyAttribute(match, kCTFontURLAttribute) as? URL else {
-            throw RunError("no font named \(family) on this Mac. Font Book lists the fonts, or pass a .ttf or .otf file.")
+            throw RunError("no font named \(family) on this Mac. Pick a family from Font Book, or pass a .ttf or .otf file.")
         }
         let font = CTFontCreateWithFontDescriptor(match, 12, nil)
         let postscript = CTFontCopyPostScriptName(font) as String
@@ -89,7 +89,7 @@ struct CaptionFont: Sendable, Equatable {
         let lines = String(decoding: data, as: UTF8.self).split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         guard process.terminationStatus == 0, lines.count >= 3,
               lines[2].split(separator: ",").contains(where: { $0.caseInsensitiveCompare(family) == .orderedSame }) else {
-            throw RunError("no font named \(family) on this machine. `fc-list : family` lists the fonts, or pass a .ttf or .otf file.")
+            throw RunError("no font named \(family) on this machine. Pick a family from `fc-list : family`, or pass a .ttf or .otf file.")
         }
         return try read(URL(fileURLWithPath: lines[0]), index: Int(lines[1]) ?? 0)
         #endif

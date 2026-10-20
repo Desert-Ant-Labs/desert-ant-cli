@@ -47,8 +47,7 @@ enum PhotoSteps {
         category: .model, model: "eye",
         inputs: [Port(id: "image", type: .image)],
         outputs: EyeFields.all.map { Port(id: $0.id, type: .any) },
-        defaults: ["fields": .null],
-        primary: "subject"
+        defaults: ["fields": .null]
     ) { run in
         let path = try photo(run)
         run.context.progress("looking")
@@ -102,7 +101,7 @@ enum PhotoSteps {
 
     #if canImport(Vision)
     static let readtext = StepDef(
-        type: "readtext", summary: "Reads the text in a photo, a scan, or a screenshot, with Apple's Vision on this Mac.",
+        type: "readtext", summary: "Reads the text in a photo, a scan, or a screenshot, with Apple's Vision. macOS only.",
         category: .logic,
         inputs: [Port(id: "image", type: .image)],
         outputs: [Port(id: "text", type: .text), Port(id: "lines", type: .text, each: true)],
@@ -124,7 +123,7 @@ enum PhotoSteps {
     }
     #else
     static let readtext = StepDef(
-        type: "readtext", summary: "Reads the text in a photo, a scan, or a screenshot, with Apple's Vision on this Mac.",
+        type: "readtext", summary: "Reads the text in a photo, a scan, or a screenshot, with Apple's Vision. macOS only.",
         category: .logic,
         inputs: [Port(id: "image", type: .image)],
         outputs: [Port(id: "text", type: .text), Port(id: "lines", type: .text, each: true)],
@@ -168,6 +167,9 @@ enum EyeFields {
     private static func words(_ s: String) -> String { s.replacingOccurrences(of: "_or_", with: " or ").replacingOccurrences(of: "_", with: " ") }
 
     private static func score(_ v: Double?) -> Value? { v.map { .number(($0 * 1000).rounded() / 1000) } }
+
+    /// Builds the document `da eye --json` writes, for the `detail` field.
+    private static let runner = EyeRunner()
 
     private static let animals = ["Animal", "Pet", "Cat", "Dog", "Bird", "Horse", "Mammal", "Kitten", "Puppy", "Fish", "Reptile"]
 
@@ -228,7 +230,6 @@ enum EyeFields {
             return .record([("x0", .number(b.x0)), ("y0", .number(b.y0)), ("x1", .number(b.x1)), ("y1", .number(b.y1))])
         },
         Field(id: "detail") { r in
-            let runner = EyeRunner()
             guard let settings = try? runner.settings(RunArguments()),
                   let data = try? JSONEncoder().encode(runner.document(r.analysis, input: r.input, time: nil, crop: nil, settings)) else { return nil }
             return (try? JSONDecoder().decode(JSONValue.self, from: data))?.value

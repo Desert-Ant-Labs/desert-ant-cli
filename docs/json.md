@@ -89,6 +89,8 @@ or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches ano
 `accepts.kind` feeds it through that option, as a file or as `-` for stdin. See
 [pipelines.md](pipelines.md).
 
+`flowSteps` lists every step type a flow file can use, as `{"type", "summary", "category", "model", "inputs", "outputs", "settings", "runsHere"}`. Each input and output is `{"id", "type"}`, where `type` is `text`, `audio` (a video goes on an audio port too), `image`, or `any`. An input has `"list": true` when it takes a whole list and `"optional": true` when it may be left unwired, and an output has `"each": true` when it is a list the next step takes item by item. `settings` maps each setting to its default, or null where it has none. `flows` says how a flow file is written; [flows.md](flows.md) has the rest.
+
 `desertant doctor --json`:
 
 ```json
@@ -413,7 +415,7 @@ these, in input order.
 
 `uses` maps each input to the output it reads. `implied` lists the inputs desertant
 wired because the file left them out. `problem` on a step and `problems` say why the
-flow cannot run here; the exit code is then 1.
+flow can't run here; the exit code is then 1.
 
 `desertant flow templates --json`: `[{"name", "title", "summary", "steps", "runsHere"}]`,
 where `steps` lists the step types in order. `flow show <template> --json` is

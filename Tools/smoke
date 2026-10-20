@@ -97,6 +97,20 @@ check "voz on wav" 0 '"words" : \[' "$da" voz talk.wav --json
 check "voz with speakers" 0 '"speaker" : 0' "$da" voz talk.wav --speakers --json
 check "no file" 1 "no file at missing.wav" "$da" ear missing.wav
 
+# Flows: the templates, a text flow from stdin, and a recording flow on the WAV.
+check "flow templates" 0 "^transcript-and-captions " "$da" flow templates
+check "flow check" 0 '"runnable" : true' "$da" flow check transcript-and-captions --json
+if [[ "$os" == Linux ]]; then
+  check "flow check names a macOS step" 1 "uhm runs on macOS only" "$da" flow check filler-words
+fi
+check "flow runs a text template" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu' | '$da' flow run redact-a-document"
+check "flow new" 0 "redact-a-document\.flow" "$da" flow new redact-a-document
+check "flow runs a flow file" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu' | '$da' flow run redact-a-document.flow"
+check "flow on a recording" 0 "talk-2\.srt" "$da" flow run transcript-and-captions talk.wav
+[[ -s talk.txt && -s talk.vtt ]] && ok "flow wrote talk.txt and talk.vtt" || fail "flow wrote talk.txt and talk.vtt"
+check "flow reports in json" 0 '"status" : "done"' "$da" flow run studio-sound talk.wav --json
+check "flow refuses a step it does not have" 1 "desertant has no teleport step" sh -c "printf 'flow: 1\nsteps:\n  - type: photos\n  - type: teleport\n' > odd.flow && '$da' flow run odd.flow"
+
 mkdir -p folder && cp talk.wav folder/a.wav && cp talk.wav folder/b.wav && echo hi > folder/notes.txt
 check "folder batch" 0 '"input" : "folder/b.wav"' "$da" ear folder --json
 
@@ -131,6 +145,12 @@ if [[ $has_ffmpeg == 1 ]]; then
   [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"
   check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts
   check "clips into an existing name" 0 'talk_clip-1-2\.mp4' "$da" clips talk.mp4 --transcript talk.srt --count 1
+  check "clips writes srt captions" 0 'talk_clip-1\.srt' "$da" clips talk.mp4 --transcript talk.srt --count 1 --captions srt --output-dir sidecar
+  # A Mac burns captions with Core Text; Linux needs an ffmpeg built with libass.
+  if [[ "$os" == Darwin ]] || ffmpeg -hide_banner -filters 2>/dev/null | grep -q " subtitles "; then
+    check "clips burns captions" 0 '"file" : ".*burned/talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --count 1 --captions burn --caption-style box --output-dir burned --json
+    [[ -s burned/talk_clip-1.mp4 ]] && ok "burned clip written" || fail "burned clip written"
+  fi
 elif [[ "$os" == Linux ]]; then
   printf 'not really audio' > talk.m4a
   check "clips asks for ffmpeg to cut" 1 "cutting clips needs ffmpeg" "$da" clips talk.wav --transcript talk.srt

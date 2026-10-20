@@ -308,7 +308,7 @@ extension AVFoundationCutter {
         case .high: AVAssetExportPresetHighestQuality
         }
         guard let session = AVAssetExportSession(asset: composition, presetName: preset) else {
-            throw RunError("could not start an export for \(destination.lastPathComponent)")
+            throw RunError("could not start an export for \(destination.lastPathComponent).")
         }
         session.videoComposition = video
         let type: AVFileType = destination.pathExtension.lowercased() == "mov" ? .mov : .mp4
@@ -316,7 +316,7 @@ extension AVFoundationCutter {
             try await session.export(to: destination, as: type)
         } catch {
             try? FileManager.default.removeItem(at: destination)
-            throw RunError("writing \(destination.lastPathComponent) failed: \(error.localizedDescription)")
+            throw RunError("could not write \(destination.lastPathComponent): \(error.localizedDescription)")
         }
     }
 }
@@ -446,7 +446,7 @@ extension FFmpegCutter {
     /// libass, in one encode.
     func cut(_ source: URL, ranges: [TimeRange], burning captions: BurnedCaptions, frame: CaptionFrame, to destination: URL) async throws {
         let kept = ranges.filter { $0.duration > 0 }
-        guard !kept.isEmpty else { throw RunError("the clip's time range lies outside the source") }
+        guard !kept.isEmpty else { throw RunError("the clip's time range is outside the source.") }
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("desertant-burn-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: scratch) }

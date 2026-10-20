@@ -245,15 +245,15 @@ struct ClipsVerb: AsyncParsableCommand {
     @Option(help: "An .srt, .vtt, or .json transcript instead of transcribing; `-` reads one from stdin.") var transcript: String?
     @Flag(name: .customLong("select-only"), help: "Report the moments as timestamps without writing files.") var selectOnly = false
     @Flag(help: "Replace existing clip files instead of stepping aside to new names.") var force = false
-    @Option(help: "burn to draw captions into each clip, srt to write <clip>.srt beside it, or off.") var captions: String?
-    @Option(name: .customLong("caption-position"), help: "bottom, center, or top.") var captionPosition: String?
-    @Option(name: .customLong("caption-align"), help: "left, center, or right.") var captionAlign: String?
-    @Option(name: .customLong("caption-font"), help: "A font family, or a .ttf or .otf file.") var captionFont: String?
-    @Option(name: .customLong("caption-size"), help: "The text's height as a share of the frame's height, as 0.06.") var captionSize: String?
-    @Option(name: .customLong("caption-weight"), help: "regular, medium, semibold, bold, black, or 100 to 900.") var captionWeight: String?
-    @Option(name: .customLong("caption-color"), help: "A name such as white or yellow, or a hex color such as #ffcc00.") var captionColor: String?
-    @Option(name: .customLong("caption-style"), help: "outline, box, or shadow.") var captionStyle: String?
-    @Option(help: "The video quality of a clip with burned captions: low, medium, or high.") var quality: String?
+    @Option(help: "burn to draw captions into each clip, srt to write <clip>.srt beside it, or off. Default off.") var captions: String?
+    @Option(name: .customLong("caption-position"), help: "Where burned captions go: bottom, center, or top. Default bottom.") var captionPosition: String?
+    @Option(name: .customLong("caption-align"), help: "How burned caption lines line up: left, center, or right. Default center.") var captionAlign: String?
+    @Option(name: .customLong("caption-font"), help: "A font family, or a .ttf or .otf file. Default Atkinson Hyperlegible, which ships with desertant.") var captionFont: String?
+    @Option(name: .customLong("caption-size"), help: "The text's height as a share of the frame's height, as 0.06. Default: sized to the frame.") var captionSize: String?
+    @Option(name: .customLong("caption-weight"), help: "The text's weight: regular, medium, semibold, bold, black, or 100 to 900. Default bold.") var captionWeight: String?
+    @Option(name: .customLong("caption-color"), help: "The text's color: a name such as white or yellow, or a hex color such as #ffcc00. Default white.") var captionColor: String?
+    @Option(name: .customLong("caption-style"), help: "How the text stands out from the picture: outline, box, or shadow. Default outline.") var captionStyle: String?
+    @Option(help: "The video quality of a clip with burned captions: low, medium, or high. Default high.") var quality: String?
     @Flag(help: "Also run the files in a folder's subfolders.") var recursive = false
     @OptionGroup var global: GlobalOptions
 

@@ -290,10 +290,9 @@ enum ModelSteps {
         type: "clips", summary: "Cuts the moments worth sharing out of a recording, with captions burned in or written beside each clip.",
         category: .model, model: "clips",
         inputs: [Port(id: "audio", type: .audio), Port(id: "words", type: .any, list: true)],
-        outputs: [Port(id: "clips", type: .any, each: true), Port(id: "files", type: .any)],
+        outputs: [Port(id: "files", type: .any), Port(id: "clips", type: .any, each: true)],
         defaults: ["count": .null, "captions": "off", "position": "bottom", "align": "center", "font": .null, "size": .null,
-                   "weight": "bold", "color": "white", "style": "outline", "quality": "high"],
-        primary: "files"
+                   "weight": "bold", "color": "white", "style": "outline", "quality": "high"]
     ) { run in
         let media = try audio(run)
         let p = run.params

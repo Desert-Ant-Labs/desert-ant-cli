@@ -99,3 +99,17 @@ extension Double {
         return Int(self)
     }
 }
+
+extension Param: Encodable {
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        switch self {
+        case .null: try c.encodeNil()
+        case .bool(let b): try c.encode(b)
+        case .number(let n): if let i = n.whole { try c.encode(i) } else { try c.encode(n) }
+        case .string(let s): try c.encode(s)
+        case .array(let a): try c.encode(a)
+        case .object(let o): try c.encode(o)
+        }
+    }
+}

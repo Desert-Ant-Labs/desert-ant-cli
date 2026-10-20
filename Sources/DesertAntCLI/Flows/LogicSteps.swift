@@ -10,7 +10,6 @@ enum LogicSteps {
         inputs: [Port(id: "value", type: .any), Port(id: "test", type: .any, optional: true)],
         outputs: [Port(id: "yes", type: .any), Port(id: "no", type: .any)],
         defaults: ["op": "equals", "operand": ""],
-        primary: "yes",
         noMap: true
     ) { run in
         let name = run.params["op"]?.string ?? "equals"
@@ -58,7 +57,7 @@ enum LogicSteps {
     }
 
     static let list = StepDef(
-        type: "list", summary: "Sorts, slices, or counts a list. Wire scores into by to sort by them.", category: .logic,
+        type: "list", summary: "Sorts, slices, or counts a list. To sort by a score, wire the score into the `by` input.", category: .logic,
         inputs: [Port(id: "items", type: .any, list: true), Port(id: "by", type: .any, list: true, optional: true)],
         outputs: [Port(id: "result", type: .any)],
         defaults: ["op": "firstN", "n": 3],

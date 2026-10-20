@@ -50,10 +50,14 @@ uses the same RAM as ten seconds), Voz reads as it goes, and AVFoundation export
 stream. Nothing loads a whole recording into memory, which is why the media is passed
 by path.
 
-## A job file
+## Flows
 
-Once the documents exist, a job file is a thin runner over the same steps that shares
-their intermediates. The file would be JSON, which needs no new dependency and is
-what agents write natively; YAML could layer on for people who prefer to hand-write
-jobs. The job file comes after the commands, because a shell pipeline of composable
-commands is already a spec and keeps every step testable on its own.
+A flow file runs a chain like the ones above in one command, and keeps what each step makes for the next: the transcript stays in memory, and clean audio and cut clips stay in a scratch folder until a step saves them. Each model loads once, even when the flow runs over a folder of files.
+
+```sh
+da flow run podcast-clips episode.mp4
+```
+
+The file is YAML that a person or an agent writes: a list of steps, each with a type, the outputs it uses, and its settings. desertant ships templates for the common chains, and `da schema --json` lists every step type for an agent that writes its own. [flows.md](flows.md) has the format.
+
+Ships today: `da flow run`, `templates`, `show`, `new`, and `check`, with the steps for audio, text, photos, and logic.

@@ -788,6 +788,8 @@ enum Embedded {
 > and crop photos, pick a video's thumbnail, and write a title. Weights download once and cache; nothing leaves the device when a
 > model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
+A flow file chains several models into one command, for example to clean up a recording, transcribe it, and cut captioned clips. `desertant flow templates` lists the flows that ship, and `flowSteps` in the schema lists every step a flow file can use.
+
 Start with `desertant schema --json`: it lists every runnable model, its input, and
 its options, and it's generated from the same code the commands run, so it can't be
 stale. `desertant models --json` lists the models that run on this machine, and
@@ -809,8 +811,10 @@ gives either as data, all offline.
   captions.
 - [Photos and video](docs/eye.md): eye, tags, filters, near-duplicates, rankings,
   crops, and video thumbnails.
-- [Clips](docs/clips.md): cutting clips from a recording, transcript formats, output
-  names, and the report.
+- [Clips](docs/clips.md): cutting clips from a recording, burned-in captions,
+  transcript formats, output names, and the report.
+- [Flows](docs/flows.md): flow files that chain models step by step, the bundled
+  templates, and every step type.
 - [Pipelines](docs/pipelines.md): composing commands, piping JSON not media, and
   rendering once.
 - [Performance](docs/performance.md): what to expect on first and later runs, and
@@ -889,6 +893,10 @@ document from stdin, so `voz --json` pipes into either; see [pipelines.md](pipel
 `--similar-to` rank. Each returns one JSON value for the whole set; see
 [eye.md](eye.md).
 
+## Run a flow
+
+A flow runs several models on a file in one command. `desertant flow templates --json` lists the flows that ship, and `desertant flow run <template or file> <files> --json` runs one and lists every file it wrote. To write your own, read `flowSteps` in the schema, write the YAML, and run `desertant flow check <file> --json` first: it shows how each input is wired and names any step that can't run here. Steps that rename or copy the user's files print a plan and change nothing until `--apply`, so pass it only when the user asks. See [flows.md](flows.md).
+
 ## What comes back
 
 stdout carries the result and nothing else. Under `--json` stdout is one JSON value,
@@ -962,7 +970,34 @@ minutes in 41s".
 - `--select-only`: report the moments as timestamps and text, write nothing.
 - `--output-dir clips/`: where the files go.
 - `--force`: replace existing clip files instead of stepping aside.
+- `--captions burn`: draw the captions into each clip. `--captions srt` writes `talk_clip-1.srt` beside each clip instead, and `off`, the default, writes no captions.
 - `--json`: the report, in [json.md](json.md).
+
+## Burned-in captions
+
+To post a clip where people watch without sound, burn the captions into it:
+
+```sh
+da clips talk.mp4 --captions burn
+da clips talk.mp4 --captions burn --caption-style box --caption-position top
+```
+
+The captions come from Voz's time on every word, moved onto the clip's own timeline, so a clip joined from two stretches of the recording shows the right words over each. They are cut short for a phone screen: at most two lines of up to 32 characters, at most 3.5s each, a new caption at the end of a sentence or after a pause. Burning re-encodes the video. A clip without captions is still cut without a re-encode.
+
+| Option | Values | Default |
+| --- | --- | --- |
+| `--caption-position` | `bottom`, `center`, or `top`, inside margins that keep clear of a phone app's buttons | `bottom` |
+| `--caption-align` | `left`, `center`, or `right` | `center` |
+| `--caption-font` | A font family installed on the machine, or a `.ttf` or `.otf` file | Atkinson Hyperlegible |
+| `--caption-size` | The text's height as a share of the frame's height, as `0.06` | 7% of the frame's short side |
+| `--caption-weight` | `regular`, `medium`, `semibold`, `bold`, `black`, or 100 to 900 | `bold` |
+| `--caption-color` | A name such as `white` or `yellow`, or a hex color such as `#ffcc00` | `white` |
+| `--caption-style` | `outline`, `box` (a dark box behind each line), or `shadow` | `outline` |
+| `--quality` | `low`, `medium`, or `high` | `high` |
+
+Atkinson Hyperlegible ships with desertant in the `fonts` folder beside the binary, so a clip looks the same on macOS and Linux. On macOS, Core Text draws the captions and AVFoundation encodes the clip; `--quality medium` also caps the clip at 1080p. On Linux, libass draws them and ffmpeg encodes the clip with H.264, so burning needs an ffmpeg built with libass, as most distributions build it. A family name is found with Core Text on macOS and with fontconfig on Linux.
+
+A recording with no picture has nothing to burn into, so `--captions burn` on audio writes an `.srt` beside each clip and says so on stderr.
 
 ## What it needs
 
@@ -1167,6 +1202,171 @@ belongs to that tool, so `update` names the command to run instead:
 `brew upgrade desertant` or `mise upgrade`. `desertant update --check` only reports
 whether a newer release exists.
 """###),
+        (name: "flows", markdown: ###"""
+# Flows
+
+Run several models on a file in one command: clean up a recording, transcribe it, cut captioned clips, and save notes, all on this machine. A flow file lists the steps in YAML, and desertant ships templates you can run as they are or copy and edit.
+
+## Templates
+
+1. List the templates:
+
+   ```sh
+   da flow templates
+   ```
+
+2. Run one on your file:
+
+   ```sh
+   da flow run transcript-and-captions talk.mp4
+   ```
+
+3. Read the paths it prints. The files are beside the input: `talk.txt`, `talk.srt`, and `talk.vtt`.
+
+| Template | What it does |
+| --- | --- |
+| `studio-sound` | Takes the noise and echo out of a recording and levels the voice. A video keeps its picture. |
+| `transcript-and-captions` | Transcribes a recording into text, SRT, and WebVTT. |
+| `who-said-what` | Transcribes a recording and names the speaker of each line. |
+| `meeting-notes` | Names each speaker, replaces personal data with placeholders, and tags the main topic. |
+| `podcast-clips` | Cleans up the sound, then cuts the moments worth sharing into clips with captions burned in. |
+| `filler-words` | Lists each uh, um, and hmm with its time. Runs on macOS. |
+| `photo-keepers` | Copies the photos worth keeping into a Keepers folder: no blurry or accidental shots, one of each near-duplicate. |
+| `find-receipts` | Copies the receipts among your photos into a Receipts folder. |
+| `redact-a-document` | Replaces the personal data in a text with placeholders and prints it. |
+
+`da flow show <template>` prints a template's YAML, and `da flow new <template>` copies it to `<template>.flow` in the current folder to edit.
+
+## Running a flow
+
+`da flow run` takes a flow file or a template's name, then the files to run it on:
+
+```sh
+da flow run podcast-clips episode.mp4
+da flow run meeting-notes standup.m4a --set who.names="Anna,Ben"
+da flow run photo-keepers ~/Pictures/trip --apply
+echo "Call Anna at 555-0100" | da flow run redact-a-document
+```
+
+The paths fill the flow's input step, its first step. A step that takes a list, `photos` or `files`, gets every path in one run, and a folder gives it every file inside. Any other input step runs the flow once per file, and each model loads once for all of them. A `text` step reads a file's text, or stdin when you pass no file. `--recursive` also takes the files in a folder's subfolders.
+
+What a flow saves goes beside the first input, or into `--output-dir`. A taken name steps aside to `talk-2.srt` unless you pass `--force`, and the input itself is never written over.
+
+`--set step.setting=value` changes one step's setting for this run, as `--set clips.count=3` or `--set clips.style=box`. `da schema --json` lists each step's settings and their defaults.
+
+The `rename` and `copy` steps change your own files, so they wait for `--apply`. Without it they print each file they would copy, move, or rename, and change nothing.
+
+Under `--json`, a run prints one document: each step's status and time, what each view and table step shows, and the files it wrote. When the flow runs once per file, the result is an array. [json.md](json.md) has the shape.
+
+The exit code is 1 when a step fails. A step whose input brought nothing, such as the `no` side of an `if` that every item passed, is skipped and isn't a failure.
+
+## Flow files
+
+A flow file is YAML: `flow: 1`, a title, and a list of steps. Each step has a `type`, and can have an `id`, `uses` to say where its inputs come from, and `with` for its settings.
+
+```yaml
+flow: 1
+title: Podcast clips
+summary: Cut captioned clips from a video podcast or a talk.
+steps:
+  - type: audio
+  - type: clear
+    with:
+      loudness: podcast
+  - type: voz
+  - type: clips
+    with:
+      captions: burn
+      count: 5
+  - type: folder
+```
+
+A step without an `id` is called by its type, as `voz` above. When two steps have the same type, give all but one of them an `id`.
+
+`uses` maps a step's inputs to outputs of earlier steps, as `step.output`:
+
+```yaml
+  - id: notes
+    type: template
+    uses:
+      a: redact.text
+      b: gist.top
+    with:
+      template: "# Notes\n\n{{date}}, about {{b}}\n\n{{a}}"
+```
+
+An input left out of `uses` takes the output of the same name from the nearest step before it, so `voz` above transcribes `clear`'s audio. If no earlier step has an output of that name, a required input takes the nearest output of the same type. When that step has several outputs of the type, the input takes the one `da schema --json` lists first for the step, if that one fits. If it doesn't fit, `da flow check` asks you to name one in `uses`.
+
+`uses` can only name earlier steps. `da flow check` reads a file, prints how every input is wired, and names any step that doesn't run on this machine. `da flow new` writes every id and every wire out in full, and lists each step's settings.
+
+## Lists
+
+Some outputs are lists that go on item by item: the photos of a `photos` step, a transcript's sentences, the clips of a `clips` step. A step after one that takes a single item runs once per item. A step that takes a whole list, as `folder`, `table`, `join`, `list`, and `duplicates` do, gets every item at once.
+
+An `if` step sends each item down `yes` or `no` and leaves a gap on the other side, so the two sides stay in step with the list they came from. `merge` joins them back together. An item that fails leaves a gap too, and the step fails only when every item does.
+
+## Steps
+
+`da schema --json` lists every step with its inputs, outputs, settings, and each setting's default.
+
+| Step | What it does | Settings |
+| --- | --- | --- |
+| `audio` | An audio or video file. | `file` |
+| `image` | A photo. | `file` |
+| `photos` | Several photos, as a list. | `files` |
+| `files` | Files, or every file in some folders, as a list. | `files`, `folders` |
+| `watch` | The files in a folder, sorted into photos, recordings, texts, and files. | `folder`, `files` |
+| `text` | Text from a file, stdin, or the flow. Also as lines, sentences, and paragraphs. | `text` |
+| `textlist` | Several texts, one item each. | `items` |
+| `voz` | Transcribes speech, with a time on every word. | |
+| `who` | Tells the speakers apart. With voz's words, labels each line. | `names` |
+| `clear` | Studio sound: noise and echo out, the voice leveled. | `loudness`: podcast, spotify, youtube, broadcast, or off |
+| `clips` | Cuts the moments worth sharing into clips. | `count`, `captions`, and the caption settings below |
+| `captions` | SRT and WebVTT from voz's words, with speaker names from who's turns. | |
+| `uhm` | The uh, um, and hmm in a recording, with times. macOS only. | |
+| `ear` | The language spoken in a recording. | |
+| `redact` | Personal data replaced with placeholders. | `confidence` |
+| `gist` | The topics of a text, from 36. | `limit` |
+| `emo` | Emoji that fit a text. | `limit` |
+| `tongue` | The language of a short text. | |
+| `eye` | What a photo shows, its kind, quality, faces, and framing. | |
+| `moderator` | Whether a photo is safe to show. | `threshold` |
+| `duplicates` | The photos to keep from sets of near-duplicates, and the rest. | |
+| `readtext` | The text in a photo, read with Apple's Vision. macOS only. | `fast` |
+| `if` | Sends each value down yes or no. | `op`, `operand` |
+| `merge` | Joins the two sides of an if back together. | |
+| `list` | Sorts, slices, or counts a list. | `op`, `n` |
+| `best` | The item with the highest score. | |
+| `template` | Text with `{{a}}`, `{{b}}`, `{{c}}`, `{{date}}`, `{{time}}`, and `{{b\|lang}}` filled in. | `template` |
+| `join` | A list joined into one text. | `separator`: newline, space, comma, or paragraph |
+| `convert` | A photo, recording, text, or table saved in another format. | `to` |
+| `view` | Prints a value. | |
+| `table` | Prints lists side by side, or one list of records with a column per field. | `columns` |
+| `folder` | Saves a value as files. | `folder`, `name` |
+| `rename` | New names for files from a pattern. Needs `--apply`. | `pattern`, `mode`: copy or rename, `folder` |
+| `copy` | Copies or moves files into a folder. Needs `--apply`. | `mode`: copy or move, `folder`, `subfolder` |
+
+An `if` checks with `op`: `equals`, `notEquals`, `oneOf` (a comma-separated `operand`), `contains`, `above`, `below`, `truthy`, `falsy`, or `empty`. It checks the value itself, or its `test` input when one is wired, as a photo against Eye's `type`. A `list` takes `op`: `desc` or `asc` (sorted by its `by` input when wired), `sort`, `most`, `firstN`, `lastN`, `item`, `count`, `unique`, `reverse`, or `compact`.
+
+The eye step gives `subject`, `scenes`, `type`, `animal`, `people`, `pets`, `keeper`, `reason`, `aesthetic`, `cover`, `sharp`, `blur`, `sensitive`, `faces`, `smile`, `eyesOpen`, `looking`, `expression`, `shot`, `crop`, and `detail`, the document `da eye --json` writes. `reason` is `keeper`, or why a photo isn't worth keeping: blurry, taken by accident, nothing special, and so on.
+
+The clips step takes the caption settings `da clips` takes, without the `caption-` in front: `captions` (burn, srt, or off), `position`, `align`, `font`, `size`, `weight`, `color`, `style`, and `quality`. [clips.md](clips.md) explains each.
+
+## Saved files
+
+A `folder` step saves text as `.txt`, captions as `.srt` or `.vtt`, text with Markdown in it as `.md`, a list of records as `.csv`, and anything else as `.json`, named by its `name` setting. `{{name}}` in it is the first input's name without its extension, so `"{{name}}_notes"` saves `standup_notes.md` beside `standup.m4a`. Audio, video, and photos keep their own names, as `talk_clear.wav` or `talk_clear_clip-1.mp4`. A bare `folder` setting, as `Receipts`, is a folder beside the input or inside `--output-dir`.
+
+A file a step makes along the way, as clear's clean audio, is kept only when a `folder` or `view` step takes it. A `view` saves it beside the input and prints its path.
+
+## Limits
+
+- Steps run one after another, in file order. Each model loads once per command.
+- A flow file holds at most 8MB and a million values.
+- `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
+- `watch` reads the files in its folder once, and doesn't wait for new ones.
+- `uhm` and `readtext` run on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
+- Eye is in closed beta, so the `eye` and `duplicates` steps need `HF_TOKEN` set to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye).
+"""###),
         (name: "json", markdown: ###"""
 # JSON contracts
 
@@ -1258,6 +1458,8 @@ count=3`). Each entry also carries `emits` (the document kind its `--json` resul
 or null) and `accepts` (`[{kind, option}]`): a command whose `emits` matches another's
 `accepts.kind` feeds it through that option, as a file or as `-` for stdin. See
 [pipelines.md](pipelines.md).
+
+`flowSteps` lists every step type a flow file can use, as `{"type", "summary", "category", "model", "inputs", "outputs", "settings", "runsHere"}`. Each input and output is `{"id", "type"}`, where `type` is `text`, `audio` (a video goes on an audio port too), `image`, or `any`. An input has `"list": true` when it takes a whole list and `"optional": true` when it may be left unwired, and an output has `"each": true` when it is a list the next step takes item by item. `settings` maps each setting to its default, or null where it has none. `flows` says how a flow file is written; [flows.md](flows.md) has the rest.
 
 `desertant doctor --json`:
 
@@ -1583,7 +1785,7 @@ these, in input order.
 
 `uses` maps each input to the output it reads. `implied` lists the inputs desertant
 wired because the file left them out. `problem` on a step and `problems` say why the
-flow cannot run here; the exit code is then 1.
+flow can't run here; the exit code is then 1.
 
 `desertant flow templates --json`: `[{"name", "title", "summary", "steps", "runsHere"}]`,
 where `steps` lists the step types in order. `flow show <template> --json` is
@@ -1686,13 +1888,17 @@ uses the same RAM as ten seconds), Voz reads as it goes, and AVFoundation export
 stream. Nothing loads a whole recording into memory, which is why the media is passed
 by path.
 
-## A job file
+## Flows
 
-Once the documents exist, a job file is a thin runner over the same steps that shares
-their intermediates. The file would be JSON, which needs no new dependency and is
-what agents write natively; YAML could layer on for people who prefer to hand-write
-jobs. The job file comes after the commands, because a shell pipeline of composable
-commands is already a spec and keeps every step testable on its own.
+A flow file runs a chain like the ones above in one command, and keeps what each step makes for the next: the transcript stays in memory, and clean audio and cut clips stay in a scratch folder until a step saves them. Each model loads once, even when the flow runs over a folder of files.
+
+```sh
+da flow run podcast-clips episode.mp4
+```
+
+The file is YAML that a person or an agent writes: a list of steps, each with a type, the outputs it uses, and its settings. desertant ships templates for the common chains, and `da schema --json` lists every step type for an agent that writes its own. [flows.md](flows.md) has the format.
+
+Ships today: `da flow run`, `templates`, `show`, `new`, and `check`, with the steps for audio, text, photos, and logic.
 """###),
         (name: "voz", markdown: ###"""
 # Transcripts and captions
@@ -1840,153 +2046,174 @@ Who splits a turn wherever a speaker pauses, so `who` joins a speaker's turns ac
         (name: "skill", markdown: ###"""
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI. Use when the task needs a local model, transcribing a recording, cutting clips, cleaning up audio, finding filler words, naming the spoken language, labeling who said what, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, or cropping photos, picking a video's thumbnail, or writing a title, or when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI, one at a time or chained in a flow. Use when the task needs a local model, transcribing a recording, writing captions, labeling who said what, cleaning up audio, cutting clips with burned-in captions, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, sorting, or cropping photos, picking a video's thumbnail, writing a title, or running several of these on a file in one command, such as meeting notes or podcast clips. Also when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
 ---
 
 # desertant
 
-The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machine.
-Weights download once and cache; nothing leaves the device at inference. Prefer the
-CLI over a network model when the input is sensitive or the task is one of the ones
-below.
+The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machine. Weights download once and cache, and nothing leaves the device when a model runs. Prefer the CLI over a network model when the input is sensitive or the task is one of the ones below.
 
 ## Discover
 
-- `desertant models --json` lists the models that run on this machine; `--all` lists
-  the full catalog.
-- `desertant info <id> --json` shows one model's card.
-- `desertant schema --json` is the tool catalog: every runnable model, its input, and
-  its options. Read it once to know what you can call.
+- `desertant schema --json` is the tool catalog: every model, whether it runs here, its input, and its options, plus `flowSteps`, every step a flow file can use. Read it once per session instead of guessing flags.
+- `desertant models --json` lists the models that run on this machine, and `--all` the full catalog. `desertant info <id> --json` is one model's card.
+- `desertant flow templates --json` lists the flows that ship.
+- `desertant docs <page>` prints a page offline: `agents`, `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`, `files`.
 
-## Run
+## Run a model
 
-Every command takes `--json` for a parseable result and reads text from stdin when no
-argument is given. Exit code 0 on success, 1 on a runtime error, 64 on a usage error.
-Weights download on first use with progress on stderr; stdout stays clean JSON.
+Every command takes `--json` for one JSON value on stdout, and a text model reads stdin when given no argument. Exit code 0 is success, 1 a runtime error, 64 a usage error, with the message on stderr. Weights download on first use with progress on stderr, so stdout stays clean JSON.
 
-- Redact personal data before sending text anywhere:
-  `desertant redact "Email Anna at anna@example.hu" --json`
-  Returns the redacted text plus the placeholder map, so you can restore originals in a
-  reply.
-- Suggest emoji: `desertant emo "pay my bills" --json`
-- Tag what a text is about: `desertant gist "<article text>" --json`
-- Name the language a short text is written in: `desertant tongue "<text>" --json`
-- Flag nudity in a photo before upload or display: `desertant moderator photo.jpg --json`
-  scores the image 0...1 and says whether the score crosses the threshold. On Linux it needs ffmpeg.
-- Write a title and description for a passage: `desertant title "<text>" --json`
-  (Apple silicon)
-- Enhance an audio or video file: `desertant clear meeting.mp4 --json` writes an
-  enhanced file and reports its path.
-- Transcribe with word times: `desertant voz talk.mp4 --json`; `--srt` or `--vtt` also
-  writes subtitles. Find filler words: `desertant uhm talk.mp4 --json`. Name the
-  spoken language: `desertant ear talk.mp4 --json`. Uhm needs Apple silicon.
-- Cut short clips from a talk or recording: `desertant clips talk.mp4 --json` transcribes,
-  picks the moments, and writes one file per clip beside the input, reporting each
-  clip's start, end, text, and file. `--select-only` returns the moments as
-  timestamps without writing; `--transcript talk.srt` skips transcribing.
-- Label who said what: `desertant who talk.mp4 --json` gives each speaker's time and
-  turns. `desertant voz talk.mp4 --speakers --json` transcribes and puts a `speaker` on
-  every sentence; `--names "Anna,Ben"` names them in the order they first speak, and
-  `--srt` or `--vtt` writes captions with the names.
-- Understand photos : `desertant eye photo.jpg --json` gives the kind of
-  image, its scores, tags, faces, people, and pets. On a folder, one flag asks one
-  question: `--has dog --not blurry` lists the matching paths, `--duplicates` groups
-  near-duplicates with the keeper first, `--best` picks one photo, and
-  `--sort aesthetic` or `--similar-to photo.jpg` ranks. `--crop 1:1` writes a crop. Use
-  `--strict` before moving or deleting anything. On a video, `--thumbnail` writes the
-  best frame and `--has people` returns the stretches that match.
+- Redact personal data before sending text anywhere: `desertant redact "Email Anna at anna@example.hu" --json` returns the redacted text and the placeholder map, so you can restore the originals in a reply.
+- Suggest emoji: `desertant emo "pay my bills" --json`.
+- Tag what a text is about, from 36 topics: `desertant gist "<article text>" --json`.
+- Name the language a short text is written in: `desertant tongue "<text>" --json`.
+- Write a title and a description for a passage: `desertant title "<text>" --json`. Apple silicon only.
+- Transcribe with a time on every word: `desertant voz talk.mp4 --json`. `--srt`, `--vtt`, and `--txt` also write those files beside the input.
+- Label who said what: `desertant voz talk.mp4 --speakers --json` puts a `speaker` on every sentence, and `--names "Anna,Ben"` names them in the order they first speak. `desertant who talk.mp4 --json` alone gives each speaker's time and turns.
+- Clean up a recording's sound, studio sound: `desertant clear meeting.mp4 --json` writes `meeting_clear.mp4` and reports the path.
+- Find each uh, um, and hmm: `desertant uhm talk.mp4 --json`. Apple silicon only.
+- Name the language spoken: `desertant ear talk.mp4 --json`.
+- Cut the moments worth sharing into clips: `desertant clips talk.mp4 --json` transcribes, picks the moments, and writes one file per clip beside the input, with each clip's start, end, text, and file. `--count 5` sets how many to look for, `--select-only` returns the moments without writing files, and `--transcript talk.srt` (or `-` with `voz --json` on stdin) skips transcribing.
+- Burn captions into the clips: `desertant clips talk.mp4 --captions burn --json`. The look: `--caption-style outline|box|shadow`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color yellow` or `#ffcc00`, `--caption-weight bold`, `--caption-size 0.06` (a share of the frame's height), `--caption-font "<family or .ttf>"`, and `--quality low|medium|high`. `--captions srt` writes an `.srt` beside each clip instead. On audio there is no picture, so burn writes the `.srt` and says so in `notes`.
+- Flag nudity in a photo before upload or display: `desertant moderator photo.jpg --json` scores it 0 to 1 and says whether the score crosses the threshold.
+- Read photos: `desertant eye photo.jpg --json` gives the kind of image, its scores, tags, faces, people, and pets. On a folder, one flag asks one question: `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates with the keeper first, `--best` picks one, and `--sort aesthetic` or `--similar-to photo.jpg` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame and `--has people` returns the stretches that match. Use `--strict` before moving or deleting anything. Eye is in closed beta and needs `HF_TOKEN`.
 
-- A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
-  `--recursive` for its subfolders) and loads the model once. The result is then an
-  array with one entry per file. A file that fails is reported on stderr, and the exit
-  code is 1 after the rest have run.
+A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 
-A command that writes a file never replaces one: a taken name steps aside to
-`name-2.ext`, and the output can never be the input. Pass `--force` to overwrite.
+The uniform form for any model is `desertant run <id> --input "<text>"` or `desertant run <id> --file <path> --option key=value`.
 
-The uniform form for any model is `desertant run <id> --input "<text>"` or
-`desertant run <id> --file <path>`.
+## Run a flow
 
-## Compose
+A flow runs several models on a file in one command. Reach for one when the user wants a chain, such as notes from a meeting or captioned clips from a podcast. The flows that ship:
 
-Commands chain through their JSON documents. `desertant schema --json` lists what each
-command `emits` and `accepts`; a match feeds through the named option, as a file or
-`-` for stdin:
+- `studio-sound`: clean up a recording's sound. A video keeps its picture.
+- `transcript-and-captions`: a transcript as text, SRT, and WebVTT.
+- `who-said-what`: a transcript with each speaker's name.
+- `meeting-notes`: who said what, with personal data replaced and the main topic tagged.
+- `podcast-clips`: clean sound, then clips with captions burned in.
+- `filler-words`: each uh, um, and hmm with its time. macOS only.
+- `photo-keepers`: copy the photos worth keeping, one of each near-duplicate, into a Keepers folder.
+- `find-receipts`: copy the receipts among some photos into a Receipts folder.
+- `redact-a-document`: a text with its personal data replaced.
 
 ```
-desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript -
+desertant flow run meeting-notes standup.m4a --json
+desertant flow run podcast-clips episode.mp4 --set clips.count=3 --set clips.style=box --json
+echo "Call Anna at 555-0100" | desertant flow run redact-a-document --json
+desertant flow run find-receipts ~/Pictures/trip --json
+```
+
+The paths fill the flow's first step. A photos or files step takes every path, folders included, in one run; any other step runs the flow once per file, and the result is then an array. `--set step.setting=value` changes one step's setting for this run, `--output-dir` chooses where files go (default: beside the first input), and `--recursive` takes subfolders. The result lists each step's `status` (`done`, `skipped`, or `failed` with a `note`), what each view and table step shows in `outputs`, and every file written in `files`. Report the paths in `files` to the user.
+
+Steps that rename, copy, or move the user's files print a plan and change nothing until `--apply`. Run without it first, show the user the plan, and pass `--apply` only when they ask for the files to change.
+
+## Write a flow
+
+When no template fits, write a flow file. Read `flowSteps` in `desertant schema --json` for each step's inputs, outputs, and settings, then write YAML:
+
+```yaml
+flow: 1
+title: Clips and captions
+steps:
+  - type: audio
+  - type: voz
+  - type: clips
+    with:
+      captions: burn
+      position: top
+      count: 3
+  - id: clipfiles
+    type: folder
+    uses:
+      value: clips.files
+    with:
+      folder: Clips
+  - type: captions
+  - id: srt
+    type: folder
+    uses:
+      value: captions.srt
+    with:
+      name: "{{name}}"
+```
+
+- Each step has a `type`. Give it an `id` when two steps share a type; otherwise the type is its id.
+- `uses` maps an input to an earlier step's output as `step.output`. An input left out takes the output of the same name from the nearest step before it, else the nearest output of the same type. Name the wire in `uses` whenever that would be ambiguous.
+- `with` holds the step's settings. The clips step takes the caption options without the `caption-` prefix: `captions`, `style`, `position`, `align`, `color`, `weight`, `size`, `font`, `quality`, `count`.
+- Run `desertant flow check flow.yml --json` before running it. It shows how every input is wired, and `problems` names any step that cannot run here; the exit code is then 1.
+- `desertant flow new <template> flow.yml` writes a template out in full, every wire and setting listed, as a starting point.
+
+`flowSteps` lists every step type desertant has; `flow check` names any other type a file uses, and `flow run` refuses the file. `desertant docs flows` has every step and rule.
+
+## Compose without a flow
+
+Commands also chain through their JSON. `desertant schema --json` lists what each command `emits` and `accepts`; a match feeds through the named option, as a file or `-` for stdin:
+
+```
+desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript - --captions burn
 desertant voz talk.mp4 --json | desertant who talk.mp4 --transcript - --json
 ```
 
-Transcribe once and reuse the transcript rather than letting clips transcribe again.
-`desertant docs pipelines` has the full picture.
+Transcribe once and reuse the transcript rather than letting another command transcribe again.
+
+## Files
+
+A command that writes a file never replaces one: a taken name steps aside to `name-2.ext`, and the output is never the input. Read the paths from the JSON result instead of predicting them. Pass `--force` only when the user asks to overwrite.
 
 ## When to reach for desertant
 
-Redact before you send anything with names, emails, or numbers to a remote service.
-Run the other models when the user asks for them. Don't shell out for a model the
-user hasn't asked for.
+Redact before you send anything with names, emails, or numbers to a remote service. Run the other models and flows when the user asks for what they do. Don't run a model the user hasn't asked for, and don't pass `--apply` or `--force` on your own judgment.
 """###),
         (name: "codex", markdown: ###"""
 # desertant models
 
-The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machine.
-Weights download once and cache; nothing leaves the device at inference. Reach for the
-CLI when the input is sensitive or the task is one of the ones below, rather than
-calling a network model.
+The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machine, one at a time or chained in a flow. Weights download once and cache, and nothing leaves the device when a model runs. Reach for the CLI when the input is sensitive or the task is one of the ones below, rather than calling a network model.
 
 Discover what is available:
 
-- `desertant models --json` lists the models that run on this machine; `--all` lists
-  the full catalog.
-- `desertant schema --json` is the tool catalog: every runnable model, its input, and
-  its options.
+- `desertant schema --json` is the tool catalog: every model, whether it runs here, its input, and its options, plus `flowSteps`, every step a flow file can use. Read it once instead of guessing flags.
+- `desertant models --json` lists the models that run on this machine, and `--all` the full catalog.
+- `desertant flow templates --json` lists the flows that ship.
+- `desertant docs <page>` prints a page offline: `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`.
 
-Run a model. Every command takes `--json` and reads stdin when given no argument. Exit
-code 0 on success, 1 on a runtime error, 64 on a usage error. Weights download on
-first use with progress on stderr; stdout stays clean JSON.
+Run a model. Every command takes `--json` and reads stdin when given no argument. Exit code 0 on success, 1 on a runtime error, 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON.
 
-- `desertant redact "<text>" --json` replaces names, emails, and numbers with
-  placeholders and returns the map. Redact before sending sensitive text to any remote
-  service.
+- `desertant redact "<text>" --json` replaces names, emails, and numbers with placeholders and returns the map. Redact before sending sensitive text to any remote service.
 - `desertant emo "<text>" --json` suggests emoji.
-- `desertant gist "<text>" --json` tags the topic.
+- `desertant gist "<text>" --json` tags the topic, from 36.
 - `desertant tongue "<text>" --json` names the language the text is written in.
-- `desertant moderator <image> --json` scores an image for nudity and says whether the
-  score crosses the threshold. On Linux it needs ffmpeg.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
-- `desertant voz <file> --json` transcribes a recording with a time on every word;
-  `--srt` or `--vtt` also writes captions beside the input.
+- `desertant voz <file> --json` transcribes a recording with a time on every word; `--srt`, `--vtt`, or `--txt` also writes that file beside the input.
+- `desertant voz <file> --speakers --json` labels each sentence with its speaker, and `--names "Anna,Ben"` names them in the order they first speak. `desertant who <file> --json` gives each speaker's time and turns.
+- `desertant clear <file> --json` gives a recording studio sound and reports the output path. A video keeps its picture.
 - `desertant uhm <file> --json` finds the filler words (Apple silicon).
 - `desertant ear <file> --json` names the language spoken.
-- `desertant clear <file> --json` denoises an audio or video file and reports the
-  output path.
-- `desertant clips <file> --json` cuts short clips from a talk or recording and reports
-  each clip's start, end, text, and file; `--select-only` gives timestamps only.
-- `desertant who <file> --json` labels who spoke when: each speaker's time and turns.
-  `desertant voz <file> --speakers --json` transcribes and labels each sentence with its
-  speaker; `--names "Anna,Ben"` names them in the order they first speak.
-- `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags,
-  faces, people, and pets. On a folder, `--has dog --not blurry` lists
-  the matches, `--duplicates` groups near-duplicates, `--best` picks one, and
-  `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail`
-  writes the best frame and `--has people` gives the stretches that match.
+- `desertant clips <file> --json` cuts the moments worth sharing into clips and reports each clip's start, end, text, and file. `--count 5` sets how many, `--select-only` gives timestamps only, and `--transcript <file>` skips transcribing.
+- `desertant clips <file> --captions burn --json` draws the captions into each clip. Set the look with `--caption-style outline|box|shadow`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color`, `--caption-weight`, `--caption-size`, `--caption-font`, and `--quality`. `--captions srt` writes an `.srt` beside each clip instead.
+- `desertant moderator <image> --json` scores an image for nudity and says whether the score crosses the threshold.
+- `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags, faces, people, and pets. On a folder, `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates, `--best` picks one, and `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame. Use `--strict` before moving or deleting anything. Eye needs `HF_TOKEN` during its beta.
 
-- A file verb takes several paths or a folder (`desertant moderator photos/ --json`,
-  `--recursive` for its subfolders) and loads the model once. The result is then an
-  array with one entry per file. A file that fails is reported on stderr, and the exit
-  code is 1 after the rest have run.
+A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 
-Commands chain through their JSON: `desertant voz talk.mp4 --json | desertant clips
-talk.mp4 --transcript -` transcribes once and cuts from that transcript.
+Run a flow when the user wants several models on a file in one go. The flows that ship are `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words` (macOS), `photo-keepers`, `find-receipts`, and `redact-a-document`:
 
-A command that writes a file never replaces one: a taken name steps aside to
-`name-2.ext`. Pass `--force` to overwrite.
+```
+desertant flow run meeting-notes standup.m4a --json
+desertant flow run podcast-clips episode.mp4 --set clips.count=3 --set clips.style=box --json
+```
+
+The paths fill the flow's first step; a photos step takes a whole folder in one run, and other flows run once per file. `--set step.setting=value` changes a setting, and `--output-dir` chooses where files go (default: beside the first input). The result lists each step's `status`, what view and table steps show in `outputs`, and every file written in `files`. Steps that rename, copy, or move the user's files print a plan and change nothing until `--apply`: show the plan, and pass `--apply` only when the user asks.
+
+To write a flow, read `flowSteps` in the schema and write YAML: `flow: 1`, then `steps`, each with a `type`, an `id` when two steps share a type, `uses` mapping an input to an earlier output as `step.output`, and `with` for settings. An input left out of `uses` takes the nearest earlier output of the same name, else of the same type. Check it with `desertant flow check <file> --json` before running it; `problems` names any step that cannot run here. `desertant flow new <template> <file>` writes a template out in full as a start, and `desertant docs flows` has every step.
+
+Commands also chain through their JSON: `desertant voz talk.mp4 --json | desertant clips talk.mp4 --transcript -` transcribes once and cuts from that transcript.
+
+A command that writes a file never replaces one: a taken name steps aside to `name-2.ext`, so read the paths from the result. Pass `--force` or `--apply` only when the user asks.
 
 The uniform form is `desertant run <id> --input "<text>"` or `--file <path>`.
 
-Copy this file, or its contents, into a project's `AGENTS.md` to make the CLI part of
-that project's toolkit.
+Copy this file, or its contents, into a project's `AGENTS.md` to make the CLI part of that project's toolkit.
 """###),
     ]
 
@@ -2029,7 +2256,7 @@ steps:
 flow: 1
 title: Meeting notes
 description: Transcribes a meeting, names each speaker, replaces personal data with placeholders, and tags the main topic. Saves the notes beside the recording. Set names with --set who.names="Anna,Ben".
-summary: Notes from a meeting recording, with personal data taken out.
+summary: Write notes from a meeting recording, with personal data taken out.
 steps:
   - type: audio
   - type: voz
@@ -2087,7 +2314,7 @@ steps:
 flow: 1
 title: Podcast clips
 description: Cleans up the sound of a video podcast or a talk, transcribes it, and cuts the moments worth sharing into clips with the captions burned in. Saves the clips beside the recording. Change the look with --set clips.style=box or --set clips.position=top.
-summary: Captioned clips from a video podcast or a talk.
+summary: Cut captioned clips from a video podcast or a talk.
 steps:
   - type: audio
   - type: clear
@@ -2153,7 +2380,7 @@ steps:
 flow: 1
 title: Who said what
 description: Transcribes a recording, tells the speakers apart, and saves a transcript with each speaker's name in front of what they said. Set names with --set who.names="Anna,Ben".
-summary: A transcript that names each speaker.
+summary: Transcribe a recording and name each speaker.
 steps:
   - type: audio
   - type: voz

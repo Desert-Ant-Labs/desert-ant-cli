@@ -185,6 +185,29 @@ Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to
 [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye). `da docs eye` lists
 the tags and the rest of the flags.
 
+## Captioned clips
+
+`--captions burn` draws the words into each clip, for a feed where people watch without sound:
+
+```sh
+da clips talk.mp4 --captions burn
+da clips talk.mp4 --captions burn --caption-style box --caption-position top --caption-color yellow
+```
+
+Captions are cut short for a phone screen, two lines at most. `--caption-align`, `--caption-font`, `--caption-size`, and `--caption-weight` set the rest of the look, and `--captions srt` writes an `.srt` beside each clip instead. The font ships with desertant, so a clip looks the same on macOS and Linux. `da docs clips` has every option.
+
+## Flows
+
+A flow runs several models on a file in one command. desertant ships nine templates, such as captioned clips from a podcast:
+
+```console
+$ da flow run podcast-clips episode.mp4
+episode_clear_clip-1.mp4
+episode_clear_clip-2.mp4
+```
+
+podcast-clips cleans up the sound, transcribes the recording, and cuts the best moments into clips with captions burned in. `da flow templates` lists the others: transcripts and captions, who said what, meeting notes with personal data taken out, filler words, photo keepers, and receipts. `da flow new podcast-clips` copies a template to a YAML file you can edit, and `da docs flows` explains the format and every step.
+
 ## Chain
 
 Commands compose through their JSON. Transcribe once, then cut:
@@ -237,7 +260,7 @@ command and how they chain.
 `llms.txt`: [using desertant from an agent](docs/agents.md), the
 [JSON contracts](docs/json.md), [files and the cache](docs/files.md),
 [speakers](docs/who.md), [photos and video](docs/eye.md), [clips](docs/clips.md),
-[pipelines](docs/pipelines.md), and [performance](docs/performance.md).
+[flows](docs/flows.md), [pipelines](docs/pipelines.md), and [performance](docs/performance.md).
 
 ## License
 

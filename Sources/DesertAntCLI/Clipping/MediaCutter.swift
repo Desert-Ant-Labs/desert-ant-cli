@@ -82,7 +82,7 @@ struct AVFoundationCutter: MediaCutter {
         let picture = AVURLAsset(url: video), sound = AVURLAsset(url: audio)
         guard let sourceVideo = try await picture.loadTracks(withMediaType: .video).first,
               let sourceAudio = try await sound.loadTracks(withMediaType: .audio).first else {
-            throw RunError("could not read the tracks of \(video.lastPathComponent) and \(audio.lastPathComponent)")
+            throw RunError("could not read the tracks of \(video.lastPathComponent) and \(audio.lastPathComponent).")
         }
         let length = try await picture.load(.duration)
         let composition = AVMutableComposition()

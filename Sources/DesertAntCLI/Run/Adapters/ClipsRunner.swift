@@ -19,7 +19,7 @@ struct ClipsRunner: ModelRunner {
         RunOption(name: "caption-align", help: "How burned caption lines line up: left, center, or right. Default center."),
         RunOption(name: "caption-font", help: "A font family, or a .ttf or .otf file. Default Atkinson Hyperlegible, which ships with desertant."),
         RunOption(name: "caption-size", help: "The text's height as a share of the frame's height, as 0.06. Default: sized to the frame."),
-        RunOption(name: "caption-weight", help: "regular, medium, semibold, bold, black, or 100 to 900. Default bold."),
+        RunOption(name: "caption-weight", help: "The text's weight: regular, medium, semibold, bold, black, or 100 to 900. Default bold."),
         RunOption(name: "caption-color", help: "The text's color: a name such as white or yellow, or a hex color such as #ffcc00. Default white."),
         RunOption(name: "caption-style", help: "How the text stands out from the picture: outline, box, or shadow. Default outline."),
         RunOption(name: "quality", help: "The video quality of a clip with burned captions: low, medium, or high. Default high."),

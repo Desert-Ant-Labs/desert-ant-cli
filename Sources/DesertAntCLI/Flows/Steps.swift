@@ -33,10 +33,9 @@ struct StepDef: Sendable {
     /// The manifest id of the model the step loads.
     var model: String? = nil
     var inputs: [Port] = []
+    /// The first is the one an input wired by type takes when several fit.
     var outputs: [Port] = []
     var defaults: Params = [:]
-    /// The output an input wired by type takes when a step has several that fit.
-    var primary: String? = nil
     /// Takes a stream whole instead of running once per item.
     var noMap = false
     /// Runs when either of its inputs brings something.
@@ -44,8 +43,6 @@ struct StepDef: Sendable {
     /// Why the step does not run on this platform, if it does not.
     var unavailable: String? = nil
     let run: @Sendable (StepRun) async throws -> [String: Value]
-
-    var primaryOutput: String? { primary ?? outputs.first?.id }
 }
 
 /// What one run of one step gets.
@@ -65,29 +62,12 @@ enum Steps {
 
     static let byType: [String: StepDef] = Dictionary(uniqueKeysWithValues: all.map { ($0.type, $0) })
 
-    /// Steps a flow file can hold that need a screen, a microphone, a person, or a
-    /// clock, with what each does.
-    static let elsewhere: [String: String] = [
-        "sketch": "draws with a pointer",
-        "whiteboard": "draws with a pointer",
-        "shapes": "turns pen strokes into shapes",
-        "cleanboard": "draws shapes on a board",
-        "gallery": "shows photos in a grid",
-        "speak": "reads text aloud",
-        "ask": "waits for a person to answer",
-        "record": "records from the microphone",
-        "call": "records calls as they happen",
-        "schedule": "runs the flow at set times",
-        "shortcut": "runs the flow from a key press",
-    ]
-
-    /// Comments on the canvas. They hold nothing to run, so a run passes over them.
+    /// A step that holds a comment and nothing to run, so a run passes over it.
     static let ignored: Set<String> = ["note"]
 
     /// Why a step of this type cannot run here, or nil when it can.
     static func problem(_ type: String) -> String? {
         if let def = byType[type] { return def.unavailable }
-        if let what = elsewhere[type] { return "the \(type) step \(what), which desertant does not do" }
         return "desertant has no \(type) step"
     }
 }

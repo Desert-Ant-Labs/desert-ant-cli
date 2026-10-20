@@ -146,10 +146,7 @@ struct ClipPipeline {
         }
 
         var cutSec = 0.0
-        if !request.selectOnly, !picks.isEmpty {
-            guard let cutter else {
-                throw RunError("cutting clips needs ffmpeg, which is not installed. Install ffmpeg with \(FFmpeg.installHint), or pass --select-only to get the moments as timestamps.")
-            }
+        if !request.selectOnly, !picks.isEmpty, let cutter {
             let cutting = Date()
             let ext = MediaFormat.outputExtension(for: request.media.path, hasVideo: info?.hasVideo ?? false)
             let stem = request.media.deletingPathExtension().lastPathComponent

@@ -148,10 +148,9 @@ enum InputSteps {
     /// Runs as a files input: the paths on the command line, or the folder it watches.
     static let watch = StepDef(
         type: "watch", summary: "The files in a folder, as photos, recordings, texts, and files.", category: .input,
-        outputs: [Port(id: "photos", type: .image, each: true), Port(id: "audio", type: .audio, each: true),
-                  Port(id: "text", type: .text, each: true), Port(id: "files", type: .any, each: true)],
-        defaults: ["folder": "", "files": .array([])],
-        primary: "files"
+        outputs: [Port(id: "files", type: .any, each: true), Port(id: "photos", type: .image, each: true),
+                  Port(id: "audio", type: .audio, each: true), Port(id: "text", type: .text, each: true)],
+        defaults: ["folder": "", "files": .array([])]
     ) { run in
         var paths = try run.context.bound?.paths ?? listed(run.params)
         if paths.isEmpty, let folder = given(run.params["folder"]) { paths = try contents(of: folder) }
@@ -174,8 +173,8 @@ enum InputSteps {
         return out
     }
 
-    /// A path from the flow file, with `~` expanded. A path into another program's
-    /// own samples, as `/samples/talk.wav`, names nothing on this machine.
+    /// A path from the flow file, with `~` expanded. A `/samples/` path is a
+    /// placeholder for a file the person passes, so it counts as no path.
     static func given(_ param: Param?) -> String? {
         guard let path = param?.string?.trimmingCharacters(in: .whitespaces), !path.isEmpty,
               !path.hasPrefix("/samples/") else { return nil }

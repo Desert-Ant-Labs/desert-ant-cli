@@ -1,7 +1,7 @@
 flow: 1
 title: Meeting notes
 description: Transcribes a meeting, names each speaker, replaces personal data with placeholders, and tags the main topic. Saves the notes beside the recording. Set names with --set who.names="Anna,Ben".
-summary: Notes from a meeting recording, with personal data taken out.
+summary: Write notes from a meeting recording, with personal data taken out.
 steps:
   - type: audio
   - type: voz

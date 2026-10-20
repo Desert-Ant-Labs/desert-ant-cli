@@ -7,6 +7,8 @@
 > and crop photos, pick a video's thumbnail, and write a title. Weights download once and cache; nothing leaves the device when a
 > model runs. Every command takes --json, reads stdin, and exits 0, 1, or 64.
 
+A flow file chains several models into one command, for example to clean up a recording, transcribe it, and cut captioned clips. `desertant flow templates` lists the flows that ship, and `flowSteps` in the schema lists every step a flow file can use.
+
 Start with `desertant schema --json`: it lists every runnable model, its input, and
 its options, and it's generated from the same code the commands run, so it can't be
 stale. `desertant models --json` lists the models that run on this machine, and
@@ -28,8 +30,10 @@ gives either as data, all offline.
   captions.
 - [Photos and video](docs/eye.md): eye, tags, filters, near-duplicates, rankings,
   crops, and video thumbnails.
-- [Clips](docs/clips.md): cutting clips from a recording, transcript formats, output
-  names, and the report.
+- [Clips](docs/clips.md): cutting clips from a recording, burned-in captions,
+  transcript formats, output names, and the report.
+- [Flows](docs/flows.md): flow files that chain models step by step, the bundled
+  templates, and every step type.
 - [Pipelines](docs/pipelines.md): composing commands, piping JSON not media, and
   rendering once.
 - [Performance](docs/performance.md): what to expect on first and later runs, and

@@ -74,7 +74,7 @@ enum FileOps {
         let run = context.run
         let verb = action == .copy ? "copy" : context.step.type == "rename" ? "rename" : "move"
         guard run.options.apply else {
-            let pairs = zip(paths, targets).filter { $0 != $1 }
+            let pairs = zip(paths, targets).filter { canonical($0) != canonical($1) }
             run.show(context.step.id, .list(pairs.map { .record([("action", .text(verb)), ("from", .file($0)), ("to", .file($1))]) }),
                      text: pairs.map { "would \(verb) \($0) to \($1)" })
             context.note = "pass --apply to \(verb) \(pairs.count == 1 ? "this file" : "these \(pairs.count) files")"
@@ -163,7 +163,7 @@ enum FileOps {
         return done
     }
 
-    private static func canonical(_ path: String) -> String {
+    static func canonical(_ path: String) -> String {
         URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath().path
     }
 }
