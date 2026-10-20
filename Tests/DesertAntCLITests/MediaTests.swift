@@ -47,6 +47,13 @@ final class MediaTests: XCTestCase {
         XCTAssertNil(FFmpeg.parseProbe(Data("not json".utf8)))
     }
 
+    func testProbeReadsRotationFromSideDataOrTheOlderTag() throws {
+        let side = #"{"streams": [{"codec_type": "video", "width": 1920, "height": 1080, "side_data_list": [{"rotation": -90}]}]}"#
+        XCTAssertEqual(try XCTUnwrap(FFmpeg.parseProbe(Data(side.utf8))).rotation, -90)
+        let tag = #"{"streams": [{"codec_type": "video", "width": 1920, "height": 1080, "tags": {"rotate": "90"}}]}"#
+        XCTAssertEqual(try XCTUnwrap(FFmpeg.parseProbe(Data(tag.utf8))).rotation, 90)
+    }
+
     func testDeinterleaveSplitsChannels() {
         let floats: [Float] = [0.5, -0.5, 0.25, -0.25, 1, -1]
         let data = floats.withUnsafeBufferPointer { Data(buffer: $0) }

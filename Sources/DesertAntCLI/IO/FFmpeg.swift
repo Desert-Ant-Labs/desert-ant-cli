@@ -75,10 +75,8 @@ enum FFmpeg {
     }
 
     static func probe(_ path: String, tools: Tools) throws -> Probe {
-        let data = try run(tools.ffprobe, [
-            "-v", "error", "-print_format", "json",
-            "-show_entries", "stream=codec_type,channels,width,height:stream_side_data=rotation:format=duration", path,
-        ], file: path)
+        // Whole sections, since ffmpeg versions name the rotation's place differently.
+        let data = try run(tools.ffprobe, ["-v", "error", "-print_format", "json", "-show_streams", "-show_format", path], file: path)
         guard let probe = parseProbe(data) else {
             throw RunError("could not read \(name(path)) as a media file.")
         }
@@ -99,6 +97,9 @@ enum FFmpeg {
                     probe.height = stream["height"] as? Int ?? 0
                     for side in stream["side_data_list"] as? [[String: Any]] ?? [] {
                         if let r = side["rotation"] as? Int { probe.rotation = r }
+                    }
+                    if let tags = stream["tags"] as? [String: Any], let r = (tags["rotate"] as? String).flatMap(Int.init) {
+                        probe.rotation = r
                     }
                 }
                 probe.hasVideo = true
