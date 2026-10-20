@@ -174,8 +174,22 @@ final class BurnTests: XCTestCase {
         XCTAssertTrue(ass.contains("Style: Default,Inclusive Sans,76,&H00FFFFFF,&H00FFFFFF,&H4C000000,&H4C000000,-1,"), ass)
         // Box (3), padding 15px, no shadow, top right (9), margins 115, 115, 86.
         XCTAssertTrue(ass.contains(",3,15,0,9,115,115,86,1\n"), ass)
-        XCTAssertTrue(ass.contains("Dialogue: 0,0:00:01.25,0:01:01.00,Default,,0,0,0,,Two \\{lines}\\Nof text\n"), ass)
+        // One event per line, a box apart (76 + 2 * 15), so the boxes touch and never overlap.
+        XCTAssertTrue(ass.contains("Dialogue: 0,0:00:01.25,0:01:01.00,Default,,0,0,0,,{\\an3\\pos(1805,162)}Two \\{lines}\n"), ass)
+        XCTAssertTrue(ass.contains("Dialogue: 0,0:00:01.25,0:01:01.00,Default,,0,0,0,,{\\an3\\pos(1805,268)}of text\n"), ass)
         XCTAssertEqual(ASS.color(.init(r: 1, g: 0.8, b: 0, a: 1)), "&H0000CCFF")
+    }
+
+    func testTheDefaultLookIsASoftShadow() throws {
+        let font = try CaptionFont.read(Self.fonts.appendingPathComponent("InclusiveSans-Bold.ttf"), index: 0)
+        let style = CaptionStyle()
+        XCTAssertEqual(style.look, .shadow)
+        let frame = CaptionFrame(width: 1920, height: 1080, style: style)
+        let ass = ASS.file([Caption(start: 0, end: 2, text: "Two\nlines")], frame: frame, style: style, font: font)
+        // A clear 3px outline for libass to blur, a 2px drop, and a 55% black shadow.
+        XCTAssertTrue(ass.contains("&HFF000000,&H73000000,-1,"), ass)
+        XCTAssertTrue(ass.contains(",1,3,2,2,115,115,86,1\n"), ass)
+        XCTAssertTrue(ass.contains("Default,,0,0,0,,{\\blur12}Two\\Nlines\n"), ass)
     }
 
     func testSentencesWithoutWordTimesSpreadTheirWords() {

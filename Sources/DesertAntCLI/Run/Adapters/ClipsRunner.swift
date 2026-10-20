@@ -23,7 +23,7 @@ struct ClipsRunner: ModelRunner {
         RunOption(name: "caption-color", help: "The text's color: a name such as white or yellow, or a hex color such as #ffcc00. Default white."),
         RunOption(name: "caption-lines", help: "Caption lines on screen at once, 1 or 2. Default 1 on a vertical clip and 2 on a square or wide clip."),
         RunOption(name: "caption-words", help: "The most words in one caption. Default 5 on a vertical clip, and as many as fit the line on a square or wide clip."),
-        RunOption(name: "caption-style", help: "How the text stands out from the picture: outline, box, or shadow. Default outline."),
+        RunOption(name: "caption-style", help: "How the text stands out from the picture: shadow, outline, or box. Default shadow, a soft shadow."),
         RunOption(name: "quality", help: "The video quality of a clip with burned captions: high, medium, or low. Default high. Every level keeps the source's size and frame rate."),
     ]
 

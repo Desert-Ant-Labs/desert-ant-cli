@@ -292,7 +292,7 @@ enum ModelSteps {
         inputs: [Port(id: "audio", type: .audio), Port(id: "words", type: .any, list: true)],
         outputs: [Port(id: "files", type: .any), Port(id: "clips", type: .any, each: true)],
         defaults: ["count": .null, "captions": "off", "position": "bottom", "align": "center", "font": .null, "size": .null,
-                   "weight": "bold", "color": "white", "style": "outline", "quality": "high",
+                   "weight": "bold", "color": "white", "style": "shadow", "quality": "high",
                    "lines": .null, "words": .null]
     ) { run in
         let media = try audio(run)

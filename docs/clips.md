@@ -37,7 +37,7 @@ The captions come from Voz's time on every word, moved onto the clip's own timel
 | `--caption-size` | The text's height as a share of the frame's height, as `0.06` | 7% of the frame's short side |
 | `--caption-weight` | `regular`, `medium`, `semibold`, `bold`, `black`, or 100 to 900 | `bold` |
 | `--caption-color` | A name such as `white` or `yellow`, or a hex color such as `#ffcc00` | `white` |
-| `--caption-style` | `outline`, `box` (a dark box behind each line), or `shadow` | `outline` |
+| `--caption-style` | `shadow` (a soft shadow), `outline`, or `box` (a dark box behind each line) | `shadow` |
 | `--caption-lines` | Lines on screen at once, `1` or `2` | Set by the clip's shape |
 | `--caption-words` | The most words in one caption | Set by the clip's shape |
 | `--quality` | How much a clip with burned captions is compressed: `high`, `medium`, or `low` | `high` |

@@ -26,7 +26,7 @@ struct CaptionStyle: Sendable, Equatable {
     var size: Double?
     var weight = 700
     var color = RGBA.white
-    var look = Look.outline
+    var look = Look.shadow
     var quality = Quality.high
     /// Lines on screen, 1 or 2. Nil follows the frame's shape.
     var lines: Int?
@@ -166,14 +166,33 @@ struct CaptionFrame: Sendable, Equatable {
         }
     }
 
-    /// The outline, padding, or shadow offset for a look, in pixels.
+    /// The outline, the box's padding, or the shadow's spread for a look, in pixels.
     func border(_ look: CaptionStyle.Look) -> Double {
         switch look {
         case .outline: (lineHeight * 0.075).rounded()
         case .box: (lineHeight * 0.2).rounded()
-        case .shadow: (lineHeight * 0.06).rounded()
+        case .shadow: (lineHeight * 0.04).rounded()
         }
     }
+
+    /// From one line's top to the next. Boxed lines sit a box apart, so the boxes
+    /// touch and never overlap.
+    func pitch(_ look: CaptionStyle.Look) -> Double { lineHeight + (look == .box ? 2 * border(.box) : 0) }
+
+    /// The top of the first of `count` lines, in pixels from the top of the frame.
+    func top(lines count: Int, style: CaptionStyle) -> Double {
+        let block = Double(count) * lineHeight + Double(max(count - 1, 0)) * (pitch(style.look) - lineHeight)
+        return switch style.position {
+        case .bottom: Double(height) - marginY - block
+        case .top: marginY
+        case .center: (Double(height) - block) / 2
+        }
+    }
+
+    /// How far the soft shadow falls below the text, and how much it blurs, in pixels.
+    var shadowOffset: Double { (lineHeight * 0.03).rounded() }
+    var shadowBlur: Double { (lineHeight * 0.16).rounded() }
+    static let shadowColor = CaptionStyle.RGBA.black.with(alpha: 0.55)
 }
 
 enum ClipCaptions {
@@ -275,8 +294,11 @@ enum ASS {
             switch style.look {
             case .outline: (1, border, 0, black, black)
             case .box: (3, border, 0, black.with(alpha: 0.7), black.with(alpha: 0.7))
-            case .shadow: (1, 0, border, black, black.with(alpha: 0.6))
+            // A clear outline gives libass something to blur, so the shadow softens
+            // and the text stays sharp.
+            case .shadow: (1, border, frame.shadowOffset, black.with(alpha: 0), CaptionFrame.shadowColor)
             }
+        let blur = style.look == .shadow ? "{\\blur\(num(frame.shadowBlur))}" : ""
         let fields = [
             "Default", font.family, num(frame.lineHeight), color(style.color), color(style.color), color(outlineColor), color(backColor),
             String(font.weight >= 600 ? -1 : 0), "0", "0", "0", "100", "100", "0", "0",
@@ -301,8 +323,20 @@ enum ASS {
         """
         for cue in cues {
             let text = cue.text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "{", with: "\\{")
-                .replacingOccurrences(of: "\n", with: "\\N")
-            out += "Dialogue: 0,\(stamp(cue.start)),\(stamp(cue.end)),Default,,0,0,0,,\(text)\n"
+            guard style.look == .box else {
+                out += "Dialogue: 0,\(stamp(cue.start)),\(stamp(cue.end)),Default,,0,0,0,,\(blur)\(text.replacingOccurrences(of: "\n", with: "\\N"))\n"
+                continue
+            }
+            // libass boxes each line of an event on its own, and overlapping boxes darken.
+            // One event per line, placed a box apart, keeps the shade even.
+            let rows = text.split(separator: "\n", omittingEmptySubsequences: false)
+            let top = frame.top(lines: rows.count, style: style)
+            let x = style.align == .left ? frame.marginX : style.align == .center ? Double(frame.width) / 2 : Double(frame.width) - frame.marginX
+            let anchor = style.align == .left ? 1 : style.align == .center ? 2 : 3
+            for (i, row) in rows.enumerated() {
+                let bottom = top + Double(i) * frame.pitch(.box) + frame.lineHeight
+                out += "Dialogue: 0,\(stamp(cue.start)),\(stamp(cue.end)),Default,,0,0,0,,{\\an\(anchor)\\pos(\(num(x)),\(num(bottom)))}\(row)\n"
+            }
         }
         return out
     }
@@ -346,6 +380,8 @@ extension AVFoundationCutter {
         let renderer = try CaptionRenderer(font: captions.font, frame: frame, style: captions.style)
         let drawn = captions.cues.compactMap { cue in renderer.image(cue).map { DrawnCue(cue: cue, image: $0.image, rect: $0.rect) } }
         let type: AVFileType = destination.pathExtension.lowercased() == "mov" ? .mov : .mp4
+        // Destination already allowed this path, and AVFoundation will not write over a file.
+        try? FileManager.default.removeItem(at: destination)
         do {
             switch captions.style.quality {
             case .high: try await export(composition, video, drawn, as: type, to: destination)
@@ -539,13 +575,7 @@ struct CaptionRenderer {
 
     private func lines(_ text: String) -> [Line] {
         let rows = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        let height = frame.lineHeight
-        let block = Double(rows.count) * height
-        let top: Double = switch style.position {
-        case .bottom: Double(frame.height) - frame.marginY - block
-        case .top: frame.marginY
-        case .center: (Double(frame.height) - block) / 2
-        }
+        let top = frame.top(lines: rows.count, style: style), pitch = frame.pitch(style.look)
         return rows.enumerated().map { i, row in
             let line = CTLineCreateWithAttributedString(NSAttributedString(string: row, attributes: [kCTFontAttributeName as NSAttributedString.Key: font]))
             let width = CTLineGetTypographicBounds(line, nil, nil, nil)
@@ -567,7 +597,7 @@ struct CaptionRenderer {
             case .center: (Double(frame.width) - width) / 2
             case .right: Double(frame.width) - frame.marginX - width
             }
-            return Line(path: path, x: x, top: Double(i) * height + top, width: width)
+            return Line(path: path, x: x, top: Double(i) * pitch + top, width: width)
         }
     }
 
@@ -577,9 +607,10 @@ struct CaptionRenderer {
         let lines = lines(cue.text)
         guard !lines.isEmpty else { return nil }
         let border = frame.border(style.look)
-        let reach = style.look == .shadow ? border : border + 1
-        let minX = lines.map(\.x).min()! - reach, maxX = lines.map { $0.x + $0.width }.max()! + reach + (style.look == .shadow ? border : 0)
-        let minY = lines[0].top - reach, maxY = lines.last!.top + frame.lineHeight + reach + (style.look == .shadow ? border : 0)
+        let reach = style.look == .shadow ? border + 2 * frame.shadowBlur : border + 1
+        let drop = style.look == .shadow ? frame.shadowOffset : 0
+        let minX = lines.map(\.x).min()! - reach, maxX = lines.map { $0.x + $0.width }.max()! + reach
+        let minY = lines[0].top - reach, maxY = lines.last!.top + frame.lineHeight + reach + drop
         let box = CGRect(x: floor(minX), y: floor(minY), width: ceil(maxX - minX) + 1, height: ceil(maxY - minY) + 1)
         guard let context = CGContext(data: nil, width: Int(box.width), height: Int(box.height), bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
@@ -590,18 +621,35 @@ struct CaptionRenderer {
         func place(_ line: Line, dx: Double = 0, dy: Double = 0) -> CGAffineTransform {
             CGAffineTransform(translationX: line.x - box.minX + dx, y: box.maxY - (line.top + baseline) - dy)
         }
+        if style.look == .box {
+            // One fill for every line's box, so where two boxes overlap the shade stays even.
+            context.addRects(lines.map {
+                CGRect(x: $0.x - border - box.minX, y: box.maxY - $0.top - frame.lineHeight - border,
+                       width: $0.width + 2 * border, height: frame.lineHeight + 2 * border)
+            })
+            context.setFillColor(color(CaptionStyle.RGBA.black.with(alpha: 0.7)))
+            context.fillPath(using: .winding)
+        }
         for line in lines {
             switch style.look {
             case .box:
-                context.setFillColor(color(CaptionStyle.RGBA.black.with(alpha: 0.7)))
-                context.fill(CGRect(x: line.x - border - box.minX, y: box.maxY - line.top - frame.lineHeight - border,
-                                    width: line.width + 2 * border, height: frame.lineHeight + 2 * border))
+                break
             case .shadow:
-                var t = place(line, dx: border, dy: border)
+                // The text drawn off the canvas casts its blurred shadow back onto it, so
+                // only the shadow lands.
+                let away = box.width + 4 * reach
+                var t = place(line, dx: away)
                 if let p = line.path.copy(using: &t) {
+                    context.saveGState()
+                    context.setShadow(offset: CGSize(width: -away, height: -frame.shadowOffset), blur: frame.shadowBlur,
+                                      color: color(CaptionFrame.shadowColor))
                     context.addPath(p)
-                    context.setFillColor(color(CaptionStyle.RGBA.black.with(alpha: 0.6)))
-                    context.fillPath()
+                    context.setLineWidth(2 * border)
+                    context.setLineJoin(.round)
+                    context.setStrokeColor(color(.black))
+                    context.setFillColor(color(.black))
+                    context.drawPath(using: .fillStroke)
+                    context.restoreGState()
                 }
             case .outline:
                 var t = place(line)

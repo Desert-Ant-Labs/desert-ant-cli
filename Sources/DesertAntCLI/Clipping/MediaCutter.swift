@@ -103,13 +103,15 @@ struct AVFoundationCutter: MediaCutter {
 
     private func export(_ composition: AVComposition, preset: String, as type: AVFileType, to destination: URL) async throws {
         guard let session = AVAssetExportSession(asset: composition, presetName: preset) else {
-            throw RunError("could not start an export for \(destination.lastPathComponent)")
+            throw RunError("could not start an export for \(destination.lastPathComponent).")
         }
+        // Destination already allowed this path, and AVFoundation will not write over a file.
+        try? FileManager.default.removeItem(at: destination)
         do {
             try await session.export(to: destination, as: type)
         } catch {
             try? FileManager.default.removeItem(at: destination)
-            throw RunError("writing \(destination.lastPathComponent) failed: \(error.localizedDescription)")
+            throw RunError("could not write \(destination.lastPathComponent): \(error.localizedDescription)")
         }
     }
 
