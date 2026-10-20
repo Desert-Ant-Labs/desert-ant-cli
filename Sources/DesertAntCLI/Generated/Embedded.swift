@@ -963,7 +963,7 @@ The pipeline is in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the t
         (name: "eye", markdown: ###"""
 # Photos and video
 
-Find, rank, and crop photos by what is in them and how they came out, group near-duplicates, and pick the frame of a video to use as its thumbnail.
+Find photos by what is in them, rank them by sharpness and looks, crop them, group near-duplicates, and pick the frame of a video to use as its thumbnail.
 
 ```
 da eye IMG_0056.jpeg

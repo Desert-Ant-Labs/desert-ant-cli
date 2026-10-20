@@ -1,9 +1,8 @@
 import Eye
 import Foundation
 
-// Eye: what a photo is, how it came out, what is in it, and where to crop it. A filter
-// or a question (--duplicates, --best, --similar-to, --sort) is about the photos
-// together. A video is sampled into frames.
+// Eye: a photo's kind, scores, tags, and crop. A filter or a question (--duplicates,
+// --best, --similar-to, --sort) is about the photos together. A video is sampled into frames.
 
 struct EyeRunner: SetRunner {
     let id = "eye"

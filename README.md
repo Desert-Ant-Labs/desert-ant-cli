@@ -4,33 +4,51 @@
 
 ![Swift](https://img.shields.io/badge/Swift-macOS%20%7C%20Linux-F05138?logo=swift&logoColor=white) ![Release](https://img.shields.io/github/v/release/Desert-Ant-Labs/desert-ant-cli?color=ADB49C&label=release) ![License](https://img.shields.io/badge/license-MIT-ADB49C)
 
-Transcribe a recording and label who said what, cut the best moments into captioned clips, clean up the audio, find, rank, and crop photos, redact personal data from text, name the language of a line, flag nudity in a photo, or tag a topic, with [Desert Ant Labs](https://desertant.com) models running on your own machine. Run one model, or several in one command as a flow. Weights download once. Nothing leaves the device.
+Transcribe recordings, cut captioned clips, clean up audio, sort photos, and redact personal data from the terminal, with [Desert Ant Labs](https://desertant.com) models running on your own machine. The weights download once, and nothing leaves the device. `da` is short for `desertant`.
 
-<img src="docs/media/flow-run.gif" width="800" alt="The terminal runs da flow run podcast-clips episode.mp4, which prints the path of one captioned clip and reports 5 steps in 2.6s, then time reports 2.914s.">
-
-`da flow run podcast-clips episode.mp4` cleans up the sound of a 27s recording, transcribes it, picks the moment worth sharing, and writes it as a clip with the captions burned in. On an M3 Ultra, with the models already loaded once, the whole flow took 2.9s. The first run on a machine downloads the models and prepares them for the Neural Engine.
-
-Captions follow the clip's shape: one short line at a time on a vertical clip, two lines on a square or wide one, in white over a soft shadow, in a font that comes with desertant, so a clip looks the same on macOS and Linux.
-
-Single models run from the terminal the same way:
+[Transcribe](#transcripts-and-captions) a recording, with a time on each line:
 
 ```console
 $ da voz talk.mp4 -t
 0:00  We build small models that run on the device.
 0:04  Nothing leaves the phone, and there is no cloud bill.
 Transcribed 48 minutes of audio in 9.7s, 296x realtime.
+```
 
-$ da clips talk.mp4
+[Cut the best moments](#captioned-clips) into clips, with the captions burned in:
+
+```console
+$ da clips talk.mp4 --captions burn
  1  10:14 to 10:42  27s
     The one thing the meter can't sell you is inference that costs nothing.
     talk_clip-1.mp4
 8 clips from 48 minutes in 41s.
+```
 
+[Score a photo](#photos) for sharpness and looks, and tag what is in it:
+
+```console
+$ da eye IMG_0056.jpeg
+photo  keeper 0.27  aesthetic 0.76  cover 0.73  sharpness 0.89
+sharp, cat, animal, keeper, pet, couch, furniture, himalayan
+2 pets
+```
+
+[Redact](#models) names, emails, and phone numbers in a text:
+
+```console
 $ da redact "Email Anna at anna@example.hu or call 555-0100"
 Email [GIVEN_NAME_1] at [EMAIL_1] or call [PHONE_1]
 ```
 
-`da` is short for `desertant`.
+[Run several models](#flows) on a file in one command. This flow cleans up the sound, transcribes it, and cuts the best moment into a captioned clip:
+
+```console
+$ da flow run podcast-clips episode.mp4
+episode_clear_clip-1.mp4
+
+Ran 5 steps in 2.6s.
+```
 
 ## Install
 
@@ -68,9 +86,129 @@ desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 
 sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
 ```
 
+## Models
+
+Each model has a page on [desertant.com](https://desertant.com/models/) with its numbers, its limits, and a live demo. `da info <model>` prints the same card.
+
+- **[Voz](https://desertant.com/models/voz/)** `da voz talk.mp4`  
+  Transcribe a recording, with a time on every word, in 25 languages.
+- **[Who](https://desertant.com/models/who/)** `da who talk.mp4`  
+  Label who said what in a recording: each speaker's turns and time.
+- **[Clips](https://desertant.com/models/clips/)** `da clips talk.mp4`  
+  Cut a podcast, interview, or meeting into short clips and highlights.
+- **[Clear](https://desertant.com/models/clear/)** `da clear talk.mp4`  
+  Studio sound: noise and room echo out, loudness leveled.
+- **[Uhm](https://desertant.com/models/uhm/)** `da uhm talk.mp4`  
+  Find every "uh", "um", and "hmm", with the exact span to cut.
+- **[Ear](https://desertant.com/models/ear/)** `da ear talk.mp4`  
+  Name the language being spoken, from 102.
+- **[Redact](https://desertant.com/models/redact/)** `da redact "<text>"`  
+  Replace names, emails, and phone numbers in a text with labels.
+- **[Emo](https://desertant.com/models/emo/)** `da emo "<text>"`  
+  Suggest emoji for a word or a sentence.
+- **[Gist](https://desertant.com/models/gist/)** `da gist "<text>"`  
+  Tag a post or article with topics, from a set of 36.
+- **[Tongue](https://desertant.com/models/tongue/)** `da tongue "<text>"`  
+  Name the language a short text is written in, from three words, in 84 languages.
+- **[Moderator](https://desertant.com/models/moderator/)** `da moderator photo.jpg`  
+  Flag nudity or sexual content before a photo is uploaded or shown.
+- **[Eye](https://desertant.com/models/eye/)** `da eye photos/`  
+  Find, rank, and crop photos, group near-duplicates, and pick a video's thumbnail.
+- **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
+  Suggest a short factual title and a one- or two-sentence description for any text.
+
+Redact, Emo, Gist, and Tongue are multilingual. Uhm and Title run on Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on your machine.
+
+## Transcripts and captions
+
+`da voz talk.mp4` prints the transcript, one sentence per line, and `-t` puts the time in front of each. Caption and text files are one flag each, written beside the input:
+
+```sh
+da voz talk.mp4 --srt          # talk.srt, captions
+da voz talk.mp4 --vtt --txt    # talk.vtt and talk.txt
+da voz talk.mp4 -o notes.vtt   # one file, the format from its extension
+da voz talk.mp4 --format srt   # SRT on stdout, for a pipe
+```
+
+Captions are cut the way broadcasters cut them: two lines of 42 characters, no more than 7s on screen. `da docs voz` has the rest.
+
+## Speakers
+
+`da voz talk.mp4 --speakers` transcribes and labels each line with who said it, and `--names "Anna,Ben"` names the speakers in the order they first speak. The SRT, VTT, and text files carry the names. `da who talk.mp4` alone prints each speaker's time and turns, and `--format rttm` writes them for diarization tools. `da docs who` has the rest.
+
+## Captioned clips
+
+`--captions burn` draws the words into each clip, for a feed where people watch without sound:
+
+```sh
+da clips talk.mp4 --captions burn
+da clips talk.mp4 --captions burn --caption-style box --caption-position top --caption-color yellow
+```
+
+Captions follow the clip's shape: one short line at a time on a vertical clip, two lines on a square or wide one, in white over a soft shadow, in a font that comes with desertant, so a clip looks the same on macOS and Linux.
+
+`--caption-lines` and `--caption-words` change how much text a caption holds, and `--caption-align`, `--caption-font`, `--caption-size`, and `--caption-weight` set the rest of the look. `--captions srt` writes an `.srt` beside each clip instead. Burning keeps the clip's size and frame rate at the highest quality unless you pass `--quality medium` or `low`. `da docs clips` has every option.
+
+## Photos
+
+`da eye` scores a photo for sharpness and looks, tags what is in it, and counts the people and pets.
+
+```console
+$ da eye IMG_0056.jpeg
+photo  keeper 0.27  aesthetic 0.76  cover 0.73  sharpness 0.89
+sharp, cat, animal, keeper, pet, couch, furniture, himalayan
+2 pets
+```
+
+On a folder, one flag asks one question about the photos together:
+
+```sh
+da eye trip/ --has beach --not blurry         # the paths of the matches
+da eye trip/ --duplicates                     # near-duplicates, the keeper first
+da eye trip/ --best                           # the one photo to keep
+da eye trip/ --sort aesthetic --limit 5       # the five best looking
+da eye trip/ --similar-to trip/IMG_3615.HEIC  # the most alike first
+```
+
+A filter prints one path per line, so the matches can go straight to another command. To move every screenshot off the desktop:
+
+```sh
+mkdir -p ~/Desktop/Screenshots
+da eye ~/Desktop --has screenshot --strict | while IFS= read -r f; do mv "$f" ~/Desktop/Screenshots/; done
+```
+
+`--strict` counts a tag at a confidence of 0.9 instead of 0.5. Use it for anything that acts without asking. To set aside the extra shots of every burst and check them before deleting:
+
+```sh
+mkdir -p trip/extras
+da eye trip/ --duplicates --json | jq -r '.groups[].others[]' | while IFS= read -r f; do mv "$f" trip/extras/; done
+```
+
+`--crop` writes Eye's best crop at an aspect, and on a video, `--thumbnail` writes the frame to use as its thumbnail:
+
+```sh
+da eye trip/ --sort cover --limit 5 --crop 1:1 --output-dir covers/
+da eye launch.mp4 --thumbnail
+```
+
+Each run reads the photos again, at 0.3s a photo on an M4 Max. To ask many questions of a large folder, read it once into JSON and query the file:
+
+```sh
+da eye photos/ --recursive --all-tags --json > photos.json
+jq -r '.[] | select(.kind == "receipt") | .input' photos.json
+```
+
+Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye). `da docs eye` lists the tags and the rest of the flags.
+
 ## Flows
 
-A flow runs several models on a file in one command. desertant comes with nine ready-made flows:
+A flow runs several models on a file in one command and loads each model once.
+
+<img src="docs/media/flow-run.gif" width="800" alt="The terminal runs da flow run podcast-clips episode.mp4, which prints the path of one captioned clip and reports 5 steps in 2.6s, then time reports 2.914s.">
+
+`da flow run podcast-clips episode.mp4` cleans up the sound of a 27s recording, transcribes it, picks the moment worth sharing, and writes it as a clip with the captions burned in. On an M3 Ultra, with the models already loaded once, the whole flow took 2.9s. The first run on a machine downloads the models and prepares them for the Neural Engine.
+
+desertant comes with nine ready-made flows:
 
 | Template | What it does |
 | --- | --- |
@@ -123,119 +261,7 @@ steps:
 
 `da flow check clips.yml` shows how every input is wired, and `da flow new podcast-clips` copies a template out in full to edit. `da docs flows` has every step and rule.
 
-## Captioned clips
-
-`--captions burn` draws the words into each clip, for a feed where people watch without sound:
-
-```sh
-da clips talk.mp4 --captions burn
-da clips talk.mp4 --captions burn --caption-style box --caption-position top --caption-color yellow
-```
-
-`--caption-lines` and `--caption-words` change how much text a caption holds, and `--caption-align`, `--caption-font`, `--caption-size`, and `--caption-weight` set the rest of the look. `--captions srt` writes an `.srt` beside each clip instead. Burning keeps the clip's size and frame rate at the highest quality unless you pass `--quality medium` or `low`. `da docs clips` has every option.
-
-## Models
-
-Each model has a page on [desertant.com](https://desertant.com/models/) with its numbers, its limits, and a live demo. `da info <model>` prints the same card.
-
-- **[Voz](https://desertant.com/models/voz/)** `da voz talk.mp4`  
-  Transcribe a recording, with a time on every word, in 25 languages.
-- **[Who](https://desertant.com/models/who/)** `da who talk.mp4`  
-  Label who said what in a recording: each speaker's turns and time.
-- **[Clips](https://desertant.com/models/clips/)** `da clips talk.mp4`  
-  Cut a podcast, interview, or meeting into short clips and highlights.
-- **[Clear](https://desertant.com/models/clear/)** `da clear talk.mp4`  
-  Studio sound: noise and room echo out, loudness leveled.
-- **[Uhm](https://desertant.com/models/uhm/)** `da uhm talk.mp4`  
-  Find every "uh", "um", and "hmm", with the exact span to cut.
-- **[Ear](https://desertant.com/models/ear/)** `da ear talk.mp4`  
-  Name the language being spoken, from 102.
-- **[Redact](https://desertant.com/models/redact/)** `da redact "<text>"`  
-  Replace names, emails, and phone numbers in a text with labels.
-- **[Emo](https://desertant.com/models/emo/)** `da emo "<text>"`  
-  Suggest emoji for a word or a sentence.
-- **[Gist](https://desertant.com/models/gist/)** `da gist "<text>"`  
-  Tag a post or article with topics, from a set of 36.
-- **[Tongue](https://desertant.com/models/tongue/)** `da tongue "<text>"`  
-  Name the language a short text is written in, from three words, in 84 languages.
-- **[Moderator](https://desertant.com/models/moderator/)** `da moderator photo.jpg`  
-  Flag nudity or sexual content before a photo is uploaded or shown.
-- **[Eye](https://desertant.com/models/eye/)** `da eye photos/`  
-  Find, rank, and crop photos, group near-duplicates, and pick a video's thumbnail.
-- **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
-  Suggest a short factual title and a one- or two-sentence description for any text.
-
-Redact, Emo, Gist, and Tongue are multilingual. Uhm and Title run on Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on your machine.
-
-## Transcripts and captions
-
-`da voz talk.mp4` prints the transcript, one sentence per line, and `-t` puts the time in front of each. Caption and text files are one flag each, written beside the input:
-
-```sh
-da voz talk.mp4 --srt          # talk.srt, captions
-da voz talk.mp4 --vtt --txt    # talk.vtt and talk.txt
-da voz talk.mp4 -o notes.vtt   # one file, the format from its extension
-da voz talk.mp4 --format srt   # SRT on stdout, for a pipe
-```
-
-Captions are cut the way broadcasters cut them: two lines of 42 characters, no more than 7s on screen. `da docs voz` has the rest.
-
-## Speakers
-
-`da voz talk.mp4 --speakers` transcribes and labels each line with who said it, and `--names "Anna,Ben"` names the speakers in the order they first speak. The SRT, VTT, and text files carry the names. `da who talk.mp4` alone prints each speaker's time and turns, and `--format rttm` writes them for diarization tools. `da docs who` has the rest.
-
-## Photos
-
-`da eye` reads what a photo is, how it came out, and what is in it.
-
-```console
-$ da eye IMG_0056.jpeg
-photo  keeper 0.27  aesthetic 0.76  cover 0.73  sharpness 0.89
-sharp, cat, animal, keeper, pet, couch, furniture, himalayan
-2 pets
-```
-
-On a folder, one flag asks one question about the photos together:
-
-```sh
-da eye trip/ --has beach --not blurry         # the paths of the matches
-da eye trip/ --duplicates                     # near-duplicates, the keeper first
-da eye trip/ --best                           # the one photo to keep
-da eye trip/ --sort aesthetic --limit 5       # the five best looking
-da eye trip/ --similar-to trip/IMG_3615.HEIC  # the most alike first
-```
-
-A filter prints one path per line, so the matches can go straight to another command. To move every screenshot off the desktop:
-
-```sh
-mkdir -p ~/Desktop/Screenshots
-da eye ~/Desktop --has screenshot --strict | while IFS= read -r f; do mv "$f" ~/Desktop/Screenshots/; done
-```
-
-`--strict` counts a tag at a confidence of 0.9 instead of 0.5. Use it for anything that acts without asking. To set aside the extra shots of every burst and check them before deleting:
-
-```sh
-mkdir -p trip/extras
-da eye trip/ --duplicates --json | jq -r '.groups[].others[]' | while IFS= read -r f; do mv "$f" trip/extras/; done
-```
-
-`--crop` writes Eye's best crop at an aspect, and on a video, `--thumbnail` writes the frame to use as its thumbnail:
-
-```sh
-da eye trip/ --sort cover --limit 5 --crop 1:1 --output-dir covers/
-da eye launch.mp4 --thumbnail
-```
-
-Each run reads the photos again, at 0.3s a photo on an M4 Max. To ask many questions of a large folder, read it once into JSON and query the file:
-
-```sh
-da eye photos/ --recursive --all-tags --json > photos.json
-jq -r '.[] | select(.kind == "receipt") | .input' photos.json
-```
-
-Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye). `da docs eye` lists the tags and the rest of the flags.
-
-## Chain
+## Pipelines
 
 Commands compose through their JSON. Transcribe once, then cut:
 
