@@ -69,6 +69,7 @@ struct DesertAnt: AsyncParsableCommand {
     /// ArgumentParser's own entry point, plus a wait for core's network requests still in
     /// flight: a process that exits under one can crash on the way out.
     static func main() async {
+        setenv("DAL_APP_ID", "com.desertant.cli", 1)
         do {
             var command = try parseAsRoot()
             if var asyncCommand = command as? AsyncParsableCommand {
