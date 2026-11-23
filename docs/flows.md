@@ -162,4 +162,3 @@ A file a step makes along the way, as clear's clean audio, is kept only when a `
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.
 - `readtext` runs on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
-- Eye is in closed beta, so the `eye` and `duplicates` steps need `HF_TOKEN` set to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye).

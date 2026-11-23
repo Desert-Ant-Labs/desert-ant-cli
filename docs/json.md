@@ -189,7 +189,7 @@ A text that is empty or only spaces is an error, exit code 1, like no text at al
 ```json
 {
   "input": "trip/IMG_9641.HEIC",
-  "model": "eye@v1.0.0",
+  "model": "eye@v1.1.0",
   "width": 4032,
   "height": 3024,
   "kind": "photo",
@@ -228,7 +228,24 @@ With `--has` or `--not` and several photos, the result is an array of the photo 
 - `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
 - `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
 
-`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, and `eye` take several paths, or a folder, and `--recursive` looks inside its folders. One path returns the document below. Several paths or a folder return an array of those documents, in the order the files ran, each with its `input`. A file the model does not read is skipped, with a note on stderr. A file that fails is left out, with its message on stderr, and the exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name one file's document, so a batch refuses them. desertant writes each output beside its input, and a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files the first run wrote.
+`desertant face <photo> --json` prints the faces in the photo. On Linux, reading the photo needs ffmpeg.
+
+```json
+{
+  "input": "/work/IMG_0412.jpg",
+  "faces": [{"box": {"x0": 0.23, "y0": 0.22, "x1": 0.46, "y1": 0.59}, "confidence": 0.76,
+             "landmarks": [{"x": 0.30, "y": 0.38}, {"x": 0.40, "y": 0.38}, {"x": 0.35, "y": 0.46}, {"x": 0.31, "y": 0.52}, {"x": 0.39, "y": 0.52}]}]
+}
+```
+
+Boxes and landmarks are fractions of the upright image, from 0 to 1, measured from the top left. `landmarks` are the left eye, the right eye, the nose tip, and the left and right mouth corners. `confidence` is the detector's, and faces below 0.35 are left out; `--min-confidence` moves that line. `faceprint` (128 numbers) appears with `--faceprints`.
+
+With several photos or a folder, the questions return their own shapes:
+
+- `--people`: `{"photos": 120, "faces": 310, "people": [{"person": 1, "photos": ["/work/IMG_0412.jpg"], "faces": [{"input": "/work/IMG_0412.jpg", "box": {...}, "confidence": 0.76}]}]}`, the most photographed person first. A person is listed once they are in two photos or more.
+- `--find <photo>`: an array of `{"input", "score"}`, the photos of the person in that photo, most alike first. `score` is the cosine similarity, and a photo counts at 0.41, or at 0.51 under `--strict`.
+
+`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, `eye`, and `face` take several paths, or a folder, and `--recursive` looks inside its folders. One path returns the document below. Several paths or a folder return an array of those documents, in the order the files ran, each with its `input`. A file the model does not read is skipped, with a note on stderr. A file that fails is left out, with its message on stderr, and the exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name one file's document, so a batch refuses them. desertant writes each output beside its input, and a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files the first run wrote.
 
 `desertant voz <file> --json` prints the transcript document. `clips --transcript` reads this file as is.
 

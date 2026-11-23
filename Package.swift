@@ -42,7 +42,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
-        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "4.3.0", traits: mlx ? ["MLX"] : []),
+        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "5.0.0", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
         .executableTarget(
@@ -68,6 +68,7 @@ let package = Package(
                 .product(name: "Uhm", package: core),
                 .product(name: "Moderator", package: core),
                 .product(name: "Eye", package: core),
+                .product(name: "Face", package: core),
                 .product(name: "Who", package: core),
                 // The download cache lives here; the cache command reads its root.
                 .product(name: "ModelStore", package: core),

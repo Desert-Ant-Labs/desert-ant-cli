@@ -23,6 +23,7 @@ enum Runners {
         ToxicRunner(),
         ModeratorRunner(),
         EyeRunner(),
+        FaceRunner(),
         WhoRunner(),
         ClipsRunner(),
         UhmRunner(),

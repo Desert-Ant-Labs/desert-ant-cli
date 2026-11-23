@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "4.3.0",
+  "sdkVersion": "5.0.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -49,7 +49,7 @@ enum Embedded {
       "home": "desert-ant-core",
       "sdks": {
         "swift": { "status": "live", "package": "Align", "platforms": ["apple", "linux", "windows"] },
-        "kotlin": { "status": "none" },
+        "kotlin": { "status": "live", "package": "ai.desertant:align", "platforms": ["android"] },
         "js": { "status": "live", "package": "@desert-ant-labs/align", "platforms": ["node"] }
       },
       "weights": {
@@ -270,7 +270,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/eye",
         "url": "https://huggingface.co/desert-ant-labs/eye",
-        "revision": "v1.0.0",
+        "revision": "v1.1.0",
         "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
@@ -293,25 +293,26 @@ enum Embedded {
     {
       "id": "face",
       "name": "Face",
-      "tagline": "Find people in photos, private on the device.",
+      "tagline": "Find people in photos, on device.",
       "summary": "On-device face matching across a photo library or through a video.",
       "category": "Face matching",
-      "lifecycle": "closed-beta",
-      "visibility": "internal",
-      "home": null,
+      "lifecycle": "stable",
+      "visibility": "public",
+      "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "planned" },
-        "kotlin": { "status": "none" },
-        "js": { "status": "none" }
+        "swift": { "status": "live", "package": "Face", "platforms": ["apple", "linux", "windows"] },
+        "kotlin": { "status": "live", "package": "ai.desertant:face", "platforms": ["android"] },
+        "js": { "status": "live", "package": "@desert-ant-labs/face", "platforms": ["web", "node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/face",
         "url": "https://huggingface.co/desert-ant-labs/face",
-        "revision": "main",
+        "revision": "v1.0.0",
         "license": "desert-ant-labs-source-available"
       },
-      "runtime": ["coreml"],
+      "runtime": ["coreml", "litert"],
+      "notices": [],
       "variants": [],
       "hub": {
         "tags": ["image", "face-recognition", "face-matching", "embeddings", "on-device", "core-ml"],
@@ -391,7 +392,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/moderator",
         "url": "https://huggingface.co/desert-ant-labs/moderator",
-        "revision": "v1.0.0",
+        "revision": "v1.1.0",
         "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
@@ -505,8 +506,8 @@ enum Embedded {
     {
       "id": "shapes",
       "name": "Shapes",
-      "tagline": "Rough sketch. Perfect shape.",
-      "summary": "On-device single-stroke shape recognition.",
+      "tagline": "Snap hand-drawn shapes to clean ones.",
+      "summary": "On-device shape recognition for pen, touch and mouse input.",
       "category": "Shape recognition",
       "lifecycle": "stable",
       "visibility": "public",
@@ -520,7 +521,7 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/shapes",
         "url": "https://huggingface.co/desert-ant-labs/shapes",
-        "revision": "v1.0.0",
+        "revision": "v2.2.0",
         "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
@@ -532,7 +533,8 @@ enum Embedded {
       },
       "languages": null,
       "notices": [
-        { "kind": "data", "name": "Quick, Draw! dataset", "by": "Google", "license": "CC-BY-4.0", "source": "https://github.com/googlecreativelab/quickdraw-dataset" }
+        { "kind": "data", "name": "Quick, Draw! dataset", "by": "Google", "license": "CC-BY-4.0", "source": "https://github.com/googlecreativelab/quickdraw-dataset" },
+        { "kind": "data", "name": "DIDI: Digital Ink Diagram data", "by": "Google", "license": "CC-BY-4.0", "source": "https://github.com/google-research/google-research/tree/master/didi_dataset" }
       ],
       "demo": {
         "space": "desert-ant-labs/shapes-demo",
@@ -632,8 +634,8 @@ enum Embedded {
     {
       "id": "toxic",
       "name": "Toxic",
-      "tagline": "Catch hate speech before it posts.",
-      "summary": "On-device hate-speech triage for European languages.",
+      "tagline": "Catch hate speech before it's posted.",
+      "summary": "On-device hate-speech triage in 35 languages.",
       "category": "Hate speech triage",
       "lifecycle": "beta",
       "visibility": "public",
@@ -1114,7 +1116,7 @@ The first line names the kind of image (photo, selfie, screenshot, photo of scre
 
 Keeper, aesthetic, and cover are percentiles: an aesthetic of 0.76 scores higher than 76% of the photos Eye was calibrated on. The second line holds the tags that reach a confidence of 0.5, most confident first, and the third counts faces, closed eyes, and pets, and says when a photo is turned on its side.
 
-Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG. Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye) before the first run.
+Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG.
 
 ## Filters
 
@@ -1444,7 +1446,6 @@ A file a step makes along the way, as clear's clean audio, is kept only when a `
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.
 - `readtext` runs on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
-- Eye is in closed beta, so the `eye` and `duplicates` steps need `HF_TOKEN` set to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye).
 """###),
         (name: "json", markdown: ###"""
 # JSON contracts
@@ -1638,7 +1639,7 @@ A text that is empty or only spaces is an error, exit code 1, like no text at al
 ```json
 {
   "input": "trip/IMG_9641.HEIC",
-  "model": "eye@v1.0.0",
+  "model": "eye@v1.1.0",
   "width": 4032,
   "height": 3024,
   "kind": "photo",
@@ -1677,7 +1678,24 @@ With `--has` or `--not` and several photos, the result is an array of the photo 
 - `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
 - `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
 
-`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, and `eye` take several paths, or a folder, and `--recursive` looks inside its folders. One path returns the document below. Several paths or a folder return an array of those documents, in the order the files ran, each with its `input`. A file the model does not read is skipped, with a note on stderr. A file that fails is left out, with its message on stderr, and the exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name one file's document, so a batch refuses them. desertant writes each output beside its input, and a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files the first run wrote.
+`desertant face <photo> --json` prints the faces in the photo. On Linux, reading the photo needs ffmpeg.
+
+```json
+{
+  "input": "/work/IMG_0412.jpg",
+  "faces": [{"box": {"x0": 0.23, "y0": 0.22, "x1": 0.46, "y1": 0.59}, "confidence": 0.76,
+             "landmarks": [{"x": 0.30, "y": 0.38}, {"x": 0.40, "y": 0.38}, {"x": 0.35, "y": 0.46}, {"x": 0.31, "y": 0.52}, {"x": 0.39, "y": 0.52}]}]
+}
+```
+
+Boxes and landmarks are fractions of the upright image, from 0 to 1, measured from the top left. `landmarks` are the left eye, the right eye, the nose tip, and the left and right mouth corners. `confidence` is the detector's, and faces below 0.35 are left out; `--min-confidence` moves that line. `faceprint` (128 numbers) appears with `--faceprints`.
+
+With several photos or a folder, the questions return their own shapes:
+
+- `--people`: `{"photos": 120, "faces": 310, "people": [{"person": 1, "photos": ["/work/IMG_0412.jpg"], "faces": [{"input": "/work/IMG_0412.jpg", "box": {...}, "confidence": 0.76}]}]}`, the most photographed person first. A person is listed once they are in two photos or more.
+- `--find <photo>`: an array of `{"input", "score"}`, the photos of the person in that photo, most alike first. `score` is the cosine similarity, and a photo counts at 0.41, or at 0.51 under `--strict`.
+
+`voz`, `uhm`, `ear`, `who`, `clear`, `clips`, `moderator`, `eye`, and `face` take several paths, or a folder, and `--recursive` looks inside its folders. One path returns the document below. Several paths or a folder return an array of those documents, in the order the files ran, each with its `input`. A file the model does not read is skipped, with a note on stderr. A file that fails is left out, with its message on stderr, and the exit code is 1 once the rest have run. `--output`, `--transcript`, and `--format` name one file's document, so a batch refuses them. desertant writes each output beside its input, and a second run of `clear` on the same folder also enhances the `talk_clear.mp4` files the first run wrote.
 
 `desertant voz <file> --json` prints the transcript document. `clips --transcript` reads this file as is.
 
@@ -2088,7 +2106,8 @@ Every command takes `--json` for one JSON value on stdout, and a text model read
 - Cut the moments worth sharing into clips: `desertant clips talk.mp4 --json` transcribes, picks the moments, and writes one file per clip beside the input, with each clip's start, end, text, and file. `--count 5` sets how many to look for, `--select-only` returns the moments without writing files, and `--transcript talk.srt` (or `-` with `voz --json` on stdin) skips transcribing.
 - Burn captions into the clips with `desertant clips talk.mp4 --captions burn --json`. Set the look with `--caption-style shadow|outline|box`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color yellow` or `#ffcc00`, `--caption-weight bold`, `--caption-size 0.06` (a share of the frame's height), and `--caption-font "<family or .ttf>"`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one; `--caption-lines 1|2` and `--caption-words 4` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead. On audio there is no picture, so burn writes the `.srt` and says so in `notes`.
 - Flag nudity in a photo before upload or display: `desertant moderator photo.jpg --json` scores it 0 to 1 and says whether the score crosses the threshold.
-- Read photos: `desertant eye photo.jpg --json` gives the kind of image, its scores, tags, faces, people, and pets. On a folder, one flag asks one question: `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates with the keeper first, `--best` picks one, and `--sort aesthetic` or `--similar-to photo.jpg` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame and `--has people` returns the stretches that match. Use `--strict` before moving or deleting anything. Eye is in closed beta and needs `HF_TOKEN`.
+- Read photos: `desertant eye photo.jpg --json` gives the kind of image, its scores, tags, faces, people, and pets. On a folder, one flag asks one question: `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates with the keeper first, `--best` picks one, and `--sort aesthetic` or `--similar-to photo.jpg` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame and `--has people` returns the stretches that match. Use `--strict` before moving or deleting anything.
+- Find people in photos: `desertant face photo.jpg --json` gives each face's box and confidence. On a folder, `--people` groups the photos into people, and `--find selfie.jpg` lists the photos of the person in it, most alike first. Use `--strict` with `--find` before sharing anything.
 
 A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 
@@ -2204,7 +2223,8 @@ To run a model, call its command. Every command takes `--json` and reads stdin w
 - `desertant clips <file> --json` cuts the moments worth sharing into clips and reports each clip's start, end, text, and file. `--count 5` sets how many, `--select-only` gives timestamps only, and `--transcript <file>` skips transcribing.
 - `desertant clips <file> --captions burn --json` draws the captions into each clip. Set the look with `--caption-style shadow|outline|box`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color`, `--caption-weight`, `--caption-size`, and `--caption-font`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one, and `--caption-lines` and `--caption-words` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead.
 - `desertant moderator <image> --json` scores an image for nudity and says whether the score crosses the threshold.
-- `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags, faces, people, and pets. On a folder, `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates, `--best` picks one, and `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame. Use `--strict` before moving or deleting anything. Eye needs `HF_TOKEN` during its beta.
+- `desertant eye <photo> --json` names what a photo is, scores it, and lists its tags, faces, people, and pets. On a folder, `--has dog --not blurry` lists the matches, `--duplicates` groups near-duplicates, `--best` picks one, and `--sort aesthetic` ranks. `--crop 1:1` writes a crop. On a video, `--thumbnail` writes the best frame. Use `--strict` before moving or deleting anything.
+- `desertant face <photo> --json` lists the faces in a photo. On a folder, `--people` groups the photos into people, and `--find selfie.jpg` lists the photos of that person. Use `--strict` with `--find` before sharing anything.
 
 A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 

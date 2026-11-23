@@ -50,6 +50,7 @@ struct DesertAnt: AsyncParsableCommand {
             ToxicVerb.self,
             ModeratorVerb.self,
             EyeVerb.self,
+            FaceVerb.self,
             FlowCommand.self,
             // Agents.
             Schema.self,

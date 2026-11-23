@@ -67,7 +67,7 @@ check "info" 0 "redact" "$da" info redact
 check "unknown model" 1 "no model named nope" "$da" run nope --input hi
 
 if [[ "$os" == Linux ]]; then
-  for id in redact emo gist tongue toxic ear clear moderator who voz eye uhm; do
+  for id in redact emo gist tongue toxic ear clear moderator who voz eye face uhm; do
     check "runs $id here" 0 "\"$id\"" "$da" doctor --json
   done
 fi
@@ -132,15 +132,14 @@ if [[ $has_ffmpeg == 1 ]]; then
   check "moderator png" 0 "^safe" "$da" moderator photo.png
   check "moderator not an image" 1 "could not read folder/notes.txt as an image" "$da" moderator folder/notes.txt
   check "who on video" 0 '"speakerCount"' "$da" who talk.mp4 --json
-  # Eye's weights are gated during the beta, so these run where a token can fetch them.
-  if [[ -n "${HF_TOKEN:-}" ]]; then
-    check "eye jpg" 0 '"kind" : ' "$da" eye photo.jpg --json
-    check "eye crop" 0 "photo_crop\.jpg" "$da" eye photo.jpg --crop 1:1
-    [[ -s photo_crop.jpg ]] && ok "eye wrote photo_crop.jpg" || fail "eye wrote photo_crop.jpg"
-    check "eye filter" 0 "" "$da" eye photo.jpg photo.png --not screenshot
-    check "eye video thumbnail" 0 "talk_thumbnail\.jpg" "$da" eye talk.mp4 --thumbnail --every 2
-    [[ -s talk_thumbnail.jpg ]] && ok "eye wrote talk_thumbnail.jpg" || fail "eye wrote talk_thumbnail.jpg"
-  fi
+  check "eye jpg" 0 '"kind" : ' "$da" eye photo.jpg --json
+  check "eye crop" 0 "photo_crop\.jpg" "$da" eye photo.jpg --crop 1:1
+  [[ -s photo_crop.jpg ]] && ok "eye wrote photo_crop.jpg" || fail "eye wrote photo_crop.jpg"
+  check "eye filter" 0 "" "$da" eye photo.jpg photo.png --not screenshot
+  check "eye video thumbnail" 0 "talk_thumbnail\.jpg" "$da" eye talk.mp4 --thumbnail --every 2
+  [[ -s talk_thumbnail.jpg ]] && ok "eye wrote talk_thumbnail.jpg" || fail "eye wrote talk_thumbnail.jpg"
+  check "face jpg" 0 '"faces" : \[' "$da" face photo.jpg --json
+  check "face people" 0 '"people" : \[' "$da" face photo.jpg photo.png --people --json
   check "clips cuts video" 0 '"file" : ".*talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --json
   [[ -s talk_clip-1.mp4 ]] && ok "clip file written" || fail "clip file written"
   check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts

@@ -145,6 +145,35 @@ struct EyeVerb: AsyncParsableCommand {
     }
 }
 
+struct FaceVerb: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "face", abstract: Manifest.summary("face"),
+        discussion: """
+        One photo prints its faces. Several photos or a folder answer one question together: \
+        --people groups them into people, and --find lists the photos of the person in one photo.
+        """)
+    @Argument(help: "The photos, or a folder of them.") var files: [String]
+    @Flag(help: "Group the photos into people, each with the photos they are in.") var people = false
+    @Option(help: "List the photos of the person in this photo, most alike first.") var find: String?
+    @Flag(help: "With --find, count a match at 1 false match in 10,000 instead of 1 in 1,000.") var strict = false
+    @Option(name: .customLong("min-confidence"), help: "Leave out faces the detector scores below this, from 0 to 1. Default 0.35.") var minConfidence: Double?
+    @Option(name: .customLong("max-faces"), help: "The most faces to find per photo. Default 20.") var maxFaces: Int?
+    @Flag(help: "Put each face's 128-number faceprint in the JSON.") var faceprints = false
+    @Flag(help: "Also include the files in subfolders.") var recursive = false
+    @OptionGroup var global: GlobalOptions
+
+    func run() async throws {
+        var args = RunArguments()
+        args.set("people", people ? "true" : nil)
+        args.set("find", find)
+        args.set("strict", strict ? "true" : nil)
+        args.set("min-confidence", minConfidence)
+        args.set("max-faces", maxFaces)
+        args.set("faceprints", faceprints ? "true" : nil)
+        try await Execute.run(id: "face", rawInputs: files, recursive: recursive, arguments: args, out: Output(options: global))
+    }
+}
+
 #if TITLE
 struct TitleVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(

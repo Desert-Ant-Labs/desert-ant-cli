@@ -21,7 +21,7 @@ The first line names the kind of image (photo, selfie, screenshot, photo of scre
 
 Keeper, aesthetic, and cover are percentiles: an aesthetic of 0.76 scores higher than 76% of the photos Eye was calibrated on. The second line holds the tags that reach a confidence of 0.5, most confident first, and the third counts faces, closed eyes, and pets, and says when a photo is turned on its side.
 
-Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG. Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye) before the first run.
+Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG.
 
 ## Filters
 

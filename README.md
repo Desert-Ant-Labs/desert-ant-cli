@@ -121,6 +121,8 @@ Each model has a page on [desertant.com](https://desertant.com/models/) with its
   Flag nudity or sexual content before a photo is uploaded or shown.
 - **[Eye](https://desertant.com/models/eye/)** `da eye photos/`  
   Find, rank, and crop photos, group near-duplicates, and pick a video's thumbnail.
+- **[Face](https://desertant.com/models/face/)** `da face photos/ --people`  
+  Group a photo library into people, or find every photo of one person.
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
@@ -205,7 +207,7 @@ da eye photos/ --recursive --all-tags --json > photos.json
 jq -r '.[] | select(.kind == "receipt") | .input' photos.json
 ```
 
-Eye is in closed beta, so set `HF_TOKEN` to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye). `da docs eye` lists the tags and the rest of the flags.
+`da docs eye` lists the tags and the rest of the flags.
 
 ## Flows
 

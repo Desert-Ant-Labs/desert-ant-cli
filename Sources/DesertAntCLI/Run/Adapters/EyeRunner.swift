@@ -32,11 +32,7 @@ struct EyeRunner: SetRunner {
 
     func isDownloaded() -> Bool { model.isDownloaded() }
     func download(_ progress: @escaping @Sendable (Double) -> Void) async throws {
-        do {
-            try await model.download(progress: progress)
-        } catch {
-            throw RunError("could not download eye: \(error.localizedDescription) Eye is in closed beta, so set HF_TOKEN to a Hugging Face token with access to desert-ant-labs/eye.")
-        }
+        try await model.download(progress: progress)
     }
 
     struct Photo: Encodable {
