@@ -29,6 +29,7 @@ struct GistRunner: ModelRunner {
             for t in topics {
                 out.line("\(t.name)  \(out.palette.dim(String(format: "%.2f", t.score)))")
             }
+            Advice.notes(for: id, text: input).forEach(out.note)
         }
     }
 }

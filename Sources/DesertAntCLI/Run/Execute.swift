@@ -15,7 +15,7 @@ enum Execute {
         let input: String
         switch runner.inputKind {
         case .text:
-            guard let text = rawInput ?? readStdin() else {
+            guard let text = rawInput ?? readStdin(), !text.allSatisfy(\.isWhitespace) else {
                 throw RunError("\(id) needs text. Pass it as an argument or pipe it in.")
             }
             input = text

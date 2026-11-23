@@ -16,17 +16,18 @@ The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machi
 
 ## Run a model
 
-Every command takes `--json` for one JSON value on stdout, and a text model reads stdin when given no argument. Exit code 0 is success, 1 a runtime error, 64 a usage error, with the message on stderr. Weights download on first use with progress on stderr, so stdout stays clean JSON.
+Every command takes `--json` for one JSON value on stdout, and a text model reads stdin when given no argument. Exit code 0 is success, 1 a runtime error, 64 a usage error, with the message on stderr. Weights download on first use with progress on stderr, so stdout stays clean JSON. When `tongue`, `toxic`, or `redact` returns `notes`, the text fell outside what the model reads best, such as a language it does not list; weigh the result less and tell the user why.
 
 - Redact personal data before sending text anywhere: `desertant redact "Email Anna at anna@example.hu" --json` returns the redacted text and the placeholder map, so you can restore the originals in a reply.
 - Suggest emoji: `desertant emo "pay my bills" --json`.
 - Tag what a text is about, from 36 topics: `desertant gist "<article text>" --json`.
 - Name the language a short text is written in: `desertant tongue "<text>" --json`.
+- Check a comment for hate, abuse, and threats before it posts: `desertant toxic "<text>" --json` returns whether it is toxic, which flags fired, and the group a hateful text targets.
 - Write a title and a description for a passage: `desertant title "<text>" --json`. Apple silicon only.
 - Transcribe with a time on every word: `desertant voz talk.mp4 --json`. `--srt`, `--vtt`, and `--txt` also write those files beside the input.
 - Label who said what: `desertant voz talk.mp4 --speakers --json` puts a `speaker` on every sentence, and `--names "Anna,Ben"` names them in the order they first speak. `desertant who talk.mp4 --json` alone gives each speaker's time and turns.
 - Clean up a recording's sound, studio sound: `desertant clear meeting.mp4 --json` writes `meeting_clear.mp4` and reports the path.
-- Find each uh, um, and hmm: `desertant uhm talk.mp4 --json`. Apple silicon only.
+- Find each uh, um, and hmm: `desertant uhm talk.mp4 --json`.
 - Name the language spoken: `desertant ear talk.mp4 --json`.
 - Cut the moments worth sharing into clips: `desertant clips talk.mp4 --json` transcribes, picks the moments, and writes one file per clip beside the input, with each clip's start, end, text, and file. `--count 5` sets how many to look for, `--select-only` returns the moments without writing files, and `--transcript talk.srt` (or `-` with `voz --json` on stdin) skips transcribing.
 - Burn captions into the clips with `desertant clips talk.mp4 --captions burn --json`. Set the look with `--caption-style shadow|outline|box`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color yellow` or `#ffcc00`, `--caption-weight bold`, `--caption-size 0.06` (a share of the frame's height), and `--caption-font "<family or .ttf>"`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one; `--caption-lines 1|2` and `--caption-words 4` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead. On audio there is no picture, so burn writes the `.srt` and says so in `notes`.
@@ -46,7 +47,7 @@ A flow runs several models on a file in one command. Reach for one when the user
 - `who-said-what`: a transcript with each speaker's name.
 - `meeting-notes`: who said what, with personal data replaced and the main topic tagged.
 - `podcast-clips`: clean sound, then clips with captions burned in.
-- `filler-words`: each uh, um, and hmm with its time. macOS only.
+- `filler-words`: each uh, um, and hmm with its time.
 - `photo-keepers`: copy the photos worth keeping, one of each near-duplicate, into a Keepers folder.
 - `find-receipts`: copy the receipts among some photos into a Receipts folder.
 - `redact-a-document`: a text with its personal data replaced.

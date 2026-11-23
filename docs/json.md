@@ -146,6 +146,26 @@ To restore originals in a reply, replace each `placeholder` with its `original`.
 
 `language` is an ISO 639 code, and is left out when there was nothing to read. `reliability` is `confident`, `likely`, `tentative`, or `empty`, judged from the text's length and the lead over the runner-up rather than the probability alone. `tooCloseToCall` is true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
 
+`desertant toxic "<text>" --json` says whether a text is hateful, abusive, or threatening.
+
+```json
+{
+  "toxic": true,
+  "flags": ["hateful", "abusive"],
+  "targets": ["nationalOrEthnicOrigin"],
+  "scores": {"hateful": 0.73, "abusive": 0.98, "threat": 0.11, "race": 0.07, "religion": 0.04, "nationalOrEthnicOrigin": 0.92,
+             "sexualOrientation": 0.02, "gender": 0.05, "disability": 0.01, "age": 0.01, "other": 0.06},
+  "thresholds": {"hateful": 0.46, "abusive": 0.44, "threat": 0.35, "race": 0.53, "religion": 0.47, "nationalOrEthnicOrigin": 0.37,
+                 "sexualOrientation": 0.39, "gender": 0.45, "disability": 0.34, "age": 0.5, "other": 0.21}
+}
+```
+
+`toxic` is true when `hateful`, `abusive`, or `threat` reaches its threshold, and `flags` lists the ones that did. `targets` lists the groups a hateful text is about, highest score first: `race`, `religion`, `nationalOrEthnicOrigin`, `sexualOrientation`, `gender`, `disability`, `age`, or `other`. `scores` and `thresholds` hold all eleven, each from 0 to 1; the thresholds come with the model.
+
+`tongue`, `toxic`, and `redact` add `notes` when a text falls outside what the model reads best: a language Toxic or Redact does not list, or a text Tongue can only guess at. The result still stands, and a note says how far to trust it. `notes` is left out when there is nothing to say. On a terminal, the same notes print under the result, and Emo and Gist print theirs too: a language Emo does not list, a long text for Emo, and a word or two for Gist.
+
+A text that is empty or only spaces is an error, exit code 1, like no text at all.
+
 `desertant title "<text>" --json` prints `{"title", "description"}`, on Apple silicon builds.
 
 `desertant moderator <image> --json` prints the nudity score. On Linux, reading the image needs ffmpeg.
@@ -241,6 +261,8 @@ With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order
   "fillers": [{"start": 4.21, "end": 4.52, "durationSec": 0.31, "type": "um", "confidence": 0.94}]
 }
 ```
+
+`type` is `uh`, `um`, `hmm`, `and`, or `other` on macOS. On Linux, Uhm finds each span but not which filler it is, and `type` is left out.
 
 `desertant ear <file> --json` prints the language spoken.
 

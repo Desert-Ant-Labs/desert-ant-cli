@@ -41,6 +41,7 @@ struct RedactRunner: ModelRunner {
     struct Result: Encodable {
         let redacted: String
         let items: [Item]
+        let notes: [String]?
     }
     struct Item: Encodable {
         let label: String
@@ -58,16 +59,19 @@ struct RedactRunner: ModelRunner {
             out.warn("Redact runs without the Neural Engine on this Mac, so it does not detect names, addresses, or cities. Emails, cards, and IBANs are still redacted.")
         }
         let redaction = try await model.redaction(of: input, options: opts)
+        let notes = Advice.notes(for: id, text: input)
         if out.isJSON {
             out.emit(Result(
                 redacted: redaction.redactedText,
                 items: redaction.items.map {
                     Item(label: $0.label.rawValue, original: $0.original,
                          placeholder: $0.placeholder, confidence: $0.confidence)
-                }
+                },
+                notes: notes.isEmpty ? nil : notes
             ))
         } else {
             out.line(redaction.redactedText)
+            notes.forEach(out.note)
         }
     }
 }

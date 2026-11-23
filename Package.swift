@@ -42,7 +42,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.0"),
-        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "4.2.1", traits: mlx ? ["MLX"] : []),
+        .package(url: "https://github.com/desert-ant-labs/desert-ant-core.git", exact: "4.3.0", traits: mlx ? ["MLX"] : []),
     ],
     targets: [
         .executableTarget(
@@ -58,13 +58,14 @@ let package = Package(
                 .product(name: "Clear", package: core),
                 .product(name: "Ear", package: core),
                 .product(name: "Tongue", package: core),
+                .product(name: "Toxic", package: core),
                 // Audio decode for the models that take samples (ear, uhm).
                 .product(name: "AudioIO", package: core),
                 // The clips pipeline and transcripts. Voz runs on Core ML on Apple, LiteRT on Linux, ONNX Runtime on Windows.
                 .product(name: "Clips", package: core),
                 .product(name: "Transcript", package: core),
                 .product(name: "Voz", package: core, condition: .when(platforms: [.macOS, .linux, .windows])),
-                .product(name: "Uhm", package: core, condition: .when(platforms: [.macOS])),
+                .product(name: "Uhm", package: core),
                 .product(name: "Moderator", package: core),
                 .product(name: "Eye", package: core),
                 .product(name: "Who", package: core),

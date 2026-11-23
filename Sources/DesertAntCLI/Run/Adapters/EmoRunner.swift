@@ -26,6 +26,7 @@ struct EmoRunner: ModelRunner {
             out.emit(suggestions.map { Suggestion(emoji: $0.emoji, confidence: $0.confidence) })
         } else {
             out.line(suggestions.map(\.emoji).joined(separator: " "))
+            Advice.notes(for: id, text: input).forEach(out.note)
         }
     }
 }

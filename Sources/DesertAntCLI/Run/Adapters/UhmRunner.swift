@@ -1,5 +1,3 @@
-#if canImport(CoreML)
-import AudioIO
 import Foundation
 import Uhm
 
@@ -34,7 +32,7 @@ struct UhmRunner: ModelRunner {
         guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)
         progress.update(nil, label: "reading audio")
-        let samples = try await AudioIO.decode(path: input, sampleRate: 16_000)
+        let samples = try await Media.decodeMono(input, sampleRate: 16_000)
         progress.update(nil, label: FirstLoad.label("uhm"))
         let result = try await model.analyze(samples: samples, sampleRate: 16_000) {
             progress.update($0, label: "analyzing")
@@ -57,4 +55,3 @@ struct UhmRunner: ModelRunner {
         out.note("\(count == 0 ? "No fillers" : "\(count) filler\(count == 1 ? "" : "s")") in \(Format.spoken(result.audioDuration)) of audio.")
     }
 }
-#endif

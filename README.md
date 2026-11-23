@@ -115,6 +115,8 @@ Each model has a page on [desertant.com](https://desertant.com/models/) with its
   Tag a post or article with topics, from a set of 36.
 - **[Tongue](https://desertant.com/models/tongue/)** `da tongue "<text>"`  
   Name the language a short text is written in, from three words, in 84 languages.
+- **[Toxic](https://desertant.com/models/toxic/)** `da toxic "<text>"`  
+  Flag hate, abuse, and threats in a comment, and the group a hateful one targets.
 - **[Moderator](https://desertant.com/models/moderator/)** `da moderator photo.jpg`  
   Flag nudity or sexual content before a photo is uploaded or shown.
 - **[Eye](https://desertant.com/models/eye/)** `da eye photos/`  
@@ -122,7 +124,7 @@ Each model has a page on [desertant.com](https://desertant.com/models/) with its
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
-Redact, Emo, Gist, and Tongue are multilingual. Uhm and Title run on Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on your machine.
+Redact, Emo, Gist, and Tongue are multilingual, and Toxic reads 35 languages. Title runs on Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on your machine.
 
 ## Transcripts and captions
 

@@ -60,6 +60,17 @@ struct TongueVerb: AsyncParsableCommand {
     }
 }
 
+struct ToxicVerb: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "toxic", abstract: Manifest.summary("toxic"))
+    @Argument(help: "The text. Without it, desertant reads stdin.") var text: String?
+    @OptionGroup var global: GlobalOptions
+
+    func run() async throws {
+        try await Execute.run(id: "toxic", rawInput: text, arguments: RunArguments(), out: Output(options: global))
+    }
+}
+
 struct ModeratorVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "moderator", abstract: Manifest.summary("moderator"))

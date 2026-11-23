@@ -25,7 +25,7 @@ Run several models on a file in one command: clean up a recording, transcribe it
 | `who-said-what` | Transcribes a recording and names the speaker of each line. |
 | `meeting-notes` | Names each speaker, replaces personal data with placeholders, and tags the main topic. |
 | `podcast-clips` | Cleans up the sound, then cuts the moments worth sharing into clips with captions burned in. |
-| `filler-words` | Lists each uh, um, and hmm with its time. Runs on macOS. |
+| `filler-words` | Lists each uh, um, and hmm with its time. |
 | `photo-keepers` | Copies the photos worth keeping into a Keepers folder: no blurry or accidental shots, one of each near-duplicate. |
 | `find-receipts` | Copies the receipts among your photos into a Receipts folder. |
 | `redact-a-document` | Replaces the personal data in a text with placeholders and prints it. |
@@ -118,12 +118,13 @@ An `if` step sends each item down `yes` or `no` and leaves a gap on the other si
 | `clear` | Studio sound: noise and echo out, the voice leveled. | `loudness`: podcast, spotify, youtube, broadcast, or off |
 | `clips` | Cuts the moments worth sharing into clips. | `count`, `captions`, and the caption settings below |
 | `captions` | SRT and WebVTT from voz's words, with speaker names from who's turns. | |
-| `uhm` | The uh, um, and hmm in a recording, with times. macOS only. | |
+| `uhm` | The uh, um, and hmm in a recording, with times. | |
 | `ear` | The language spoken in a recording. | |
 | `redact` | Personal data replaced with placeholders. | `confidence` |
 | `gist` | The topics of a text, from 36. | `limit` |
 | `emo` | Emoji that fit a text. | `limit` |
 | `tongue` | The language of a short text. | |
+| `toxic` | Whether a text is hateful, abusive, or threatening, and the group a hateful text targets. | |
 | `eye` | What a photo shows, its kind, quality, faces, and framing. | |
 | `moderator` | Whether a photo is safe to show. | `threshold` |
 | `duplicates` | The photos to keep from sets of near-duplicates, and the rest. | |
@@ -160,5 +161,5 @@ A file a step makes along the way, as clear's clean audio, is kept only when a `
 - A flow file holds at most 8MB and a million values.
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.
-- `uhm` and `readtext` run on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
+- `readtext` runs on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
 - Eye is in closed beta, so the `eye` and `duplicates` steps need `HF_TOKEN` set to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye).

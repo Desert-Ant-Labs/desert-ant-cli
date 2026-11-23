@@ -16,6 +16,7 @@ struct TongueRunner: ModelRunner {
         let reliability: String
         let tooCloseToCall: Bool
         let candidates: [Candidate]
+        let notes: [String]?
     }
     struct Candidate: Encodable {
         let language: String
@@ -27,9 +28,11 @@ struct TongueRunner: ModelRunner {
         // Loading is a 2MB read from the package bundle, so the runner does not keep one.
         let detection = try Tongue().detect(input, topK: top)
         let candidates = detection.candidates.map { Candidate(language: $0.language, probability: $0.probability) }
+        let notes = Advice.tongue(detection, text: input)
         if out.isJSON {
             out.emit(Document(language: detection.language, reliability: detection.reliability.rawValue,
-                              tooCloseToCall: detection.isTooCloseToCall, candidates: candidates))
+                              tooCloseToCall: detection.isTooCloseToCall, candidates: candidates,
+                              notes: notes.isEmpty ? nil : notes))
             return
         }
         let p = out.palette
@@ -44,5 +47,6 @@ struct TongueRunner: ModelRunner {
         if detection.isTooCloseToCall, candidates.count > 1 {
             out.note("Too close to call between \(candidates[0].language) and \(candidates[1].language).")
         }
+        notes.forEach(out.note)
     }
 }

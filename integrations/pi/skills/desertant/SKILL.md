@@ -14,17 +14,18 @@ These commands show what is available here.
 - `desertant flow templates --json` lists ready-made flows.
 - `desertant docs <page>` prints a page offline: `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`.
 
-To run a model, call its command. Every command takes `--json` and reads stdin when given no argument. The exit code is 0 on success, 1 on a runtime error, and 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON.
+To run a model, call its command. Every command takes `--json` and reads stdin when given no argument. The exit code is 0 on success, 1 on a runtime error, and 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON. When `tongue`, `toxic`, or `redact` returns `notes`, the text fell outside what the model reads best, such as a language it does not list; weigh the result less and tell the user why.
 
 - `desertant redact "<text>" --json` replaces names, emails, and numbers with placeholders and returns the map. Redact before sending sensitive text to any remote service.
 - `desertant emo "<text>" --json` suggests emoji.
 - `desertant gist "<text>" --json` tags the topic, from 36.
 - `desertant tongue "<text>" --json` names the language the text is written in.
+- `desertant toxic "<text>" --json` flags hate, abuse, and threats, and the group a hateful text targets.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word; `--srt`, `--vtt`, or `--txt` also writes that file beside the input.
 - `desertant voz <file> --speakers --json` labels each sentence with its speaker, and `--names "Anna,Ben"` names them in the order they first speak. `desertant who <file> --json` gives each speaker's time and turns.
 - `desertant clear <file> --json` gives a recording studio sound and reports the output path. A video keeps its picture.
-- `desertant uhm <file> --json` finds the filler words (Apple silicon).
+- `desertant uhm <file> --json` finds the filler words.
 - `desertant ear <file> --json` names the language spoken.
 - `desertant clips <file> --json` cuts the moments worth sharing into clips and reports each clip's start, end, text, and file. `--count 5` sets how many, `--select-only` gives timestamps only, and `--transcript <file>` skips transcribing.
 - `desertant clips <file> --captions burn --json` draws the captions into each clip. Set the look with `--caption-style shadow|outline|box`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color`, `--caption-weight`, `--caption-size`, and `--caption-font`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one, and `--caption-lines` and `--caption-words` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead.
@@ -33,7 +34,7 @@ To run a model, call its command. Every command takes `--json` and reads stdin w
 
 A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 
-Run a flow when the user wants several models on a file in one go. desertant comes with these ready-made flows: `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words` (macOS), `photo-keepers`, `find-receipts`, and `redact-a-document`:
+Run a flow when the user wants several models on a file in one go. desertant comes with these ready-made flows: `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words`, `photo-keepers`, `find-receipts`, and `redact-a-document`:
 
 ```
 desertant flow run meeting-notes standup.m4a --json

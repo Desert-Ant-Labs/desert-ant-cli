@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "4.2.1",
+  "sdkVersion": "4.3.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -17,9 +17,26 @@ enum Embedded {
     "mavenGroup": "ai.desertant"
   },
   "license": {
-    "id": "desert-ant-labs-source-available-1.0",
-    "url": "https://license.desertant.com/1.0"
+    "id": "desert-ant-labs-source-available",
+    "url": "https://license.desertant.com/"
   },
+  "notices": [
+    { "kind": "library", "name": "LiteRT", "by": "Google", "license": "Apache-2.0", "source": "https://github.com/google-ai-edge/LiteRT", "copyright": "Copyright 2024 Google LLC", "note": "Runs the models off Apple platforms. Its C headers are in `Sources/CLiteRt`. `libLiteRt.so` ships in the Android library, with its GPU accelerator, and in the Linux Node packages." },
+    { "kind": "library", "name": "ICU", "by": "Unicode, Inc. and others", "license": "Unicode-3.0", "source": "https://github.com/unicode-org/icu", "copyright": "Copyright © 2016 and later Unicode, Inc. and others", "note": "Statically linked with Foundation, through swift-foundation-icu, into the Linux Node packages and the WebAssembly builds." },
+    { "kind": "library", "name": "swift-numerics", "by": "Apple", "license": "Apache-2.0", "source": "https://github.com/apple/swift-numerics", "note": "Math functions (`RealModule`), compiled into every build." },
+    { "kind": "library", "name": "JavaScriptKit", "by": "Yuta Saito and contributors", "license": "MIT", "source": "https://github.com/swiftwasm/JavaScriptKit", "copyright": "Copyright (c) 2020 Yuta Saito", "note": "Compiled into the WebAssembly builds." },
+    { "kind": "library", "name": "wasi-libc", "by": "WebAssembly contributors", "license": "MIT", "source": "https://github.com/WebAssembly/wasi-libc", "copyright": "Copyright © 2005-2020 Rich Felker, et al.", "note": "Statically linked into the WebAssembly builds. It includes musl." },
+    { "kind": "library", "name": "LiteRT.js", "by": "Google", "license": "Apache-2.0", "source": "https://www.npmjs.com/package/@litertjs/core", "note": "Runs the models in the browser. A peer dependency of the JavaScript packages." },
+    { "kind": "library", "name": "ONNX Runtime", "by": "Microsoft", "license": "MIT", "source": "https://github.com/microsoft/onnxruntime", "copyright": "Copyright (c) Microsoft Corporation", "note": "Runs Voz on Windows, through COnnxRuntime, and in the browser, as onnxruntime-web, a peer dependency." },
+    { "kind": "library", "name": "koffi", "by": "Niels Martignène", "license": "MIT", "source": "https://github.com/Koromix/koffi", "copyright": "Copyright 2023 Niels Martignène", "note": "Loads the native core in Node." },
+    { "kind": "library", "name": "browser_wasi_shim", "by": "bjorn3", "license": "Apache-2.0", "source": "https://github.com/bjorn3/browser_wasi_shim", "note": "Runs the WebAssembly builds in the browser." },
+    { "kind": "library", "name": "Mediabunny", "by": "Vanilagy", "license": "MPL-2.0", "source": "https://github.com/Vanilagy/mediabunny", "note": "Decodes audio and video for Voz in JavaScript." },
+    { "kind": "library", "name": "kotlinx.serialization", "by": "JetBrains", "license": "Apache-2.0", "source": "https://github.com/Kotlin/kotlinx.serialization", "note": "JSON in the Android library." },
+    { "kind": "library", "name": "kotlinx.coroutines", "by": "JetBrains", "license": "Apache-2.0", "source": "https://github.com/Kotlin/kotlinx.coroutines", "note": "Coroutines in the Android library." },
+    { "kind": "library", "name": "swift-xet", "by": "Hugging Face", "license": "Apache-2.0", "source": "https://github.com/huggingface/swift-xet", "note": "Optional, behind the `Xet` trait: Xet downloads on Apple platforms, with the SwiftNIO stack it pulls in." },
+    { "kind": "library", "name": "mlx-swift-lm", "by": "ml-explore", "license": "MIT", "source": "https://github.com/ml-explore/mlx-swift-lm", "copyright": "Copyright (c) 2024 ml-explore", "note": "Optional, behind the `MLX` trait: runs Title." },
+    { "kind": "library", "name": "swift-transformers", "by": "Hugging Face", "license": "Apache-2.0", "source": "https://github.com/huggingface/swift-transformers", "note": "Optional, behind the `MLX` trait: Title's tokenizer." }
+  ],
   "models": [
     {
       "id": "align",
@@ -40,7 +57,7 @@ enum Embedded {
         "repo": "desert-ant-labs/align",
         "url": "https://huggingface.co/desert-ant-labs/align",
         "revision": "v1.1.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -55,6 +72,11 @@ enum Embedded {
         "basis": "declared",
         "source": "https://huggingface.co/desert-ant-labs/align"
       },
+      "notices": [
+        { "kind": "data", "name": "LibriSpeech", "by": "Vassil Panayotov, Guoguo Chen, Daniel Povey and Sanjeev Khudanpur", "license": "CC-BY-4.0", "source": "https://www.openslr.org/12" },
+        { "kind": "data", "name": "AMI Meeting Corpus", "by": "University of Edinburgh CSTR and the AMI consortium", "license": "CC-BY-4.0", "source": "https://groups.inf.ed.ac.uk/ami/corpus/" },
+        { "kind": "data", "name": "FLEURS", "by": "Google", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/google/fleurs" }
+      ],
       "demo": null
     },
     {
@@ -76,7 +98,7 @@ enum Embedded {
         "repo": "desert-ant-labs/clear",
         "url": "https://huggingface.co/desert-ant-labs/clear",
         "revision": "v0.3.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "coreai", "litert"],
       "variants": [
@@ -90,6 +112,9 @@ enum Embedded {
         "libraryName": null
       },
       "languages": null,
+      "notices": [
+        { "kind": "model", "name": "DeepFilterNet 3", "by": "Hendrik Schröter", "license": "MIT", "source": "https://github.com/Rikorose/DeepFilterNet", "copyright": "Copyright (c) 2022 Hendrik Schröter", "note": "Both variants are fine-tuned from it." }
+      ],
       "demo": {
         "space": "desert-ant-labs/clear-demo",
         "embed": "https://desert-ant-labs-clear-demo.static.hf.space",
@@ -115,7 +140,7 @@ enum Embedded {
         "repo": "desert-ant-labs/clips",
         "url": "https://huggingface.co/desert-ant-labs/clips",
         "revision": "v0.1.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -130,6 +155,9 @@ enum Embedded {
         "basis": "inherited",
         "source": "https://huggingface.co/desert-ant-labs/clips"
       },
+      "notices": [
+        { "kind": "model", "name": "XLM-RoBERTa base", "by": "Facebook AI", "license": "MIT", "source": "https://huggingface.co/FacebookAI/xlm-roberta-base", "copyright": "Copyright (c) Facebook, Inc. and its affiliates", "note": "Fine-tuned. Its tokenizer ships unchanged in `clip_tokenizer.bin`." }
+      ],
       "demo": null
     },
     {
@@ -151,7 +179,7 @@ enum Embedded {
         "repo": "desert-ant-labs/ear",
         "url": "https://huggingface.co/desert-ant-labs/ear",
         "revision": "v0.2.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -174,6 +202,9 @@ enum Embedded {
         "basis": "declared",
         "source": null
       },
+      "notices": [
+        { "kind": "model", "name": "whisper-tiny", "by": "OpenAI", "license": "Apache-2.0", "source": "https://huggingface.co/openai/whisper-tiny", "note": "Ear's encoder is derived from its encoder and fine-tuned." }
+      ],
       "demo": null
     },
     {
@@ -195,7 +226,7 @@ enum Embedded {
         "repo": "desert-ant-labs/emo",
         "url": "https://huggingface.co/desert-ant-labs/emo",
         "revision": "v0.7.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -210,6 +241,11 @@ enum Embedded {
         "basis": "declared",
         "source": "https://huggingface.co/desert-ant-labs/emo"
       },
+      "notices": [
+        { "kind": "model", "name": "potion-multilingual-128M", "by": "MinishLab", "license": "MIT", "source": "https://huggingface.co/minishlab/potion-multilingual-128M", "note": "Emo's embedding and tokenizer derive from it, reduced and pruned." },
+        { "kind": "model", "name": "bge-m3", "by": "BAAI", "license": "MIT", "source": "https://huggingface.co/BAAI/bge-m3", "note": "potion-multilingual-128M was distilled from it." },
+        { "kind": "data", "name": "Unicode CLDR", "by": "Unicode, Inc.", "license": "Unicode-DFS-2016", "source": "https://cldr.unicode.org", "note": "Emoji annotations in many languages." }
+      ],
       "demo": {
         "space": "desert-ant-labs/emo-demo",
         "embed": null,
@@ -235,7 +271,7 @@ enum Embedded {
         "repo": "desert-ant-labs/eye",
         "url": "https://huggingface.co/desert-ant-labs/eye",
         "revision": "v1.0.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -245,6 +281,9 @@ enum Embedded {
         "libraryName": null
       },
       "languages": null,
+      "notices": [
+        { "kind": "model", "name": "PE-Core S/16-384", "by": "Meta", "license": "Apache-2.0", "source": "https://huggingface.co/facebook/PE-Core-S16-384", "copyright": "Copyright (c) Meta Platforms, Inc. and affiliates", "note": "The image encoder, partly fine-tuned." }
+      ],
       "demo": {
         "space": null,
         "embed": null,
@@ -270,7 +309,7 @@ enum Embedded {
         "repo": "desert-ant-labs/face",
         "url": "https://huggingface.co/desert-ant-labs/face",
         "revision": "main",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml"],
       "variants": [],
@@ -305,7 +344,7 @@ enum Embedded {
         "repo": "desert-ant-labs/gist",
         "url": "https://huggingface.co/desert-ant-labs/gist",
         "revision": "v2.2.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [
@@ -323,6 +362,11 @@ enum Embedded {
         "basis": "inherited",
         "source": "https://huggingface.co/minishlab/potion-multilingual-128M"
       },
+      "notices": [
+        { "kind": "model", "name": "potion-multilingual-128M", "by": "MinishLab", "license": "MIT", "source": "https://huggingface.co/minishlab/potion-multilingual-128M", "note": "Gist's embedding and tokenizer derive from it, pruned." },
+        { "kind": "model", "name": "bge-m3", "by": "BAAI", "license": "MIT", "source": "https://huggingface.co/BAAI/bge-m3", "note": "potion-multilingual-128M was distilled from it." },
+        { "kind": "file", "name": "IAB Content Taxonomy 2.2", "by": "IAB Tech Lab", "license": "CC-BY-3.0", "source": "https://github.com/InteractiveAdvertisingBureau/Taxonomies", "note": "`taxonomy.json` and `taxonomy_crosswalk.json` include its node IDs and names, adapted to Gist's topics." }
+      ],
       "demo": {
         "space": "desert-ant-labs/gist-demo",
         "embed": null,
@@ -348,7 +392,7 @@ enum Embedded {
         "repo": "desert-ant-labs/moderator",
         "url": "https://huggingface.co/desert-ant-labs/moderator",
         "revision": "v1.0.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -358,6 +402,11 @@ enum Embedded {
         "libraryName": null
       },
       "languages": null,
+      "notices": [
+        { "kind": "model", "name": "MobileNetV4-Conv-Medium", "by": "Google, with weights by Ross Wightman", "license": "Apache-2.0", "source": "https://huggingface.co/timm/mobilenetv4_conv_medium.e250_r384_in12k_ft_in1k", "copyright": "Copyright 2019 Ross Wightman", "note": "Fine-tuned." },
+        { "kind": "data", "name": "Wikimedia Commons", "by": "Wikimedia Commons contributors", "license": ["CC-BY-4.0", "CC-BY-SA-4.0"], "source": "https://commons.wikimedia.org", "note": "Each image keeps the license on its Commons page." },
+        { "kind": "data", "name": "Open Images V7", "by": "Google", "license": "CC-BY-4.0", "source": "https://storage.googleapis.com/openimages/web/index.html" }
+      ],
       "demo": {
         "space": null,
         "embed": null,
@@ -382,8 +431,8 @@ enum Embedded {
         "source": "hub",
         "repo": "desert-ant-labs/redact",
         "url": "https://huggingface.co/desert-ant-labs/redact",
-        "revision": "v0.4.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "revision": "v0.4.2",
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -398,6 +447,15 @@ enum Embedded {
         "basis": "declared",
         "source": "https://huggingface.co/desert-ant-labs/redact"
       },
+      "notices": [
+        { "kind": "model", "name": "Multilingual-MiniLM-L12-H384", "by": "Microsoft", "license": "MIT", "source": "https://huggingface.co/microsoft/Multilingual-MiniLM-L12-H384", "copyright": "Copyright (c) Microsoft Corporation", "note": "Truncated, its vocabulary trimmed, and fine-tuned." },
+        { "kind": "data", "name": "gretel-pii-masking-en-v1", "by": "Gretel", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/gretelai/gretel-pii-masking-en-v1" },
+        { "kind": "data", "name": "synthetic_pii_finance_multilingual", "by": "Gretel", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/gretelai/synthetic_pii_finance_multilingual" },
+        { "kind": "data", "name": "pii-masking-openpii-1.5m", "by": "Ai4Privacy / Ai Suisse SA", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/ai4privacy/pii-masking-openpii-1.5m", "copyright": "Copyright © Ai Suisse SA" },
+        { "kind": "data", "name": "synthetic-multi-pii-ner-v1", "by": "E3-JSI", "license": "MIT", "source": "https://huggingface.co/datasets/E3-JSI/synthetic-multi-pii-ner-v1" },
+        { "kind": "data", "name": "C4", "by": "Allen Institute for AI", "license": "ODC-By-1.0", "source": "https://huggingface.co/datasets/allenai/c4" },
+        { "kind": "data", "name": "FineWeb-2", "by": "Hugging Face", "license": "ODC-By-1.0", "source": "https://huggingface.co/datasets/HuggingFaceFW/fineweb-2" }
+      ],
       "demo": {
         "space": "desert-ant-labs/redact-demo",
         "embed": "https://desert-ant-labs-redact-demo.static.hf.space",
@@ -423,7 +481,7 @@ enum Embedded {
         "repo": "desert-ant-labs/schemer",
         "url": "https://huggingface.co/desert-ant-labs/schemer",
         "revision": "main",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml"],
       "variants": [],
@@ -463,7 +521,7 @@ enum Embedded {
         "repo": "desert-ant-labs/shapes",
         "url": "https://huggingface.co/desert-ant-labs/shapes",
         "revision": "v1.0.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -473,6 +531,9 @@ enum Embedded {
         "libraryName": null
       },
       "languages": null,
+      "notices": [
+        { "kind": "data", "name": "Quick, Draw! dataset", "by": "Google", "license": "CC-BY-4.0", "source": "https://github.com/googlecreativelab/quickdraw-dataset" }
+      ],
       "demo": {
         "space": "desert-ant-labs/shapes-demo",
         "embed": "https://desert-ant-labs-shapes-demo.static.hf.space",
@@ -498,7 +559,7 @@ enum Embedded {
         "repo": "desert-ant-labs/title",
         "url": "https://huggingface.co/desert-ant-labs/title",
         "revision": "v0.1.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["mlx"],
       "variants": [],
@@ -513,6 +574,9 @@ enum Embedded {
         "basis": "inherited",
         "source": "https://huggingface.co/desert-ant-labs/title"
       },
+      "notices": [
+        { "kind": "model", "name": "Granite 4.0 350M", "by": "IBM", "license": "Apache-2.0", "source": "https://huggingface.co/ibm-granite/granite-4.0-350m", "note": "Fine-tuned and quantized. Its tokenizer ships unchanged." }
+      ],
       "demo": null
     },
     {
@@ -534,7 +598,7 @@ enum Embedded {
         "repo": "desert-ant-labs/tongue",
         "url": "https://huggingface.co/desert-ant-labs/tongue",
         "revision": "v1.0.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["pure"],
       "variants": [],
@@ -549,6 +613,16 @@ enum Embedded {
         "basis": "derived",
         "source": "Sources/Tongue/Resources/tongue_meta.json"
       },
+      "notices": [
+        { "kind": "data", "name": "Tatoeba", "by": "Tatoeba contributors", "license": "CC-BY-2.0-FR", "source": "https://tatoeba.org", "copyright": "© Tatoeba contributors" },
+        { "kind": "data", "name": "Hunspell dictionary, English", "by": "wooorm/dictionaries contributors", "license": "LicenseRef-hunspell-en", "source": "https://github.com/wooorm/dictionaries/tree/main/dictionaries/en" },
+        { "kind": "data", "name": "Hunspell dictionary, Dutch", "by": "wooorm/dictionaries contributors", "license": "LicenseRef-hunspell-nl", "source": "https://github.com/wooorm/dictionaries/tree/main/dictionaries/nl" },
+        { "kind": "data", "name": "Hunspell dictionary, Lithuanian", "by": "wooorm/dictionaries contributors", "license": "LicenseRef-hunspell-lt", "source": "https://github.com/wooorm/dictionaries/tree/main/dictionaries/lt" },
+        { "kind": "data", "name": "Hunspell dictionary, Russian", "by": "wooorm/dictionaries contributors", "license": "LicenseRef-hunspell-ru", "source": "https://github.com/wooorm/dictionaries/tree/main/dictionaries/ru" },
+        { "kind": "data", "name": "Hunspell dictionary, Turkish", "by": "wooorm/dictionaries contributors", "license": "LicenseRef-hunspell-tr", "source": "https://github.com/wooorm/dictionaries/tree/main/dictionaries/tr" },
+        { "kind": "data", "name": "Hunspell dictionary, Persian", "by": "wooorm/dictionaries contributors", "license": ["LicenseRef-hunspell-fa", "Apache-2.0"], "source": "https://github.com/wooorm/dictionaries/tree/main/dictionaries/fa" },
+        { "kind": "data", "name": "Universal Dependencies treebanks", "by": "the Universal Dependencies contributors", "license": "CC-BY-4.0", "source": "https://universaldependencies.org", "note": "UD_Spanish-AnCora, UD_Catalan-AnCora, UD_Finnish-FTB, UD_Italian-MarkIT and UD_Portuguese-Porttinari." }
+      ],
       "demo": {
         "space": "desert-ant-labs/tongue-demo",
         "embed": null,
@@ -561,20 +635,20 @@ enum Embedded {
       "tagline": "Catch hate speech before it posts.",
       "summary": "On-device hate-speech triage for European languages.",
       "category": "Hate speech triage",
-      "lifecycle": "closed-beta",
+      "lifecycle": "beta",
       "visibility": "public",
-      "home": null,
+      "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "none" },
-        "kotlin": { "status": "none" },
-        "js": { "status": "none" }
+        "swift": { "status": "live", "package": "Toxic", "platforms": ["apple", "linux", "windows"] },
+        "kotlin": { "status": "live", "package": "ai.desertant:toxic", "platforms": ["android"] },
+        "js": { "status": "live", "package": "@desert-ant-labs/toxic", "platforms": ["web", "node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/toxic",
         "url": "https://huggingface.co/desert-ant-labs/toxic",
-        "revision": "main",
-        "license": "desert-ant-labs-source-available-1.0"
+        "revision": "v0.2.2",
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [],
@@ -584,11 +658,49 @@ enum Embedded {
         "libraryName": null
       },
       "languages": {
-        "count": 23,
-        "codes": ["bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "ga", "hr", "hu", "it", "lt", "lv", "nl", "pl", "pt", "ro", "sk", "sl", "sv"],
+        "count": 35,
+        "codes": ["ar", "bg", "ca", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "he", "hi", "hr", "hu", "id", "it", "ja", "ko", "lt", "lv", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "th", "tr", "uk", "vi", "zh"],
         "basis": "declared",
         "source": "https://huggingface.co/desert-ant-labs/toxic"
       },
+      "notices": [
+        { "kind": "model", "name": "mmBERT-small", "by": "Johns Hopkins University, Center for Language and Speech Processing", "license": "MIT", "source": "https://huggingface.co/jhu-clsp/mmBERT-small", "note": "The encoder, fine-tuned. Its tokenizer files are redistributed unchanged." },
+        { "kind": "model", "name": "mmBERT-base", "by": "Johns Hopkins University, Center for Language and Speech Processing", "license": "MIT", "source": "https://huggingface.co/jhu-clsp/mmBERT-base", "note": "Distilled from: a classifier fine-tuned from it is part of the teacher whose scores the weights were trained on." },
+        { "kind": "model", "name": "multilingual-e5-large", "by": "Microsoft", "license": "MIT", "source": "https://huggingface.co/intfloat/multilingual-e5-large", "note": "Distilled from: a classifier fine-tuned from it is part of the teacher whose scores the weights were trained on." },
+        { "kind": "model", "name": "BGE-M3", "by": "Beijing Academy of Artificial Intelligence", "license": "MIT", "source": "https://huggingface.co/BAAI/bge-m3", "note": "Distilled from: a classifier fine-tuned from it is part of the teacher whose scores the weights were trained on." },
+        { "kind": "file", "name": "Gemma 2 tokenizer", "by": "Google", "license": "Apache-2.0", "source": "https://github.com/google/gemma_pytorch", "note": "The vocabulary in `tokenizer.json`, as mmBERT uses it." },
+        { "kind": "data", "name": "OffensEval 2020", "by": "Marcos Zampieri, Preslav Nakov, Sara Rosenthal, Pepa Atanasova, Georgi Karadzhov, Hamdy Mubarak, Leon Derczynski, Zeses Pitenis and Çağrı Çöltekin", "license": ["CC-BY-4.0", "CC-BY-2.0"], "source": "https://huggingface.co/datasets/strombergnlp/offenseval_2020", "note": "The Turkish part is CC BY 2.0." },
+        { "kind": "data", "name": "HateXplain", "by": "Binny Mathew, Punyajoy Saha, Seid Muhie Yimam, Chris Biemann, Pawan Goyal and Animesh Mukherjee", "license": "MIT", "source": "https://github.com/hate-alert/HateXplain" },
+        { "kind": "data", "name": "GermEval 2018", "by": "Michael Wiegand, Melanie Siegel and Josef Ruppenhofer", "license": "CC-BY-4.0", "source": "https://github.com/uds-lsv/GermEval-2018-Data" },
+        { "kind": "data", "name": "HOCON34k", "by": "Max-Emanuel Keller, Maximilian Auch, Alexander Döschl, Fabian Vlk, Julian Quernheim, Mike Hartmann, Peter Mandl, Alexander Kaul and Markus Franz", "license": "CC-BY-4.0", "source": "https://zenodo.org/records/12665948" },
+        { "kind": "data", "name": "Polish Cyberbullying Dataset", "by": "Michal Ptaszynski, Agata Pieciukiewicz, Pawel Dybala, Pawel Skrzek, Kamil Soliwoda, Marcin Fortuna, Gniewosz Leliwa and Michal Wroczynski", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/ptaszynski/PolishCyberbullyingDataset" },
+        { "kind": "data", "name": "MuTox", "by": "Meta", "license": "MIT", "source": "https://github.com/facebookresearch/seamless_communication/blob/main/src/seamless_communication/cli/toxicity/mutox/README.md" },
+        { "kind": "data", "name": "Measuring Hate Speech", "by": "Chris J. Kennedy, Geoff Bacon, Alexander Sahn and Claudia von Vacano, D-Lab, University of California, Berkeley", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/ucberkeley-dlab/measuring-hate-speech" },
+        { "kind": "data", "name": "Social Bias Frames", "by": "Maarten Sap, Saadia Gabriel, Lianhui Qin, Dan Jurafsky, Noah A. Smith and Yejin Choi", "license": "CC-BY-4.0", "source": "https://maartensap.com/social-bias-frames/" },
+        { "kind": "data", "name": "Dynamically Generated Hate Speech Dataset", "by": "Bertie Vidgen, Tristan Thrush, Zeerak Waseem and Douwe Kiela", "license": "CC-BY-4.0", "source": "https://github.com/bvidgen/Dynamically-Generated-Hate-Speech-Dataset" },
+        { "kind": "data", "name": "Gab Hate Corpus", "by": "Brendan Kennedy, Mohammad Atari, Aida Mostafazadeh Davani and others, University of Southern California", "license": "CC-BY-4.0", "source": "https://osf.io/edua3/" },
+        { "kind": "data", "name": "Contextual Abuse Dataset", "by": "Bertie Vidgen, Dong Nguyen, Helen Margetts, Patricia Rossini and Rebekah Tromble", "license": "CC-BY-4.0", "source": "https://zenodo.org/records/4881008" },
+        { "kind": "data", "name": "Implicit Hate Corpus", "by": "Mai ElSherief, Caleb Ziems, David Muchlinski, Vaishnavi Anupindi, Jordyn Seybolt, Munmun De Choudhury and Diyi Yang", "license": "CC-BY-4.0", "source": "https://github.com/SALT-NLP/implicit-hate" },
+        { "kind": "data", "name": "Detecting East Asian Prejudice on Social Media", "by": "Bertie Vidgen, Austin Botelho, David Broniatowski, Ella Guest, Matthew Hall, Helen Margetts, Rebekah Tromble, Zeerak Waseem and Scott Hale", "license": "CC-BY-4.0", "source": "https://zenodo.org/records/3816667" },
+        { "kind": "data", "name": "Hate Speech and Offensive Language", "by": "Thomas Davidson, Dana Warmsley, Michael Macy and Ingmar Weber", "license": "MIT", "source": "https://github.com/t-davidson/hate-speech-and-offensive-language" },
+        { "kind": "data", "name": "Slur Corpus", "by": "Jana Kurrek, Haji Mohammad Saleem and Derek Ruths", "license": "MIT", "source": "https://github.com/networkdynamics/slur-corpus" },
+        { "kind": "data", "name": "Counterspeech on YouTube", "by": "Binny Mathew, Punyajoy Saha, Hardik Tharad, Subham Rajgaria, Prajwal Singhania, Suman Kalyan Maity, Pawan Goyal and Animesh Mukherjee", "license": "MIT", "source": "https://github.com/hate-alert/Countering_Hate_Speech_ICWSM2019" },
+        { "kind": "data", "name": "Antisemitism on Twitter", "by": "Gunther Jikeli, Sameer Karali, Daniel Miehling and Katharina Soemer", "license": "CC-BY-4.0", "source": "https://zenodo.org/records/14448399" },
+        { "kind": "data", "name": "Online Misogyny", "by": "Ella Guest, Bertie Vidgen, Alexandros Mittos, Nishanth Sastry, Gareth Tyson and Helen Margetts", "license": "MIT", "source": "https://github.com/ellamguest/online-misogyny-eacl2021" },
+        { "kind": "data", "name": "HatemojiBuild", "by": "Hannah Rose Kirk, Bertie Vidgen, Paul Röttger, Tristan Thrush and Scott A. Hale", "license": "CC-BY-4.0", "source": "https://github.com/HannahKirk/Hatemoji" },
+        { "kind": "data", "name": "ConvAbuse", "by": "Amanda Cercas Curry, Gavin Abercrombie and Verena Rieser", "license": "CC-BY-4.0", "source": "https://github.com/amandacurry/convabuse" },
+        { "kind": "data", "name": "GAHD", "by": "Janis Goldzycher, Paul Röttger and Gerold Schneider", "license": "CC-BY-4.0", "source": "https://github.com/jagol/gahd" },
+        { "kind": "data", "name": "RO-Offense", "by": "the ReaderBench group, University Politehnica of Bucharest", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/readerbench/ro-offense" },
+        { "kind": "data", "name": "FB-RO-Offense", "by": "the ReaderBench group, University Politehnica of Bucharest", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/readerbench/ro-fb-offense" },
+        { "kind": "data", "name": "RO-Offense Sequences", "by": "the ReaderBench group, University Politehnica of Bucharest", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/readerbench/ro-offense-sequences" },
+        { "kind": "data", "name": "Salamandra Guard dataset", "by": "Language Technologies Lab, Barcelona Supercomputing Center", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/BSC-LT/salamandra-guard-dataset", "copyright": "Copyright (c) 2026 by Language Technologies Lab, Barcelona Supercomputing Center" },
+        { "kind": "data", "name": "Aegis AI Content Safety Dataset 1.0", "by": "NVIDIA", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/nvidia/Aegis-AI-Content-Safety-Dataset-1.0" },
+        { "kind": "data", "name": "Aegis AI Content Safety Dataset 2.0", "by": "NVIDIA", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/nvidia/Aegis-AI-Content-Safety-Dataset-2.0" },
+        { "kind": "data", "name": "Nemotron Safety Guard Dataset v3", "by": "NVIDIA", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/nvidia/Nemotron-Safety-Guard-Dataset-v3" },
+        { "kind": "data", "name": "ToxiFrench", "by": "Axel Delaval, Shujian Yang, Haicheng Wang, Han Qiu and Jialiang Lu", "license": "MIT", "source": "https://huggingface.co/datasets/AxelDlv00/ToxiFrench" },
+        { "kind": "data", "name": "ALIA-es discriminative hate speech", "by": "SINAI research group, Universidad de Jaén", "license": "CC-BY-4.0", "source": "https://huggingface.co/datasets/SINAI/ALIA-es-discriminative-hate-speech" },
+        { "kind": "data", "name": "Portuguese toxicity annotations", "by": "Nicholas Kluge Corrêa, Aniket Sen, Shiza Fatimah, Sophia Falk, Lennard Landgraf, Julia Kastner and Lucie Flek", "license": "Apache-2.0", "source": "https://huggingface.co/datasets/Polygl0t/portuguese-toxicity-qwen-annotations", "note": "The labels; the texts keep their sources' licenses." }
+      ],
       "demo": {
         "space": "desert-ant-labs/toxic-demo",
         "embed": null,
@@ -605,23 +717,23 @@ enum Embedded {
       "visibility": "public",
       "home": "desert-ant-core",
       "sdks": {
-        "swift": { "status": "live", "package": "Uhm", "platforms": ["apple"] },
-        "kotlin": { "status": "planned" },
-        "js": { "status": "planned" }
+        "swift": { "status": "live", "package": "Uhm", "platforms": ["apple", "linux", "windows"] },
+        "kotlin": { "status": "live", "package": "ai.desertant:uhm", "platforms": ["android"] },
+        "js": { "status": "live", "package": "@desert-ant-labs/uhm", "platforms": ["web", "node"] }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/uhm",
         "url": "https://huggingface.co/desert-ant-labs/uhm",
         "revision": "v1.2.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
-      "runtime": ["coreml"],
+      "runtime": ["coreml", "coreai", "litert"],
       "variants": [
         { "id": "high", "default": true, "note": "DistilHuBERT. The base tier is unpublished." }
       ],
       "hub": {
-        "tags": ["audio", "speech", "filler-detection", "disfluency", "on-device", "core-ml", "onnx"],
+        "tags": ["audio", "speech", "filler-detection", "disfluency", "on-device", "core-ml", "litert", "onnx"],
         "pipelineTag": "audio-classification",
         "libraryName": null
       },
@@ -631,6 +743,11 @@ enum Embedded {
         "basis": "declared",
         "source": "https://huggingface.co/desert-ant-labs/uhm"
       },
+      "notices": [
+        { "kind": "model", "name": "DistilHuBERT", "by": "NTU Speech Processing and Machine Learning Lab", "license": "Apache-2.0", "source": "https://huggingface.co/ntu-spml/distilhubert", "note": "Fine-tuned." },
+        { "kind": "model", "name": "HuBERT base", "by": "Meta", "license": "Apache-2.0", "source": "https://huggingface.co/facebook/hubert-base-ls960", "note": "DistilHuBERT was distilled from it." },
+        { "kind": "data", "name": "AMI Meeting Corpus", "by": "University of Edinburgh CSTR and the AMI consortium", "license": "CC-BY-4.0", "source": "https://groups.inf.ed.ac.uk/ami/corpus/" }
+      ],
       "demo": {
         "space": "desert-ant-labs/uhm-demo",
         "embed": "https://desert-ant-labs-uhm-demo.static.hf.space",
@@ -677,7 +794,7 @@ enum Embedded {
         "repo": "desert-ant-labs/voz",
         "url": "https://huggingface.co/desert-ant-labs/voz",
         "revision": "v0.5.0",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": [
         "coreml",
@@ -732,6 +849,9 @@ enum Embedded {
         "basis": "declared",
         "source": null
       },
+      "notices": [
+        { "kind": "model", "name": "Parakeet TDT 0.6B v3", "by": "NVIDIA", "license": "CC-BY-4.0", "source": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3", "note": "Converted for Core ML, LiteRT and ONNX Runtime and compressed. The weight values are otherwise unchanged." }
+      ],
       "demo": null
     },
     {
@@ -753,7 +873,7 @@ enum Embedded {
         "repo": "desert-ant-labs/who",
         "url": "https://huggingface.co/desert-ant-labs/who",
         "revision": "v0.3.4",
-        "license": "desert-ant-labs-source-available-1.0"
+        "license": "desert-ant-labs-source-available"
       },
       "runtime": ["coreml", "litert"],
       "variants": [
@@ -766,6 +886,16 @@ enum Embedded {
         "libraryName": null
       },
       "languages": null,
+      "notices": [
+        { "kind": "model", "name": "speaker-diarization-community-1", "by": "pyannoteAI", "license": "CC-BY-4.0", "source": "https://huggingface.co/pyannote-community/speaker-diarization-community-1", "note": "Who's voice graph derives from it." },
+        { "kind": "data", "name": "LibriSpeech", "by": "Vassil Panayotov, Guoguo Chen, Daniel Povey and Sanjeev Khudanpur", "license": "CC-BY-4.0", "source": "https://www.openslr.org/12" },
+        { "kind": "data", "name": "MUSAN", "by": "David Snyder, Guoguo Chen and Daniel Povey", "license": "CC-BY-4.0", "source": "https://www.openslr.org/17" },
+        { "kind": "data", "name": "AMI Meeting Corpus", "by": "University of Edinburgh CSTR and the AMI consortium", "license": "CC-BY-4.0", "source": "https://groups.inf.ed.ac.uk/ami/corpus/" },
+        { "kind": "data", "name": "ICSI Meeting Corpus", "by": "International Computer Science Institute", "license": "CC-BY-4.0", "source": "https://groups.inf.ed.ac.uk/ami/icsi/" },
+        { "kind": "data", "name": "CHiME-6", "by": "the CHiME challenge organizers", "license": "CC-BY-SA-4.0", "source": "https://www.openslr.org/150/" },
+        { "kind": "data", "name": "AliMeeting", "by": "Alibaba DAMO Academy", "license": "CC-BY-SA-4.0", "source": "https://www.openslr.org/119/" },
+        { "kind": "data", "name": "AISHELL-4", "by": "Beijing Shell Shell Technology", "license": "CC-BY-SA-4.0", "source": "https://www.openslr.org/111/" }
+      ],
       "demo": {
         "space": null,
         "embed": null,
@@ -1177,7 +1307,7 @@ Run several models on a file in one command: clean up a recording, transcribe it
 | `who-said-what` | Transcribes a recording and names the speaker of each line. |
 | `meeting-notes` | Names each speaker, replaces personal data with placeholders, and tags the main topic. |
 | `podcast-clips` | Cleans up the sound, then cuts the moments worth sharing into clips with captions burned in. |
-| `filler-words` | Lists each uh, um, and hmm with its time. Runs on macOS. |
+| `filler-words` | Lists each uh, um, and hmm with its time. |
 | `photo-keepers` | Copies the photos worth keeping into a Keepers folder: no blurry or accidental shots, one of each near-duplicate. |
 | `find-receipts` | Copies the receipts among your photos into a Receipts folder. |
 | `redact-a-document` | Replaces the personal data in a text with placeholders and prints it. |
@@ -1270,12 +1400,13 @@ An `if` step sends each item down `yes` or `no` and leaves a gap on the other si
 | `clear` | Studio sound: noise and echo out, the voice leveled. | `loudness`: podcast, spotify, youtube, broadcast, or off |
 | `clips` | Cuts the moments worth sharing into clips. | `count`, `captions`, and the caption settings below |
 | `captions` | SRT and WebVTT from voz's words, with speaker names from who's turns. | |
-| `uhm` | The uh, um, and hmm in a recording, with times. macOS only. | |
+| `uhm` | The uh, um, and hmm in a recording, with times. | |
 | `ear` | The language spoken in a recording. | |
 | `redact` | Personal data replaced with placeholders. | `confidence` |
 | `gist` | The topics of a text, from 36. | `limit` |
 | `emo` | Emoji that fit a text. | `limit` |
 | `tongue` | The language of a short text. | |
+| `toxic` | Whether a text is hateful, abusive, or threatening, and the group a hateful text targets. | |
 | `eye` | What a photo shows, its kind, quality, faces, and framing. | |
 | `moderator` | Whether a photo is safe to show. | `threshold` |
 | `duplicates` | The photos to keep from sets of near-duplicates, and the rest. | |
@@ -1312,7 +1443,7 @@ A file a step makes along the way, as clear's clean audio, is kept only when a `
 - A flow file holds at most 8MB and a million values.
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.
-- `uhm` and `readtext` run on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
+- `readtext` runs on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
 - Eye is in closed beta, so the `eye` and `duplicates` steps need `HF_TOKEN` set to a Hugging Face token with access to [desert-ant-labs/eye](https://huggingface.co/desert-ant-labs/eye).
 """###),
         (name: "json", markdown: ###"""
@@ -1464,6 +1595,26 @@ To restore originals in a reply, replace each `placeholder` with its `original`.
 
 `language` is an ISO 639 code, and is left out when there was nothing to read. `reliability` is `confident`, `likely`, `tentative`, or `empty`, judged from the text's length and the lead over the runner-up rather than the probability alone. `tooCloseToCall` is true when the top two are within 0.12 of each other. Pass `--top 2` to see both.
 
+`desertant toxic "<text>" --json` says whether a text is hateful, abusive, or threatening.
+
+```json
+{
+  "toxic": true,
+  "flags": ["hateful", "abusive"],
+  "targets": ["nationalOrEthnicOrigin"],
+  "scores": {"hateful": 0.73, "abusive": 0.98, "threat": 0.11, "race": 0.07, "religion": 0.04, "nationalOrEthnicOrigin": 0.92,
+             "sexualOrientation": 0.02, "gender": 0.05, "disability": 0.01, "age": 0.01, "other": 0.06},
+  "thresholds": {"hateful": 0.46, "abusive": 0.44, "threat": 0.35, "race": 0.53, "religion": 0.47, "nationalOrEthnicOrigin": 0.37,
+                 "sexualOrientation": 0.39, "gender": 0.45, "disability": 0.34, "age": 0.5, "other": 0.21}
+}
+```
+
+`toxic` is true when `hateful`, `abusive`, or `threat` reaches its threshold, and `flags` lists the ones that did. `targets` lists the groups a hateful text is about, highest score first: `race`, `religion`, `nationalOrEthnicOrigin`, `sexualOrientation`, `gender`, `disability`, `age`, or `other`. `scores` and `thresholds` hold all eleven, each from 0 to 1; the thresholds come with the model.
+
+`tongue`, `toxic`, and `redact` add `notes` when a text falls outside what the model reads best: a language Toxic or Redact does not list, or a text Tongue can only guess at. The result still stands, and a note says how far to trust it. `notes` is left out when there is nothing to say. On a terminal, the same notes print under the result, and Emo and Gist print theirs too: a language Emo does not list, a long text for Emo, and a word or two for Gist.
+
+A text that is empty or only spaces is an error, exit code 1, like no text at all.
+
 `desertant title "<text>" --json` prints `{"title", "description"}`, on Apple silicon builds.
 
 `desertant moderator <image> --json` prints the nudity score. On Linux, reading the image needs ffmpeg.
@@ -1559,6 +1710,8 @@ With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order
   "fillers": [{"start": 4.21, "end": 4.52, "durationSec": 0.31, "type": "um", "confidence": 0.94}]
 }
 ```
+
+`type` is `uh`, `um`, `hmm`, `and`, or `other` on macOS. On Linux, Uhm finds each span but not which filler it is, and `type` is left out.
 
 `desertant ear <file> --json` prints the language spoken.
 
@@ -1919,17 +2072,18 @@ The `desertant` CLI (alias `da`) runs small Desert Ant Labs models on this machi
 
 ## Run a model
 
-Every command takes `--json` for one JSON value on stdout, and a text model reads stdin when given no argument. Exit code 0 is success, 1 a runtime error, 64 a usage error, with the message on stderr. Weights download on first use with progress on stderr, so stdout stays clean JSON.
+Every command takes `--json` for one JSON value on stdout, and a text model reads stdin when given no argument. Exit code 0 is success, 1 a runtime error, 64 a usage error, with the message on stderr. Weights download on first use with progress on stderr, so stdout stays clean JSON. When `tongue`, `toxic`, or `redact` returns `notes`, the text fell outside what the model reads best, such as a language it does not list; weigh the result less and tell the user why.
 
 - Redact personal data before sending text anywhere: `desertant redact "Email Anna at anna@example.hu" --json` returns the redacted text and the placeholder map, so you can restore the originals in a reply.
 - Suggest emoji: `desertant emo "pay my bills" --json`.
 - Tag what a text is about, from 36 topics: `desertant gist "<article text>" --json`.
 - Name the language a short text is written in: `desertant tongue "<text>" --json`.
+- Check a comment for hate, abuse, and threats before it posts: `desertant toxic "<text>" --json` returns whether it is toxic, which flags fired, and the group a hateful text targets.
 - Write a title and a description for a passage: `desertant title "<text>" --json`. Apple silicon only.
 - Transcribe with a time on every word: `desertant voz talk.mp4 --json`. `--srt`, `--vtt`, and `--txt` also write those files beside the input.
 - Label who said what: `desertant voz talk.mp4 --speakers --json` puts a `speaker` on every sentence, and `--names "Anna,Ben"` names them in the order they first speak. `desertant who talk.mp4 --json` alone gives each speaker's time and turns.
 - Clean up a recording's sound, studio sound: `desertant clear meeting.mp4 --json` writes `meeting_clear.mp4` and reports the path.
-- Find each uh, um, and hmm: `desertant uhm talk.mp4 --json`. Apple silicon only.
+- Find each uh, um, and hmm: `desertant uhm talk.mp4 --json`.
 - Name the language spoken: `desertant ear talk.mp4 --json`.
 - Cut the moments worth sharing into clips: `desertant clips talk.mp4 --json` transcribes, picks the moments, and writes one file per clip beside the input, with each clip's start, end, text, and file. `--count 5` sets how many to look for, `--select-only` returns the moments without writing files, and `--transcript talk.srt` (or `-` with `voz --json` on stdin) skips transcribing.
 - Burn captions into the clips with `desertant clips talk.mp4 --captions burn --json`. Set the look with `--caption-style shadow|outline|box`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color yellow` or `#ffcc00`, `--caption-weight bold`, `--caption-size 0.06` (a share of the frame's height), and `--caption-font "<family or .ttf>"`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one; `--caption-lines 1|2` and `--caption-words 4` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead. On audio there is no picture, so burn writes the `.srt` and says so in `notes`.
@@ -1949,7 +2103,7 @@ A flow runs several models on a file in one command. Reach for one when the user
 - `who-said-what`: a transcript with each speaker's name.
 - `meeting-notes`: who said what, with personal data replaced and the main topic tagged.
 - `podcast-clips`: clean sound, then clips with captions burned in.
-- `filler-words`: each uh, um, and hmm with its time. macOS only.
+- `filler-words`: each uh, um, and hmm with its time.
 - `photo-keepers`: copy the photos worth keeping, one of each near-duplicate, into a Keepers folder.
 - `find-receipts`: copy the receipts among some photos into a Receipts folder.
 - `redact-a-document`: a text with its personal data replaced.
@@ -2034,17 +2188,18 @@ These commands show what is available here.
 - `desertant flow templates --json` lists ready-made flows.
 - `desertant docs <page>` prints a page offline: `json` (the shape of every result), `flows`, `clips`, `voz`, `who`, `eye`, `pipelines`.
 
-To run a model, call its command. Every command takes `--json` and reads stdin when given no argument. The exit code is 0 on success, 1 on a runtime error, and 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON.
+To run a model, call its command. Every command takes `--json` and reads stdin when given no argument. The exit code is 0 on success, 1 on a runtime error, and 64 on a usage error, with the message on stderr. Weights download on first use with progress on stderr; stdout stays clean JSON. When `tongue`, `toxic`, or `redact` returns `notes`, the text fell outside what the model reads best, such as a language it does not list; weigh the result less and tell the user why.
 
 - `desertant redact "<text>" --json` replaces names, emails, and numbers with placeholders and returns the map. Redact before sending sensitive text to any remote service.
 - `desertant emo "<text>" --json` suggests emoji.
 - `desertant gist "<text>" --json` tags the topic, from 36.
 - `desertant tongue "<text>" --json` names the language the text is written in.
+- `desertant toxic "<text>" --json` flags hate, abuse, and threats, and the group a hateful text targets.
 - `desertant title "<text>" --json` writes a title and a description (Apple silicon).
 - `desertant voz <file> --json` transcribes a recording with a time on every word; `--srt`, `--vtt`, or `--txt` also writes that file beside the input.
 - `desertant voz <file> --speakers --json` labels each sentence with its speaker, and `--names "Anna,Ben"` names them in the order they first speak. `desertant who <file> --json` gives each speaker's time and turns.
 - `desertant clear <file> --json` gives a recording studio sound and reports the output path. A video keeps its picture.
-- `desertant uhm <file> --json` finds the filler words (Apple silicon).
+- `desertant uhm <file> --json` finds the filler words.
 - `desertant ear <file> --json` names the language spoken.
 - `desertant clips <file> --json` cuts the moments worth sharing into clips and reports each clip's start, end, text, and file. `--count 5` sets how many, `--select-only` gives timestamps only, and `--transcript <file>` skips transcribing.
 - `desertant clips <file> --captions burn --json` draws the captions into each clip. Set the look with `--caption-style shadow|outline|box`, `--caption-position bottom|center|top`, `--caption-align left|center|right`, `--caption-color`, `--caption-weight`, `--caption-size`, and `--caption-font`. The captions follow the clip's shape, one short line on a vertical clip and up to two lines on a square or wide one, and `--caption-lines` and `--caption-words` override that. `--quality high|medium|low` sets the compression; high is the default, and every level keeps the source's size and frame rate. `--captions srt` writes an `.srt` beside each clip instead.
@@ -2053,7 +2208,7 @@ To run a model, call its command. Every command takes `--json` and reads stdin w
 
 A file command takes several paths or a folder (`--recursive` for its subfolders) and loads the model once. The result is then an array with one entry per file. A file that fails is reported on stderr, and the exit code is 1 after the rest have run.
 
-Run a flow when the user wants several models on a file in one go. desertant comes with these ready-made flows: `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words` (macOS), `photo-keepers`, `find-receipts`, and `redact-a-document`:
+Run a flow when the user wants several models on a file in one go. desertant comes with these ready-made flows: `studio-sound`, `transcript-and-captions`, `who-said-what`, `meeting-notes`, `podcast-clips`, `filler-words`, `photo-keepers`, `find-receipts`, and `redact-a-document`:
 
 ```
 desertant flow run meeting-notes standup.m4a --json

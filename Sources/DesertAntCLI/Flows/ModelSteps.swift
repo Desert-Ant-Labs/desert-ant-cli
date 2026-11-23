@@ -6,14 +6,12 @@ import Gist
 import Redact
 import Tongue
 import Transcript
-import Who
-#if canImport(CoreML)
 import Uhm
-#endif
+import Who
 
 enum ModelSteps {
     static var all: [StepDef] {
-        var steps = [who, clear, ear, tongue, redact, gist, emo, uhm, captions, clips]
+        var steps = [who, clear, ear, tongue, redact, gist, emo, toxic, uhm, captions, clips]
         #if canImport(Voz)
         steps.insert(voz, at: 0)
         #endif
@@ -233,7 +231,17 @@ enum ModelSteps {
         ]
     }
 
-    #if canImport(CoreML)
+    static let toxic = StepDef(
+        type: "toxic", summary: "Flags hate, abuse, and threats in a text, and the group a hateful text targets.",
+        category: .model, model: "toxic",
+        inputs: [Port(id: "text", type: .text)],
+        outputs: [Port(id: "toxic", type: .any), Port(id: "flags", type: .any), Port(id: "targets", type: .any)]
+    ) { run in
+        let model = await run.context.run.models.model("toxic") { ToxicClassifier() }
+        let result = try await ToxicRunner.check(run.inputs["text"].asText, with: model)
+        return ["toxic": .bool(result.toxic), "flags": .list(result.flags.map { .text($0) }), "targets": .list(result.targets.map { .text($0) })]
+    }
+
     static let uhm = StepDef(
         type: "uhm", summary: "Finds the uh, um, and hmm in a recording, with times.", category: .model, model: "uhm",
         inputs: [Port(id: "audio", type: .audio)],
@@ -252,14 +260,6 @@ enum ModelSteps {
             "count": .number(Double(result.fillers.count)),
         ]
     }
-    #else
-    static let uhm = StepDef(
-        type: "uhm", summary: "Finds the uh, um, and hmm in a recording, with times.", category: .model,
-        inputs: [Port(id: "audio", type: .audio)],
-        outputs: [Port(id: "fillers", type: .any, each: true), Port(id: "count", type: .any)],
-        unavailable: "uhm runs on macOS only"
-    ) { _ in throw StepError("uhm runs on macOS only.") }
-    #endif
 
     static let captions = StepDef(
         type: "captions", summary: "Writes captions as SRT and WebVTT from words with times. With turns from who, names each speaker.",

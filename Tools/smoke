@@ -67,7 +67,7 @@ check "info" 0 "redact" "$da" info redact
 check "unknown model" 1 "no model named nope" "$da" run nope --input hi
 
 if [[ "$os" == Linux ]]; then
-  for id in redact emo gist tongue ear clear moderator who voz eye; do
+  for id in redact emo gist tongue toxic ear clear moderator who voz eye uhm; do
     check "runs $id here" 0 "\"$id\"" "$da" doctor --json
   done
 fi
@@ -85,6 +85,9 @@ check "redact from stdin" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu'
 check "emo" 0 "." "$da" emo "pay my bills"
 check "gist" 0 '"slug" : "finance"' "$da" gist --json "The central bank raised interest rates again to fight inflation"
 check "tongue" 0 "^nl " "$da" tongue "dit is een korte zin in het Nederlands"
+check "toxic" 0 "^clean" "$da" toxic "Have a lovely day, see you at the match."
+check "toxic notes a language it does not read" 0 '"notes" : \[' "$da" toxic --json "Wewe ni mtu mbaya sana na sitaki kukuona tena hapa kijijini kwetu"
+check "blank text" 1 "needs text" "$da" gist "   "
 
 # Audio as WAV, which core reads without ffmpeg.
 check "ear on wav" 0 '"language" : "en"' "$da" ear talk.wav --json
@@ -97,6 +100,7 @@ check "clips transcribes with voz" 0 '"sentences" : [1-9]' "$da" clips talk.wav 
 check "who on wav" 0 '"speakerCount" : [1-9]' "$da" who talk.wav --json
 check "who writes rttm" 0 "^SPEAKER talk 1 " "$da" who talk.wav --format rttm
 check "who labels a transcript" 0 '"lines" : \[' "$da" who talk.wav --transcript talk.srt --json
+check "uhm on wav" 0 '"fillers" : \[' "$da" uhm talk.wav --json
 check "voz on wav" 0 '"words" : \[' "$da" voz talk.wav --json
 check "voz with speakers" 0 '"speaker" : 0' "$da" voz talk.wav --speakers --json
 check "no file" 1 "no file at missing.wav" "$da" ear missing.wav
@@ -104,9 +108,7 @@ check "no file" 1 "no file at missing.wav" "$da" ear missing.wav
 # Flows: the templates, a text flow from stdin, and a recording flow on the WAV.
 check "flow templates" 0 "^ *transcript-and-captions " "$da" flow templates
 check "flow check" 0 '"runnable" : true' "$da" flow check transcript-and-captions --json
-if [[ "$os" == Linux ]]; then
-  check "flow check names a macOS step" 1 "uhm runs on macOS only" "$da" flow check filler-words
-fi
+check "flow check filler-words" 0 '"runnable" : true' "$da" flow check filler-words --json
 check "flow runs a text template" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu' | '$da' flow run redact-a-document"
 check "flow new" 0 "redact-a-document\.flow" "$da" flow new redact-a-document
 check "flow runs a flow file" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu' | '$da' flow run redact-a-document.flow"
@@ -128,6 +130,7 @@ if [[ $has_ffmpeg == 1 ]]; then
   check "ear on m4a" 0 '"language" : "en"' "$da" ear talk.m4a --json
   check "ear on mp3" 0 '"language" : "en"' "$da" ear talk.mp3 --json
   check "ear on video" 0 '"language" : "en"' "$da" ear talk.mp4 --json
+  check "uhm on video" 0 '"fillers" : \[' "$da" uhm talk.mp4 --json
   check "clear keeps m4a" 0 "talk_clear\.m4a" "$da" clear talk.m4a
   check "clear writes mp3 as m4a" 0 "Written as m4a" "$da" clear talk.mp3
   check "clear on video" 0 "talk_clear\.mp4" "$da" clear talk.mp4

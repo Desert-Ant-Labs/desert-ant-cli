@@ -20,10 +20,12 @@ enum Runners {
         ClearRunner(),
         EarRunner(),
         TongueRunner(),
+        ToxicRunner(),
         ModeratorRunner(),
         EyeRunner(),
         WhoRunner(),
         ClipsRunner(),
+        UhmRunner(),
     ]
 
     /// Models whose frameworks exist only on some platforms.
@@ -31,9 +33,6 @@ enum Runners {
         var runners: [any ModelRunner] = []
         #if canImport(Voz)
         runners.append(VozRunner())
-        #endif
-        #if canImport(CoreML) && canImport(AVFoundation)
-        runners.append(UhmRunner())
         #endif
         #if TITLE
         runners.append(TitleRunner())
