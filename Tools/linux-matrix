@@ -59,7 +59,7 @@ elif command -v zypper >/dev/null; then
   [ "$want_ffmpeg" = 1 ] && zypper -q -n install ffmpeg >/dev/null 2>&1 || true
 elif command -v pacman >/dev/null; then
   # The sandbox needs seccomp, which an emulated container may not offer.
-  pacman -Sy --noconfirm --quiet --disable-sandbox curl >/dev/null
+  pacman -Syu --noconfirm --quiet --disable-sandbox curl >/dev/null
   [ "$want_ffmpeg" = 1 ] && pacman -S --noconfirm --quiet --disable-sandbox ffmpeg >/dev/null
 elif command -v apk >/dev/null; then
   apk add -q bash curl >/dev/null

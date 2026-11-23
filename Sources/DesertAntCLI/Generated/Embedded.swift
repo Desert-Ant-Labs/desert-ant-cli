@@ -1574,7 +1574,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
 }
 ```
 
-To restore originals in a reply, replace each `placeholder` with its `original`. Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`, `CREDIT_CARD`, `IP_ADDRESS`, `URL`, and the rest of that set. On a Mac without a Neural Engine, such as a virtual Mac, Redact finds no names, addresses, or cities, and says so on stderr; emails, cards, and IBANs are still redacted.
+To restore originals in a reply, replace each `placeholder` with its `original`. Labels are the Redact SDK's: `GIVEN_NAME`, `SURNAME`, `EMAIL`, `PHONE`, `CREDIT_CARD`, `IP_ADDRESS`, `URL`, and the rest of that set.
 
 `desertant gist "<text>" --json` prints an array of topics, best first.
 

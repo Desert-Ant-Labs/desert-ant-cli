@@ -174,9 +174,6 @@ enum ModelSteps {
         let model = await run.context.run.models.model("redact") { Redact() }
         var options = Options()
         if let min = run.params["confidence"]?.number { options.minimumConfidence = min }
-        if RedactRunner.offNeuralEngine {
-            run.context.note = "Redact runs without the Neural Engine on this Mac, so it does not detect names, addresses, or cities."
-        }
         var tags = Placeholders.Numbering()
         var found: [Value] = []
         func one(_ text: String) async throws -> String {

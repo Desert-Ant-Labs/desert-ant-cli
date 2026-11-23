@@ -72,15 +72,8 @@ if [[ "$os" == Linux ]]; then
   done
 fi
 
-# Text models, which download their weights here on a first run. A virtual Mac has no
-# Neural Engine, where Redact finds no names and says so.
-if [[ "$os" == Darwin && "$(sysctl -n kern.hv_vmm_present 2>/dev/null)" == 1 ]]; then
-  allowed+=(-e "^Redact runs without the Neural Engine")
-  check "redact warns without the Neural Engine" 0 "does not detect names" "$da" redact "Email Anna at anna@example.hu"
-  check "redact still redacts emails" 0 "Email Anna at \[EMAIL_1\]" "$da" redact "Email Anna at anna@example.hu"
-else
-  check "redact" 0 "Email \[GIVEN_NAME_1\] at \[EMAIL_1\]" "$da" redact "Email Anna at anna@example.hu"
-fi
+# Text models, which download their weights here on a first run.
+check "redact" 0 "Email \[GIVEN_NAME_1\] at \[EMAIL_1\]" "$da" redact "Email Anna at anna@example.hu"
 check "redact from stdin" 0 "\[EMAIL_1\]" sh -c "echo 'write to anna@example.hu' | '$da' redact"
 check "emo" 0 "." "$da" emo "pay my bills"
 check "gist" 0 '"slug" : "finance"' "$da" gist --json "The central bank raised interest rates again to fight inflation"
