@@ -3,10 +3,6 @@ import Foundation
 import Transcript
 import Who
 
-// Voz: a transcript with a time on every word. Sentences on stdout, captions and
-// transcripts as files, the document under --json (which `clips --transcript` reads).
-// With --speakers, Who labels each line with who said it.
-
 struct VozRunner: ModelRunner {
     let id = "voz"
     let inputKind = RunInputKind.file
@@ -41,7 +37,6 @@ struct VozRunner: ModelRunner {
         let sentences: [Span]
         let captions: [Caption]
         let files: [String: String]
-        /// With --speakers.
         let speakers: [SpeakerSummary]?
         let turns: [SpeakerTurn]?
     }
@@ -49,7 +44,6 @@ struct VozRunner: ModelRunner {
         let start: Double
         let end: Double
         let text: String
-        /// With --speakers, on sentences.
         var speaker: Int? = nil
     }
 
@@ -82,7 +76,6 @@ struct VozRunner: ModelRunner {
         let cues = voices.map { SpeakerFile.captions($0.lines, words: t.words).map(\.0) } ?? Captions.captions(from: t.words, sentences: sentences)
         let force = arguments["force"] == "true"
 
-        // Files: the flags write beside the input, --output writes one path.
         var files: [String: String] = [:]
         for ext in ["srt", "vtt", "txt"] where arguments[ext] == "true" {
             let path = try Destination.resolve(requested: nil, default: Destination.sibling(of: input, suffix: "", extension: ext),
@@ -100,7 +93,6 @@ struct VozRunner: ModelRunner {
             files[ext] = path
         }
 
-        // Stdout.
         if format == .json {
             out.emit(document(input: input, t, sentences, cues, voices, files: files, loadSec: loadSec))
             return
@@ -138,7 +130,6 @@ struct VozRunner: ModelRunner {
         return k
     }
 
-    /// Who spoke when, matched to the words.
     private func label(_ input: String, _ t: VozTranscriber.Transcription, names: [String], _ progress: Progress) async throws -> Voices {
         if !who.isDownloaded() {
             try await who.download { progress.update($0, label: "downloading who") }
@@ -166,7 +157,6 @@ struct VozRunner: ModelRunner {
 
     private func document(input: String, _ t: VozTranscriber.Transcription, _ sentences: [Sentence], _ cues: [Caption],
                           _ voices: Voices?, files: [String: String], loadSec: Double) -> Document {
-        // A sentence two people share is split where the speaker changes.
         let spans = voices.map { $0.lines.map { Span(start: $0.start, end: $0.end, text: $0.text, speaker: $0.speaker) } }
             ?? sentences.map { Span(start: $0.start, end: $0.end, text: $0.text) }
         return Document(

@@ -1,9 +1,6 @@
 import XCTest
 @testable import DesertAntCLI
 
-// The parts of the clips pipeline that need no model or media: reading a transcript
-// file, and the timestamps a person reads.
-
 final class ClippingTests: XCTestCase {
     private func write(_ name: String, _ text: String) throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString)-\(name)")

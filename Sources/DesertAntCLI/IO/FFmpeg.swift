@@ -1,7 +1,5 @@
 import Foundation
 
-// The ffmpeg on PATH, for the media work AVFoundation and ImageIO do on a Mac.
-
 enum FFmpeg {
     struct Tools: Sendable {
         let ffmpeg: String
@@ -26,7 +24,6 @@ enum FFmpeg {
         throw RunError("reading \(name) needs ffmpeg, which is not installed. Install ffmpeg with \(installHint)\(fallback.map { ", or \($0)" } ?? "").")
     }
 
-    /// How to install ffmpeg here, as a phrase that follows "Install ffmpeg with".
     static var installHint: String {
         #if os(macOS)
         return "`brew install ffmpeg`"
@@ -55,13 +52,10 @@ enum FFmpeg {
         return "your package manager"
     }
 
-    /// Whether this ffmpeg draws subtitles, which needs libass.
     static func hasSubtitles(_ tools: Tools) -> Bool {
         let filters = (try? run(tools.ffmpeg, ["-hide_banner", "-filters"], file: "filters")) ?? Data()
         return String(decoding: filters, as: UTF8.self).contains(" subtitles ")
     }
-
-    // MARK: - Probe
 
     struct Probe: Sendable, Equatable {
         var hasVideo = false
@@ -112,9 +106,6 @@ enum FFmpeg {
         return probe
     }
 
-    // MARK: - Audio
-
-    /// One array per channel, mixed down to `channels` when given.
     static func decodeAudio(_ path: String, sampleRate: Double, channels wanted: Int? = nil,
                             tools: Tools) throws -> [[Float]] {
         let info = try probe(path, tools: tools)
@@ -146,9 +137,7 @@ enum FFmpeg {
                 file: destination, writing: true)
     }
 
-    // MARK: - Images
-
-    /// The first frame as stored, RGB. EXIF orientation is left to `Exif`.
+    /// EXIF orientation is left to `Exif`.
     static func decodeImage(_ path: String, tools: Tools) throws -> (width: Int, height: Int, rgb: [UInt8]) {
         let info = try probe(path, tools: tools)
         guard info.hasVideo, info.width > 0, info.height > 0 else {
@@ -164,10 +153,6 @@ enum FFmpeg {
         return (info.width, info.height, [UInt8](data))
     }
 
-    // MARK: - Clips
-
-    /// Copies the tracks, as AVFoundation's passthrough export does. When the container
-    /// cannot hold the source's codecs, ffmpeg's default encoders for it take over.
     static func cut(_ source: String, ranges: [(start: Double, duration: Double)],
                     to destination: String, tools: Tools) throws {
         let kept = ranges.filter { $0.duration > 0 }
@@ -217,9 +202,6 @@ enum FFmpeg {
     private static func seconds(_ s: Double) -> String { String(format: "%.3f", max(0, s)) }
     private static func name(_ path: String) -> String { URL(fileURLWithPath: path).lastPathComponent }
 
-    // MARK: - Running
-
-    /// stdout, or an error carrying ffmpeg's last line.
     @discardableResult
     static func run(_ executable: String, _ arguments: [String], file: String, writing: Bool = false, in directory: URL? = nil) throws -> Data {
         let process = Process()

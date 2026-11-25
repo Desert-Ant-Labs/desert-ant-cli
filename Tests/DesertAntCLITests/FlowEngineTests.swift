@@ -17,7 +17,6 @@ final class FlowEngineTests: XCTestCase {
         return StepContext(run: run, step: flow.steps[0], position: 1)
     }
 
-    /// Doubles a number, and fails on 3.
     private let double = StepDef(
         type: "double", summary: "", category: .logic,
         inputs: [Port(id: "n", type: .any), Port(id: "label", type: .any, optional: true)],
@@ -78,7 +77,6 @@ final class FlowEngineTests: XCTestCase {
     }
 
     func testAnEmptyWiredInputSkipsTheStep() async throws {
-        // An empty list of items gives the textlist step no output at all.
         let (report, _) = try await run("""
         flow: 1
         steps:

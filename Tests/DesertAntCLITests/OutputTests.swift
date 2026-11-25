@@ -1,9 +1,6 @@
 import XCTest
 @testable import DesertAntCLI
 
-// The file-writing policy and the brand's time formatting, both easy to get subtly
-// wrong and both visible to every reader.
-
 final class OutputTests: XCTestCase {
     private var dir: URL!
 
@@ -30,7 +27,6 @@ final class OutputTests: XCTestCase {
     func testOutputNeverReplacesTheInput() {
         let input = touch("talk.wav")
         XCTAssertThrowsError(try Destination.resolve(requested: input, default: "", input: input, force: true))
-        // The same file spelled differently still counts as the input.
         let roundabout = dir.path + "/../" + dir.lastPathComponent + "/talk.wav"
         XCTAssertThrowsError(try Destination.resolve(requested: roundabout, default: "", input: input, force: false))
     }

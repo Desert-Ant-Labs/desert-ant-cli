@@ -1,7 +1,6 @@
 import Foundation
 import Yams
 
-/// A step's settings as plain data, read from a flow file's `with`.
 enum Param: Hashable, Sendable {
     case null
     case bool(Bool)
@@ -52,8 +51,6 @@ enum Param: Hashable, Sendable {
         array?.compactMap(\.string) ?? []
     }
 
-    /// A value from YAML: a scalar by its resolved tag, a sequence, or a mapping with
-    /// text keys.
     init(_ node: Yams.Node) {
         switch node {
         case .scalar:
@@ -73,8 +70,6 @@ enum Param: Hashable, Sendable {
         }
     }
 
-    /// One value typed on the command line, as `--set clips.count=3`: a number or a flag
-    /// when it reads as one, otherwise text.
     static func parse(_ text: String) -> Param {
         guard let node = try? Yams.compose(yaml: text), case .scalar = node else { return .string(text) }
         let param = Param(node)
@@ -93,7 +88,6 @@ extension Param: ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, Expres
 }
 
 extension Double {
-    /// The number as an `Int` when it has no fraction and fits.
     var whole: Int? {
         guard isFinite, rounded() == self, abs(self) < 1e15 else { return nil }
         return Int(self)

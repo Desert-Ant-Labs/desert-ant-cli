@@ -1,9 +1,6 @@
 import XCTest
 @testable import DesertAntCLI
 
-// The CLI must not drift from the vendored manifest. These pin the contract between
-// the two, and the pieces of the terminal layer that are easy to get subtly wrong.
-
 final class CatalogTests: XCTestCase {
     func testManifestDecodes() {
         let m = Manifest.shared

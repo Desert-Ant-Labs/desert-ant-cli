@@ -1,9 +1,5 @@
 import Foundation
 
-// One progress line on stderr: the loader, a label, and a percentage when there is
-// one. The loader runs on its own clock so a phase with no measurable progress still
-// moves. Nothing draws unless stderr is a terminal, so a captured log holds only text.
-
 final class Progress: @unchecked Sendable {
     private let palette: Palette
     private let live: Bool
@@ -18,8 +14,6 @@ final class Progress: @unchecked Sendable {
         live = !quiet && Terminal.isTTY(STDERR_FILENO)
     }
 
-    /// Set what the line says. `fraction` is 0...1, or nil when the phase has no
-    /// measurable progress.
     func update(_ fraction: Double?, label: String) {
         lock.lock()
         self.label = label
@@ -36,7 +30,6 @@ final class Progress: @unchecked Sendable {
         }
     }
 
-    /// Clear the line, ready for the result on stdout.
     func finish() {
         ticker?.cancel()
         ticker = nil

@@ -6,7 +6,6 @@ final class BurnTests: XCTestCase {
     private static let fonts = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("fonts")
 
-    /// Words at a steady pace from `start`.
     private func speak(_ text: String, from start: Double = 0, pace: Double = 0.4) -> [TimedWord] {
         text.split(separator: " ").enumerated().map { i, w in
             TimedWord(text: (i == 0 ? "" : " ") + w, start: start + Double(i) * pace, end: start + Double(i + 1) * pace)
@@ -15,7 +14,6 @@ final class BurnTests: XCTestCase {
 
     func testWordsMoveOntoTheClipsTimeline() {
         let words = speak("one two three four five six seven eight", pace: 1)
-        // Two ranges played end to end: 1-3s, then 5-7s.
         let shifted = ClipCaptions.shift(words, into: [TimeRange(start: 1, end: 3), TimeRange(start: 5, end: 7)])
         XCTAssertEqual(shifted.map { $0.text.trimmingCharacters(in: .whitespaces) }, ["two", "three", "six", "seven"])
         XCTAssertEqual(shifted.map(\.start), [0, 1, 2, 3])
@@ -59,7 +57,6 @@ final class BurnTests: XCTestCase {
     func testACaptionStaysUpAtLeastPointEightSeconds() {
         let alone = ClipCaptions.settle([Caption(start: 2, end: 2.1, text: "Yes."), Caption(start: 5, end: 6, text: "b")])
         XCTAssertEqual(alone[0].end, 2.8, accuracy: 1e-9)
-        // Never past the next caption's start.
         let crowded = ClipCaptions.settle([Caption(start: 2, end: 2.1, text: "Yes."), Caption(start: 2.5, end: 3.5, text: "b")])
         XCTAssertEqual(crowded[0].end, 2.5)
         XCTAssertEqual(crowded[1].start, 2.5)

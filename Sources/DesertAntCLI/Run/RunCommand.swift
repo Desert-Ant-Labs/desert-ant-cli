@@ -1,8 +1,5 @@
 import ArgumentParser
 
-// `desertant run <model>` and `desertant pull <model>`. The uniform shape for scripts
-// and agents; the per-model verbs reach the same executor.
-
 struct Run: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "run",

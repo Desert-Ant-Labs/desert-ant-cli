@@ -1,17 +1,14 @@
 import Foundation
 import Transcript
 
-/// What happens to a clip's captions.
 enum CaptionMode: String, Sendable, CaseIterable {
-    /// Drawn into the picture, which re-encodes the clip.
     case burn
-    /// Written beside the clip as an .srt file, with no re-encode.
     case srt
     case off
 }
 
-/// How burned-in captions look. macOS draws them with Core Text and Linux with libass,
-/// from this one description, so a clip looks the same on both.
+/// macOS draws captions with Core Text and Linux with libass, both from this one
+/// description, so a clip looks the same on both.
 struct CaptionStyle: Sendable, Equatable {
     enum Position: String, Sendable, CaseIterable { case bottom, center, top }
     enum Align: String, Sendable, CaseIterable { case left, center, right }
@@ -28,9 +25,7 @@ struct CaptionStyle: Sendable, Equatable {
     var color = RGBA.white
     var look = Look.shadow
     var quality = Quality.high
-    /// Lines on screen, 1 or 2. Nil follows the frame's shape.
     var lines: Int?
-    /// The most words in one caption. Nil follows the frame's shape.
     var words: Int?
 
     struct RGBA: Sendable, Equatable {
@@ -66,7 +61,6 @@ struct CaptionStyle: Sendable, Equatable {
 
     static let weights: [String: Int] = ["regular": 400, "medium": 500, "semibold": 600, "bold": 700, "black": 900]
 
-    /// The style from command-line text, each value checked.
     static func parse(position: String?, align: String?, font: String?, size: String?, weight: String?,
                       color: String?, look: String?, quality: String?, lines: String? = nil, words: String? = nil) throws -> CaptionStyle {
         var s = CaptionStyle()
@@ -115,30 +109,20 @@ struct CaptionStyle: Sendable, Equatable {
     }
 }
 
-/// How captions are cut for a frame: few short words on a tall phone video, two
-/// lines of a sentence on a wide one.
 struct Pacing: Sendable, Equatable {
-    /// 1 or 2.
     let lines: Int
-    /// The most characters on a line.
     let lineLength: Int
-    /// The most words in one caption, if there is a limit.
     let words: Int?
-    /// The longest a caption stays on screen while the words go on.
     let maxDuration: Double
-    /// A pause longer than this starts a new caption.
     let pause: Double
 }
 
-/// Where captions go in one frame size: the text's pixel height, the margins, and how
-/// the captions are paced.
 struct CaptionFrame: Sendable, Equatable {
     enum Shape: String, Sendable { case vertical, square, landscape }
 
     let width: Int
     let height: Int
     let shape: Shape
-    /// The height of a line of text, in pixels.
     let lineHeight: Double
     let marginX: Double
     let marginY: Double
@@ -166,7 +150,6 @@ struct CaptionFrame: Sendable, Equatable {
         }
     }
 
-    /// The outline, the box's padding, or the shadow's spread for a look, in pixels.
     func border(_ look: CaptionStyle.Look) -> Double {
         switch look {
         case .outline: (lineHeight * 0.075).rounded()
@@ -179,7 +162,6 @@ struct CaptionFrame: Sendable, Equatable {
     /// touch and never overlap.
     func pitch(_ look: CaptionStyle.Look) -> Double { lineHeight + (look == .box ? 2 * border(.box) : 0) }
 
-    /// The top of the first of `count` lines, in pixels from the top of the frame.
     func top(lines count: Int, style: CaptionStyle) -> Double {
         let block = Double(count) * lineHeight + Double(max(count - 1, 0)) * (pitch(style.look) - lineHeight)
         return switch style.position {
@@ -189,15 +171,12 @@ struct CaptionFrame: Sendable, Equatable {
         }
     }
 
-    /// How far the soft shadow falls below the text, and how much it blurs, in pixels.
     var shadowOffset: Double { (lineHeight * 0.03).rounded() }
     var shadowBlur: Double { (lineHeight * 0.16).rounded() }
     static let shadowColor = CaptionStyle.RGBA.black.with(alpha: 0.55)
 }
 
 enum ClipCaptions {
-    /// Words inside `ranges`, moved onto the clip's own timeline, where the ranges play
-    /// end to end. A word belongs to the range its middle falls in.
     static func shift(_ words: [TimedWord], into ranges: [TimeRange]) -> [TimedWord] {
         var out: [TimedWord] = []
         var offset = 0.0
@@ -211,9 +190,6 @@ enum ClipCaptions {
         return out
     }
 
-    /// Cues paced for the frame: at most `pacing.lines` lines and `pacing.words` words,
-    /// a new cue at the end of a sentence, after a pause, or when a cue has been up for
-    /// its longest, timed by `settle`.
     static func social(_ words: [TimedWord], pacing: Pacing) -> [Caption] {
         var cues: [Caption] = []
         var current: [TimedWord] = []
@@ -259,8 +235,6 @@ enum ClipCaptions {
         return out
     }
 
-    /// Words spread evenly over each sentence, for a transcript with times on sentences
-    /// only.
     static func words(spreading sentences: [Sentence]) -> [TimedWord] {
         var out: [TimedWord] = []
         for s in sentences {
@@ -276,8 +250,7 @@ enum ClipCaptions {
     }
 }
 
-/// Captions as an Advanced SubStation file for libass, laid out as the Core Text
-/// renderer lays them out: lines broken in advance, no wrapping, the same margins.
+/// Must match the Core Text renderer's layout: lines broken in advance, no wrapping, the same margins.
 enum ASS {
     static func file(_ cues: [Caption], frame: CaptionFrame, style: CaptionStyle, font: CaptionFont) -> String {
         let alignment: Int = {
@@ -359,7 +332,6 @@ enum ASS {
     private static func num(_ v: Double) -> String { v.whole.map(String.init) ?? String(format: "%.2f", v) }
 }
 
-/// Captions to draw into one clip.
 struct BurnedCaptions: Sendable {
     let cues: [Caption]
     let style: CaptionStyle
@@ -372,9 +344,6 @@ import CoreText
 import QuartzCore
 
 extension AVFoundationCutter {
-    /// The ranges laid end to end with each cue drawn in by Core Text. High quality
-    /// exports with Apple's highest quality preset. Medium and low write H.264 at a
-    /// lower bit rate, at the source's own size and frame rate.
     func cut(_ source: URL, ranges: [TimeRange], burning captions: BurnedCaptions, frame _: CaptionFrame, to destination: URL) async throws {
         let composition = try await Self.composition(of: AVURLAsset(url: source), keeping: ranges)
         let video = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: composition)
@@ -397,7 +366,6 @@ extension AVFoundationCutter {
         }
     }
 
-    /// Each cue as a layer that shows for the cue's time, over the video.
     private func export(_ composition: AVComposition, _ video: AVMutableVideoComposition, _ drawn: [DrawnCue],
                         as type: AVFileType, to destination: URL) async throws {
         let parent = CALayer()
@@ -435,10 +403,8 @@ struct DrawnCue: @unchecked Sendable {
     let rect: CGRect
 }
 
-/// Reads the composed frames, draws the cue that is showing into each, and writes them
-/// as H.264 at a bit rate set by `bitsPerPixel`, with the audio as AAC. Apple's export
-/// presets below the highest one shrink the picture, so the smaller sizes are written
-/// here instead.
+/// Apple's export presets below the highest one shrink the picture, so medium and
+/// low quality write H.264 here instead, at a bit rate set by `bitsPerPixel`.
 final class CaptionWriter: @unchecked Sendable {
     private let reader: AVAssetReader
     private let writer: AVAssetWriter
@@ -520,7 +486,6 @@ final class CaptionWriter: @unchecked Sendable {
         }
     }
 
-    /// Feeds an input whenever it is ready, until `next` runs out or an append fails.
     /// A failed writer is never ready again, so the pump stops when it sees one rather
     /// than wait for a call that will not come; `run` then throws the writer's error.
     private func pump(_ input: AVAssetWriterInput, label: String, _ next: @escaping @Sendable () -> Bool) async {
@@ -550,8 +515,7 @@ final class CaptionWriter: @unchecked Sendable {
     }
 }
 
-/// Draws a cue the way libass does: lines broken in advance, each a line height tall,
-/// placed inside the margins, with an outline, a box, or a shadow.
+/// Draws a cue the way libass does, so macOS and Linux clips match.
 struct CaptionRenderer {
     let font: CTFont
     let metrics: CaptionFont
@@ -603,8 +567,7 @@ struct CaptionRenderer {
         }
     }
 
-    /// The cue drawn the size of what it draws, and where that goes in the frame,
-    /// bottom-left origin as video frames and composition layers use.
+    /// Bottom-left origin, as video frames and composition layers use.
     func image(_ cue: Caption) -> (image: CGImage, rect: CGRect)? {
         let lines = lines(cue.text)
         guard !lines.isEmpty else { return nil }
@@ -679,8 +642,6 @@ struct CaptionRenderer {
 #endif
 
 extension FFmpegCutter {
-    /// The ranges cut with exact seeking and laid end to end, the captions drawn by
-    /// libass, in one encode.
     func cut(_ source: URL, ranges: [TimeRange], burning captions: BurnedCaptions, frame: CaptionFrame, to destination: URL) async throws {
         let kept = ranges.filter { $0.duration > 0 }
         guard !kept.isEmpty else { throw RunError("the clip's time range is outside the source.") }

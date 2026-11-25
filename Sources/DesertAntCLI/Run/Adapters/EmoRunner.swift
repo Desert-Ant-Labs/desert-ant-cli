@@ -1,7 +1,5 @@
 import Emo
 
-// Emo: emoji suggestions for a line of text.
-
 struct EmoRunner: ModelRunner {
     let id = "emo"
     let inputKind = RunInputKind.text

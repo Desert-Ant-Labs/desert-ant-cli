@@ -3,12 +3,7 @@ import Foundation
 import CQuietLiteRt
 #endif
 
-// Shared execution: resolve the input, make sure the weights are present, run.
-
 enum Execute {
-    /// Run a model by id. `rawInput` is the argument the user gave (text or a path),
-    /// or nil to fall back to stdin for a text model. Downloads the weights first if
-    /// they are missing, with live progress on stderr.
     static func run(id: String, rawInput: String?, arguments: RunArguments, out: Output) async throws {
         let runner = try resolveRunner(id)
 
@@ -31,17 +26,13 @@ enum Execute {
         out.space()
     }
 
-    /// Run a file or image model over several paths, or a folder. One plain path takes
-    /// the single-input route above, so its result keeps today's shape; otherwise every
-    /// file runs in turn with the model loaded once, `--json` collects the results in
-    /// one array, and a file that fails is reported on stderr without stopping the rest.
+    /// One plain path takes the single-input route, so its result keeps today's shape.
     static func run(id: String, rawInputs: [String], recursive: Bool, arguments: RunArguments, out: Output) async throws {
         let runner = try resolveRunner(id)
         guard runner.inputKind != .text else {
             throw RunError("\(id) takes text, not files. Pass the text as --input, or pipe it in.")
         }
         let expanded = try Inputs.expand(rawInputs, kind: runner.inputKind, recursive: recursive)
-        // A question about the inputs together, such as which photos are near-duplicates.
         if let set = runner as? any SetRunner, set.wantsSet(arguments) {
             try runner.validate(arguments)
             try await ensureDownloaded(runner, out: out)
@@ -55,7 +46,6 @@ enum Execute {
             try await run(id: id, rawInput: expanded.files.first, arguments: arguments, out: out)
             return
         }
-        // Options that name one input's companion have no meaning across many.
         if arguments["output"] != nil {
             throw RunError("--output names one file. Run one input at a time, or let each output land beside its input.")
         }
@@ -95,7 +85,6 @@ enum Execute {
         }
     }
 
-    /// A skipped file is a note, so --quiet drops it; a failed file is not.
     private static func noteSkipped(_ expanded: Inputs.Expanded, _ runner: any ModelRunner, _ out: Output) {
         guard !expanded.skipped.isEmpty, !out.options.quiet else { return }
         let shown = expanded.skipped.prefix(5).joined(separator: ", ")
@@ -107,13 +96,11 @@ enum Execute {
         }
     }
 
-    /// The same text the CLI prints for the error on a single run.
     private static func message(of error: Error) -> String {
         if let localized = error as? LocalizedError, let text = localized.errorDescription { return text }
         return String(describing: error)
     }
 
-    /// The runner for an id, or a message that says why there is none.
     static func resolveRunner(_ id: String) throws -> any ModelRunner {
         _ = quietLiteRt
         if let runner = Runners.runner(for: id) { return runner }
@@ -133,7 +120,6 @@ enum Execute {
         #endif
     }()
 
-    /// Download the weights if they are not on disk, showing progress on stderr.
     static func ensureDownloaded(_ runner: any ModelRunner, out: Output) async throws {
         guard !runner.isDownloaded() else { return }
         let progress = Progress(palette: out.palette, quiet: out.options.quiet)

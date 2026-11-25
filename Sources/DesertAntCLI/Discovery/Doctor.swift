@@ -1,9 +1,6 @@
 import ArgumentParser
 import Foundation
 
-// `desertant doctor`. What this machine can run, what is downloaded, whether a newer
-// release exists, and how the catalog stands.
-
 struct Doctor: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "doctor",
@@ -30,9 +27,11 @@ struct Doctor: AsyncParsableCommand {
         let updateCommand: String
         let models: Int
         let shipping: Int
+        let apiKey: Bool
+        let apiKeySource: APIKey.Source?
     }
 
-    // Compile-time facts about this binary. MLX (the Title model) needs Apple silicon.
+    // MLX (the Title model) needs Apple silicon.
     private static let os: String = {
         #if os(macOS)
         "macOS"
@@ -91,7 +90,8 @@ struct Doctor: AsyncParsableCommand {
                 downloaded: downloaded, runnable: runnable,
                 version: Version.cli, coreVersion: Version.core, latest: latest,
                 updateAvailable: newer, updateCommand: source.updateCommand,
-                models: m.models.count, shipping: shipping
+                models: m.models.count, shipping: shipping,
+                apiKey: APIKey.current != nil, apiKeySource: APIKey.current?.source
             ))
             return
         }
@@ -110,6 +110,13 @@ struct Doctor: AsyncParsableCommand {
             out.line("  \(p.dim("up to date"))")
         } else {
             out.line("  \(p.dim("could not check for a newer release"))")
+        }
+        out.line()
+        out.line(p.bold("API key"))
+        switch APIKey.current?.source {
+        case .environment?: out.line(check(true, "set, from DAL_API_KEY"))
+        case .saved?: out.line(check(true, "set, saved by `desertant auth login`"))
+        case nil: out.line(check(false, "not set. You only need an API key when you use our models in production."))
         }
         out.line()
         out.line(p.bold("Machine"))

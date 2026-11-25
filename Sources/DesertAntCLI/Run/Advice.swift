@@ -1,8 +1,6 @@
 import Foundation
 import Tongue
 
-// Notes for a text outside what a model reads best; the result still stands.
-
 enum Advice {
     static func notes(for id: String, text: String) -> [String] {
         var notes: [String] = []

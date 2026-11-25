@@ -1,9 +1,6 @@
 import ArgumentParser
 import Foundation
 
-// `desertant cache`. Where the weights live, how big they are, and which models are
-// on disk. `--path` prints just the directory; `--clean --force` empties it.
-
 struct Cache: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "cache",

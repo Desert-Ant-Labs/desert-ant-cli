@@ -14,7 +14,6 @@ struct FlowCommand: AsyncParsableCommand {
     )
 }
 
-/// A flow named on the command line: a file, or failing that a template.
 struct FlowSource {
     let name: String
     let yaml: String
@@ -150,13 +149,11 @@ struct FlowRunCommand: AsyncParsableCommand {
         out.note("Ran \(done) step\(done == 1 ? "" : "s") in \(Format.elapsed(elapsed))\(skipped > 0 ? ", and skipped \(skipped)" : "").")
     }
 
-    /// A path under the current folder as the reader would type it; JSON keeps it absolute.
     static func display(_ text: String) -> String {
         let here = FileManager.default.currentDirectoryPath + "/"
         return text.hasPrefix(here) ? String(text.dropFirst(here.count)) : text
     }
 
-    /// `--set clips.count=3` as settings by step, each checked against the step's own.
     static func settings(_ pairs: [String], in flow: Flow) throws -> [String: Params] {
         var sets: [String: Params] = [:]
         for pair in pairs {
@@ -178,9 +175,6 @@ struct FlowRunCommand: AsyncParsableCommand {
         return sets
     }
 
-    /// One binding per run: every path at once for an input that takes a list, one
-    /// path per run otherwise, stdin for a text input, or nil to run on the flow's own
-    /// settings.
     func bindings(_ flow: Flow, sets: [String: Params], out: Output) throws -> [Binding?] {
         guard let input = flow.input else {
             if !inputs.isEmpty { throw RunError("this flow has no input step, so it takes no files.") }
@@ -229,7 +223,6 @@ struct FlowTemplatesCommand: ParsableCommand {
         let runsHere: Bool
     }
 
-    /// Templates grouped by what they start from, as the home screen groups the verbs.
     static let groups: [(label: String, inputs: Set<String>)] = [
         ("Recordings", ["audio", "watch"]), ("Text", ["text", "textlist"]), ("Photos and files", ["photos", "image", "files"]),
     ]
@@ -343,7 +336,6 @@ struct FlowCheckCommand: ParsableCommand {
         let id: String
         let type: String
         let uses: [String: String]
-        /// The inputs wired by desertant rather than by the file.
         let implied: [String]
         let problem: String?
     }

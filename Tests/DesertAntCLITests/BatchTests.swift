@@ -1,9 +1,6 @@
 import XCTest
 @testable import DesertAntCLI
 
-// Several inputs in one process: what a folder expands to, and how the results are
-// collected into one array.
-
 final class BatchTests: XCTestCase {
     private var dir: URL!
 
@@ -52,7 +49,6 @@ final class BatchTests: XCTestCase {
 
     func testFolderWithNothingToRunThrows() {
         XCTAssertThrowsError(try Inputs.expand([dir.path], kind: .file, recursive: true))
-        // The --recursive hint only when there was a folder to look inside.
         XCTAssertThrowsError(try Inputs.expand([dir.path], kind: .file, recursive: false)) { error in
             XCTAssertTrue("\(error)".contains("--recursive"))
         }

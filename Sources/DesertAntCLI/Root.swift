@@ -2,9 +2,6 @@ import ArgumentParser
 import Foundation
 import Usage
 
-// desertant. The root command and the tree under it. The binary installs as
-// `desertant` with a `da` alias.
-
 @main
 struct DesertAnt: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -26,16 +23,13 @@ struct DesertAnt: AsyncParsableCommand {
         version: Version.full,
         subcommands: {
             var commands: [ParsableCommand.Type] = [
-            // Discover.
             Home.self,
             Models.self,
             Search.self,
             Info.self,
             Doctor.self,
-            // Weights.
             Pull.self,
             Cache.self,
-            // Run.
             Run.self,
             EmoVerb.self,
             RedactVerb.self,
@@ -52,11 +46,10 @@ struct DesertAnt: AsyncParsableCommand {
             EyeVerb.self,
             FaceVerb.self,
             FlowCommand.self,
-            // Agents.
             Schema.self,
             Docs.self,
             Setup.self,
-            // Itself.
+            Auth.self,
             Update.self,
             ]
             // Title runs on MLX and is compiled in only when the build asks for it.
@@ -68,9 +61,11 @@ struct DesertAnt: AsyncParsableCommand {
         defaultSubcommand: Home.self
     )
 
-    /// ArgumentParser's own entry point, plus a wait for core's network requests still in
-    /// flight: a process that exits under one can crash on the way out.
+    /// A process that exits under a license request in flight can crash.
     static func main() async {
+        if let key = APIKey.current?.key {
+            Usage.DesertAnt.configure(apiKey: key)
+        }
         do {
             var command = try parseAsRoot()
             if var asyncCommand = command as? AsyncParsableCommand {
@@ -78,9 +73,9 @@ struct DesertAnt: AsyncParsableCommand {
             } else {
                 try command.run()
             }
-            await TelemetryDebug.shared.flushAndWait()
+            await Usage.DesertAnt.flushLicenses()
         } catch {
-            await TelemetryDebug.shared.flushAndWait()
+            await Usage.DesertAnt.flushLicenses()
             exit(withError: error)
         }
     }

@@ -3,10 +3,8 @@ import Foundation
 import WinSDK
 #endif
 
-// The terminal's width, so a list fits on one line per row instead of wrapping.
-
 enum Terminal {
-    /// Whether a file descriptor is a terminal. Windows deprecates the POSIX name.
+    /// Windows deprecates the POSIX name.
     static func isTTY(_ fd: Int32) -> Bool {
         #if os(Windows)
         return _isatty(fd) != 0
@@ -15,7 +13,6 @@ enum Terminal {
         #endif
     }
 
-    /// Columns available on stdout: the tty's width, else `COLUMNS`, else 100.
     static var columns: Int {
         #if os(Windows)
         // Fails when stdout is redirected, which stands in for the isatty check.

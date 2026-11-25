@@ -1,10 +1,6 @@
 import Foundation
 import Transcript
 
-// Who's turns shaped for a reader. `who --transcript` and `voz --speakers` both write
-// through here.
-
-/// One stretch of one speaker, numbered from 0 in order of first appearance.
 struct SpeakerTurn: Encodable, Sendable, Equatable {
     let start: Double
     let end: Double
@@ -18,7 +14,6 @@ struct SpeakerTurn: Encodable, Sendable, Equatable {
     }
 }
 
-/// One speaker's share of the recording.
 struct SpeakerSummary: Encodable, Sendable, Equatable {
     let speaker: Int
     let name: String
@@ -27,7 +22,6 @@ struct SpeakerSummary: Encodable, Sendable, Equatable {
     let turns: Int
 }
 
-/// A line of the transcript with the speaker who said it.
 struct SpokenLine: Encodable, Sendable, Equatable {
     let start: Double
     let end: Double
@@ -36,10 +30,8 @@ struct SpokenLine: Encodable, Sendable, Equatable {
 }
 
 enum Speakers {
-    /// The pause, in seconds, under which a speaker's turns read as one.
     static let defaultJoin = 1.0
 
-    /// "Speaker 1" or the name given for that speaker, in order of first appearance.
     static func name(_ speaker: Int, names: [String]) -> String {
         speaker < names.count ? names[speaker] : "Speaker \(speaker + 1)"
     }
@@ -48,9 +40,6 @@ enum Speakers {
         (list ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
 
-    /// Turns in time order, a speaker's consecutive turns joined when the pause between
-    /// them is at most `gap`. Another speaker in between keeps them apart, so a short
-    /// "yes" from someone else stays on the page.
     static func join(_ turns: [SpeakerTurn], gap: Double) -> [SpeakerTurn] {
         var out: [SpeakerTurn] = []
         for turn in turns.sorted(by: { ($0.start, $0.speaker) < ($1.start, $1.speaker) }) {
@@ -63,8 +52,6 @@ enum Speakers {
         return out
     }
 
-    /// Each speaker's time and share of `duration`, most heard first. `turns` counts
-    /// the joined turns, the ones a reader sees.
     static func summary(_ turns: [SpeakerTurn], joined: [SpeakerTurn], duration: Double, names: [String]) -> [SpeakerSummary] {
         return Set(turns.map(\.speaker)).map { s in
             let seconds = turns.filter { $0.speaker == s }.reduce(0) { $0 + ($1.end - $1.start) }
@@ -74,8 +61,6 @@ enum Speakers {
         }.sorted { $0.seconds != $1.seconds ? $0.seconds > $1.seconds : $0.speaker < $1.speaker }
     }
 
-    /// The speaker heard most during `start...end`, summed over their turns, or the
-    /// nearest one within a second when nobody overlaps it, else nil.
     static func speaker(at start: Double, _ end: Double, in turns: [SpeakerTurn]) -> Int? {
         var heard: [Int: Double] = [:]
         var nearest: (speaker: Int, distance: Double)?
@@ -90,9 +75,7 @@ enum Speakers {
         return nil
     }
 
-    /// Words split into lines by speaker, then into sentences within each speaker's run.
-    /// A run of one or two words under 0.6s between two runs of the same speaker is
-    /// boundary jitter, and goes to the speaker around it.
+    /// A run of one or two words under 0.6s between two runs of the same speaker is boundary jitter and goes to the speaker around it.
     static func lines(words: [TimedWord], turns: [SpeakerTurn]) -> [SpokenLine] {
         guard !words.isEmpty else { return [] }
         var labels: [Int] = []
@@ -123,8 +106,6 @@ enum Speakers {
         return out
     }
 
-    /// Sentences with no word times, as an SRT carries them: each goes to the speaker
-    /// heard most during it.
     static func lines(sentences: [Sentence], turns: [SpeakerTurn]) -> [SpokenLine] {
         var last = 0
         return sentences.map { s in
@@ -145,8 +126,6 @@ enum Speakers {
     }
 }
 
-/// A diarization three ways: the turns as Who numbered them, joined for reading, and
-/// summed per speaker.
 struct LabeledTurns {
     let raw: [SpeakerTurn]
     let joined: [SpeakerTurn]
@@ -160,7 +139,6 @@ struct LabeledTurns {
 }
 
 extension Output {
-    /// "2 speakers in 46 seconds", then each speaker's time and share, most heard first.
     func speakerSummary(_ summary: [SpeakerSummary], duration: Double) {
         let p = palette
         line(p.bold("\(summary.count) speaker\(summary.count == 1 ? "" : "s")") + p.dim(" in \(Format.spoken(duration))"))
@@ -172,7 +150,6 @@ extension Output {
         }
     }
 
-    /// A script: the speaker's name when it changes, then each line with its time.
     func script(_ lines: [SpokenLine], names: [String]) {
         let p = palette
         let width = min(Terminal.columns, 100)
@@ -190,9 +167,7 @@ extension Output {
     }
 }
 
-/// The files a speaker-labeled result is written as.
 enum SpeakerFile {
-    /// RTTM, the diarization exchange format: one `SPEAKER` line per turn.
     static func rttm(_ turns: [SpeakerTurn], input: String, names: [String]) -> String {
         let file = token(URL(fileURLWithPath: input).deletingPathExtension().lastPathComponent)
         return turns.map { t in
@@ -200,12 +175,10 @@ enum SpeakerFile {
         }.joined(separator: "\n") + (turns.isEmpty ? "" : "\n")
     }
 
-    /// The transcript as text: a paragraph per speaker turn, the name in front.
     static func text(_ lines: [SpokenLine], names: [String]) -> String {
         paragraphs(lines).map { "\(Speakers.name($0.speaker, names: names)): \($0.text)" }.joined(separator: "\n\n") + "\n"
     }
 
-    /// Captions with the speaker named when it changes.
     static func srt(_ lines: [SpokenLine], words: [TimedWord]?, names: [String]) -> String {
         var previous: Int?
         let cues = captions(lines, words: words).map { cue, speaker in
@@ -215,14 +188,12 @@ enum SpeakerFile {
         return TranscriptFile.srt(cues)
     }
 
-    /// WebVTT with a voice span on every cue.
     static func vtt(_ lines: [SpokenLine], words: [TimedWord]?, names: [String]) -> String {
         TranscriptFile.vtt(captions(lines, words: words).map { cue, speaker in
             Caption(start: cue.start, end: cue.end, text: "<v \(Speakers.name(speaker, names: names))>\(cue.text)")
         })
     }
 
-    /// Cues that never straddle two speakers: each speaker's run is cut on its own.
     static func captions(_ lines: [SpokenLine], words: [TimedWord]?) -> [(Caption, Int)] {
         paragraphs(lines).flatMap { p -> [(Caption, Int)] in
             let sentences = p.lines.enumerated().map { Sentence(id: $0.offset, text: $0.element.text, start: $0.element.start, end: $0.element.end) }

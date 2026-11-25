@@ -1,10 +1,6 @@
 import Foundation
 
-/// What moves between steps. Media moves by path.
-///
-/// A `stream` is a list going item by item: every step after it that takes one item
-/// runs once per item, until a step that takes a whole list collects it. A nil item is
-/// one a branch skipped, kept so lists stay aligned.
+/// A nil item in a stream is one a branch skipped, kept so lists stay aligned.
 indirect enum Value: Sendable {
     case text(String)
     case number(Double)
@@ -21,7 +17,6 @@ indirect enum Value: Sendable {
         if case .stream = self { true } else { false }
     }
 
-    /// The items of a list or a stream, holes included. Anything else is a list of one.
     var items: [Value?] {
         switch self {
         case .list(let l), .stream(let l): l
@@ -35,7 +30,6 @@ indirect enum Value: Sendable {
         if case .text(let s) = self { s } else { nil }
     }
 
-    /// The file behind a media value.
     var path: String? {
         switch self {
         case .audio(let p), .video(let p), .image(let p), .file(let p): p
@@ -43,7 +37,6 @@ indirect enum Value: Sendable {
         }
     }
 
-    /// Audio, or the audio track of a video.
     var audioPath: String? {
         switch self {
         case .audio(let p), .video(let p): p
@@ -55,7 +48,6 @@ indirect enum Value: Sendable {
         if case .record(let fields) = self { fields.first { $0.0 == key }?.1 } else { nil }
     }
 
-    /// The value as words, for templates, comparisons, and the terminal.
     var asText: String {
         switch self {
         case .text(let s): return s
@@ -90,7 +82,6 @@ indirect enum Value: Sendable {
         return (try? encoder.encode(self)).map { String(decoding: $0, as: UTF8.self) } ?? asText
     }
 
-    /// A stream when any item survived, otherwise nothing.
     static func sparse(_ items: [Value?]) -> Value? {
         items.contains { $0 != nil } ? .stream(items) : nil
     }
@@ -137,7 +128,6 @@ extension Value: Encodable {
         }
     }
 
-    /// The kind of value, as `flow check` and errors name it.
     var kind: String {
         switch self {
         case .text: "text"
@@ -153,8 +143,6 @@ extension Value: Encodable {
     }
 }
 
-/// A value from JSON: an object as a record with its keys sorted, an array as a list,
-/// null as nothing.
 struct JSONValue: Decodable {
     let value: Value?
 

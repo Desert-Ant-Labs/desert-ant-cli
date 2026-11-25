@@ -1,9 +1,5 @@
 import Foundation
 
-// A once-a-day look at the latest release, for the home screen only. The result is
-// cached so a day of `da` costs one request, and nothing runs under --json, in a
-// pipe, or with DESERTANT_NO_UPDATE_CHECK set.
-
 enum UpdateCheck {
     private struct Cached: Codable {
         let latest: String?
@@ -16,7 +12,6 @@ enum UpdateCheck {
         return caches.appendingPathComponent("desertant/latest-release.json")
     }
 
-    /// A line to show when a newer release exists, else nil.
     static func notice(interactive: Bool) async -> String? {
         guard interactive, ProcessInfo.processInfo.environment["DESERTANT_NO_UPDATE_CHECK"] == nil else { return nil }
         var cached = (try? JSONDecoder().decode(Cached.self, from: Data(contentsOf: file)))

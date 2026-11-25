@@ -1,9 +1,6 @@
 import ArgumentParser
 import Foundation
 
-// The flags every command shares, and the one place text and JSON leave the process.
-
-/// Flags carried by every subcommand.
 struct GlobalOptions: ParsableArguments {
     @Flag(name: .long, help: "Print the result as JSON, for scripts and agents.")
     var json = false
@@ -14,23 +11,16 @@ struct GlobalOptions: ParsableArguments {
     @Flag(name: .customLong("no-color"), help: "Print without color, even on a terminal.")
     var noColor = false
 
-    /// The painting decision for this run.
     var palette: Palette { Palette.resolve(noColor: noColor, json: json) }
 }
 
-/// Where a command writes its result, with the flags that decide how.
 struct Output {
     let options: GlobalOptions
-    /// Set while several inputs run in one process: `emit` collects each result here
-    /// instead of printing, and the loop prints the list once at the end.
     var batch: Batch? = nil
-    /// Put in front of every text line, so one input's lines sit under its name.
     var indent = ""
     var palette: Palette { options.palette }
     var isJSON: Bool { options.json }
 
-    /// A line of human text. Suppressed under --json. An empty line asks for a break
-    /// before whatever prints next; see `Spacing`.
     func line(_ s: String = "") {
         guard !isJSON else { return }
         guard !s.isEmpty else { return Spacing.shared.breakNext() }
@@ -38,7 +28,6 @@ struct Output {
         print(indent + s)
     }
 
-    /// Text that is already laid out, such as a transcript or an .srt, printed as it is.
     /// Printed under --json too, since a format the reader asked for wins.
     func text(_ s: String) {
         guard !s.isEmpty else { return }
@@ -46,25 +35,19 @@ struct Output {
         print(s, terminator: s.hasSuffix("\n") ? "" : "\n")
     }
 
-    /// A message for the person on stderr, whatever stdout carries: a file that failed
-    /// in a batch. Printed under --quiet too, since an error is not a note.
+    /// Printed under --quiet too, since an error is not a note.
     func warn(_ s: String) {
         FileHandle.standardError.write(Data((s + "\n").utf8))
     }
 
-    /// End a block: whatever prints next starts after one blank line.
     func space() {
         guard !isJSON else { return }
         Spacing.shared.breakNext()
     }
 
-    /// Whether notes and hints show: on a terminal, without --json or --quiet. In a pipe
-    /// or a file, stdout carries the result alone, so `voz --format srt > a.srt` stays
-    /// a valid .srt.
+    /// Off a terminal, stdout carries the result alone, so `voz --format srt > a.srt` stays a valid .srt.
     var decorates: Bool { !isJSON && !options.quiet && Terminal.isTTY(STDOUT_FILENO) }
 
-    /// A note, dimmed and wrapped at the terminal's width, shown only when `decorates`.
-    /// Notes in a row form one block, set apart from the result.
     func note(_ s: String) {
         guard decorates else { return }
         let text = s.trimmingCharacters(in: .newlines)
@@ -73,8 +56,6 @@ struct Output {
         for line in wrap(text, width: min(Terminal.columns, 100) - indent.count) { print(indent + palette.dim(line)) }
     }
 
-    /// Emit a JSON value. Used only under --json. In a batch the value is collected
-    /// and printed with the others as one array.
     func emit<T: Encodable>(_ value: T) {
         if let batch {
             batch.append(value)
@@ -90,7 +71,6 @@ struct Output {
     }
 }
 
-/// The results of a batch, in input order, printed as one JSON array at the end.
 final class Batch: @unchecked Sendable {
     private let lock = NSLock()
     private var items: [AnyEncodable] = []
@@ -108,14 +88,12 @@ final class Batch: @unchecked Sendable {
     }
 }
 
-/// One runner's result with its type erased, so a batch can hold any of them.
 struct AnyEncodable: Encodable {
     private let encodeInto: (Encoder) throws -> Void
     init<T: Encodable>(_ value: T) { encodeInto = { try value.encode(to: $0) } }
     func encode(to encoder: Encoder) throws { try encodeInto(encoder) }
 }
 
-/// Read all of stdin as text, or nil when stdin is a terminal (nothing piped).
 func readStdin() -> String? {
     guard !Terminal.isTTY(STDIN_FILENO) else { return nil }
     let data = FileHandle.standardInput.readDataToEndOfFile()
@@ -124,8 +102,6 @@ func readStdin() -> String? {
 }
 
 extension Output {
-    /// What to type next: each command and what it does, in two aligned columns, the
-    /// command named the way the reader started this one. Shown only when `decorates`.
     func hints(_ rows: [(command: String, does: String)]) {
         guard decorates, !rows.isEmpty else { return }
         let p = palette
@@ -143,9 +119,6 @@ extension Output {
     }
 }
 
-/// The blank lines between blocks of text output, decided in one place: one blank line
-/// between a result, its notes, and the hints, and none before the first line or after
-/// the last, so the output sits right under the command and the prompt follows it.
 final class Spacing: @unchecked Sendable {
     enum Block { case result, note, hints }
 
@@ -154,15 +127,12 @@ final class Spacing: @unchecked Sendable {
     private var last: Block?
     private var pending = false
 
-    /// Ask for a blank line before the next block. Nothing prints if nothing follows.
     func breakNext() {
         lock.lock()
         pending = true
         lock.unlock()
     }
 
-    /// About to print a line of `block`: put a blank line first when it starts a new
-    /// block after earlier output.
     func open(_ block: Block) {
         lock.lock()
         defer { lock.unlock() }

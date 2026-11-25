@@ -1,7 +1,5 @@
 import Toxic
 
-// Toxic: whether a text is hateful, abusive, or threatening, and the group a hateful text targets.
-
 // The flow steps cannot import Toxic: its Options clashes with Redact's.
 typealias ToxicClassifier = Toxic
 

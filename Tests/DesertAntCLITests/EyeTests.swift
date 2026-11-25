@@ -2,10 +2,6 @@ import Eye
 import XCTest
 @testable import DesertAntCLI
 
-// Eye's command-line side: options that conflict fail before any download, crops come
-// out at the aspect asked for, capture times read from EXIF, and a video's matching
-// frames become time spans.
-
 final class EyeTests: XCTestCase {
     private let eye = EyeRunner()
 

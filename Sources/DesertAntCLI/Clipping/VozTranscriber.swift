@@ -6,9 +6,6 @@ import Voz
 import AVFoundation
 #endif
 
-// Voz with word timestamps, for the `voz` command and the clips pipeline. Off Apple
-// platforms the CLI decodes the media to samples through ffmpeg.
-
 actor VozTranscriber: Transcriber {
     nonisolated let name = "voz"
     private var voz: Voz?
@@ -49,8 +46,7 @@ actor VozTranscriber: Transcriber {
                              durationSec: result.duration, processingSec: result.processingTime)
     }
 
-    /// Voz emits bare words; `Sentence.sentences(from:)` expects each word to carry
-    /// its leading space, or sentences run together.
+    /// Voz emits bare words, and `Sentence.sentences(from:)` needs each to carry its leading space.
     private static func spaced(_ words: [Word]) -> [TimedWord] {
         words.enumerated().map { index, word in
             TimedWord(text: index == 0 ? word.text : " " + word.text, start: word.start, end: word.end)
@@ -58,8 +54,6 @@ actor VozTranscriber: Transcriber {
     }
 
     #if canImport(AVFoundation)
-    /// The media itself when it is already audio, else its audio track exported to a
-    /// temporary m4a.
     static func audioOnly(_ media: URL) async throws -> URL {
         let asset = AVURLAsset(url: media)
         guard try await !asset.loadTracks(withMediaType: .audio).isEmpty else {

@@ -7,10 +7,7 @@ import ImageIO
 import UniformTypeIdentifiers
 #endif
 
-// Pixels in and out for Eye: ImageIO and AVFoundation on Apple platforms, ffmpeg elsewhere.
-
 enum Pictures {
-    /// A photo's pixels, upright per its EXIF orientation.
     static func pixels(_ path: String) throws -> ImagePixels {
         #if canImport(ImageIO)
         do {
@@ -33,7 +30,6 @@ enum Pictures {
         #endif
     }
 
-    /// When the photo was taken, in seconds since 1970, from its EXIF; nil when it does not say.
     static func captureDate(_ path: String) -> Double? {
         #if canImport(ImageIO)
         guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
@@ -48,7 +44,6 @@ enum Pictures {
         #endif
     }
 
-    /// `2026:10:18 10:38:33` with an optional `+02:00`, read as local time without one.
     static func exifDate(_ stamp: String, offset: String?) -> Double? {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
@@ -56,7 +51,6 @@ enum Pictures {
         return f.date(from: stamp + (offset ?? ""))?.timeIntervalSince1970
     }
 
-    /// `1:1`, `16:9`, `4:5`, or a plain ratio like `1.91`, as width over height.
     static func aspect(_ text: String) -> Double? {
         let parts = text.split(separator: ":").map { Double($0.trimmingCharacters(in: .whitespaces)) }
         switch parts.count {
@@ -68,8 +62,7 @@ enum Pictures {
         }
     }
 
-    /// `box` trimmed about its center to exactly `aspect` (width over height) in an image
-    /// of `width` x `height` pixels. Eye's best crop for an aspect can be up to 10% off it.
+    /// Eye's best crop for an aspect can be up to 10% off it, so trim to exact.
     static func exact(_ box: Box, aspect: Double, width: Int, height: Int) -> Box {
         let w = box.width * Double(width), h = box.height * Double(height)
         guard w > 0, h > 0 else { return box }
@@ -82,7 +75,6 @@ enum Pictures {
         return Box(x0: box.x0, y0: cy - half, x1: box.x1, y1: cy + half)
     }
 
-    /// The `box` of `pixels`, in 0...1, rounded out to whole pixels and kept inside the image.
     static func crop(_ pixels: ImagePixels, to box: Box) throws -> ImagePixels {
         let w = pixels.width, h = pixels.height, ch = pixels.channels
         let x0 = max(0, min(w - 1, Int((box.x0 * Double(w)).rounded(.down))))
@@ -98,7 +90,6 @@ enum Pictures {
             : try ImagePixels(width: x1 - x0, height: y1 - y0, rgb: out)
     }
 
-    /// Write `pixels`, or the `box` of them, as an image file in the format the extension names.
     static func write(_ pixels: ImagePixels, box: Box? = nil, to path: String) throws {
         let image = try box.map { try crop(pixels, to: $0) } ?? pixels
         #if canImport(ImageIO)
@@ -124,7 +115,6 @@ enum Pictures {
         #endif
     }
 
-    /// The extension a written image keeps: the input's own when this platform writes it, else jpg.
     static func outputExtension(for input: String) -> String {
         let ext = (input as NSString).pathExtension.lowercased()
         #if canImport(ImageIO)
@@ -157,14 +147,11 @@ enum Pictures {
 }
 
 #if !canImport(ImageIO)
-/// HEIC through libheif's command-line tools. ffmpeg cannot be used for it: up to 6.1 it
-/// does not open an iPhone's HEIC, and 7.1 reads the photo as separate tiles.
+/// ffmpeg cannot read HEIC: up to 6.1 it does not open an iPhone's HEIC, and 7.1 reads the photo as separate tiles.
 enum HEIF {
     static func isHEIF(_ path: String) -> Bool { ["heic", "heif"].contains((path as NSString).pathExtension.lowercased()) }
 
-    /// The photo as a temporary JPEG: upright, orientation 1, the EXIF kept. Quality 92
-    /// moves Eye's scores by under 0.02 and is a fifth the size of a PNG. The caller
-    /// removes the file.
+    /// Quality 92 moves Eye's scores by under 0.02 and is a fifth the size of a PNG. The caller removes the file.
     static func convert(_ path: String) throws -> String {
         let search = (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":")
         guard let tool = ["heif-dec", "heif-convert"].lazy.compactMap({ name in
@@ -189,7 +176,6 @@ enum HEIF {
         return jpeg
     }
 
-    /// Capture times read while converting, so `--duplicates` converts each photo once.
     private nonisolated(unsafe) static var times: [String: (stamp: String, offset: String?)?] = [:]
     private static let lock = NSLock()
 
@@ -206,7 +192,6 @@ enum HEIF {
         return taken
     }
 
-    /// How to install libheif's tools here, as a phrase that follows "with".
     static var installHint: String {
         let release = (try? String(contentsOfFile: "/etc/os-release", encoding: .utf8)) ?? ""
         if release.contains("fedora") { return "`sudo dnf install libheif-tools`" }
@@ -217,7 +202,6 @@ enum HEIF {
 }
 #endif
 
-/// Frames read out of a video, upright, at the times asked for.
 struct VideoFrames {
     let durationSec: Double
     #if canImport(AVFoundation)
@@ -228,8 +212,7 @@ struct VideoFrames {
     private let maxSide: Double?
     #endif
 
-    /// `maxSide` bounds the longer side of each frame; nil reads frames at full size.
-    /// `tolerance` is how far from the time asked a frame may sit, in seconds.
+    /// `tolerance` is in seconds.
     init(_ path: String, maxSide: Double? = 1280, tolerance: Double = 0.25) async throws {
         #if canImport(AVFoundation)
         let asset = AVURLAsset(url: URL(fileURLWithPath: path))
@@ -255,14 +238,13 @@ struct VideoFrames {
         #endif
     }
 
-    /// Times every `every` seconds, from half a step in, so the first frame is not a fade from black.
+    /// From half a step in, so the first frame is not a fade from black.
     func times(every: Double) -> [Double] {
         guard durationSec > 0 else { return [0] }
         let step = max(every, 0.1)
         return Array(stride(from: min(step / 2, durationSec / 2), to: durationSec, by: step))
     }
 
-    /// The frame nearest `time`, and the time it actually sits at.
     func frame(at time: Double) async throws -> (pixels: ImagePixels, time: Double) {
         #if canImport(AVFoundation)
         let (image, actual) = try await generator.image(at: CMTime(seconds: time, preferredTimescale: 600))

@@ -1,8 +1,5 @@
 import ArgumentParser
 
-// `desertant docs [page]`. The docs from inside the binary, readable without the repo
-// or a network.
-
 struct Docs: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "docs",
@@ -25,7 +22,6 @@ struct Docs: ParsableCommand {
         let title: String
     }
 
-    /// The first heading, as the page's title.
     static func title(of markdown: String) -> String {
         markdown.split(separator: "\n").first { $0.hasPrefix("# ") }
             .map { String($0.dropFirst(2)) } ?? ""
@@ -47,7 +43,6 @@ struct Docs: ParsableCommand {
             return
         }
 
-        // Raw markdown, with headings bold and fences dim on a terminal. The text is untouched.
         let p = out.palette
         var inFence = false
         for line in doc.markdown.split(separator: "\n", omittingEmptySubsequences: false) {

@@ -1,7 +1,5 @@
 import Gist
 
-// Gist: what a passage of text is about, from a 36-topic taxonomy.
-
 struct GistRunner: ModelRunner {
     let id = "gist"
     let inputKind = RunInputKind.text

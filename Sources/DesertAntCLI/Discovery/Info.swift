@@ -1,8 +1,5 @@
 import ArgumentParser
 
-// `desertant info <model>`. The model card: what it is, how it runs, where its
-// weights live, its state on this machine, and how to reach it.
-
 struct Info: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "info",
@@ -85,7 +82,6 @@ struct Info: ParsableCommand {
         }
         if let demo = m.demo?.page { field("demo", demo) }
 
-        // State on this machine.
         out.line()
         if let runner {
             let state = downloaded == true ? p.accent("downloaded") : p.dim("not downloaded yet, fetched on first run")

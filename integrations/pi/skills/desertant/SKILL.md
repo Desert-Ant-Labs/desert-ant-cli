@@ -1,6 +1,6 @@
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI, one at a time or chained in a flow. Use for transcribing a recording, writing captions, cutting clips with burned-in captions, running several models on a file in one command such as meeting notes or podcast clips, cleaning up audio, finding filler words, naming the spoken language, labeling who said what, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, or cropping photos, picking a video's thumbnail, or writing a title. Local, no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI, one at a time or chained in a flow. Use for transcribing a recording, writing captions, cutting clips with burned-in captions, running several models on a file in one command such as meeting notes or podcast clips, cleaning up audio, finding filler words, naming the spoken language, labeling who said what, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, or cropping photos, picking a video's thumbnail, or writing a title. Local; add --json for a parseable result.
 ---
 
 # desertant

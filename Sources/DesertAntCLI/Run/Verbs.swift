@@ -1,8 +1,5 @@
 import ArgumentParser
 
-// The per-model verbs (`desertant emo "..."`), reaching the same executor as `run`.
-// A verb's typed flags map onto the names in its runner's `options` list.
-
 struct EmoVerb: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "emo", abstract: Manifest.summary("emo"))

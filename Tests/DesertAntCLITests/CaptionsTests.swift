@@ -2,10 +2,7 @@ import Transcript
 import XCTest
 @testable import DesertAntCLI
 
-// Captions follow the broadcast rules whatever the sentences look like.
-
 final class CaptionsTests: XCTestCase {
-    /// Words at a steady pace, with a sentence per period.
     private func speak(_ text: String, wordsPerSecond: Double = 2.5) -> ([TimedWord], [Sentence]) {
         var words: [TimedWord] = []
         var t = 0.0

@@ -1,9 +1,7 @@
 import Foundation
 
-// The catalog, decoded from the vendored `manifest.json`. Field names and enum domains
-// match what `desert-ant-core/mise-tasks/check/manifest` enforces.
+// Field names and enum domains must match what `desert-ant-core/mise-tasks/check/manifest` enforces.
 
-/// The whole registry: the org, its license, and every model.
 struct Manifest: Codable, Sendable {
     var schemaVersion: Int
     var sdkVersion: String
@@ -26,7 +24,6 @@ struct Manifest: Codable, Sendable {
     }
 }
 
-/// One model in the catalog.
 struct Model: Codable, Sendable {
     var id: String
     var name: String
@@ -85,14 +82,11 @@ struct Model: Codable, Sendable {
     }
 }
 
-// MARK: - Enum domains
-
 // An unknown value decodes to `.other` so a newer manifest never breaks an older
 // binary. Each enum spells out `init(from:)` because a synthesized decoder would win
 // over a protocol default and lose the fallback.
 
 extension RawRepresentable where RawValue == String {
-    /// Decode a string, falling back to `other` for an unknown value.
     static func lenient(from decoder: Decoder, other: Self) throws -> Self {
         Self(rawValue: try decoder.singleValueContainer().decode(String.self)) ?? other
     }
@@ -123,7 +117,6 @@ enum Runtime: String, Codable, Sendable {
     case coreml, litert, mlx, pure, other
     init(from decoder: Decoder) throws { self = try Self.lenient(from: decoder, other: .other) }
 
-    /// The name people know it by.
     var label: String {
         switch self {
         case .coreml: "Core ML"
@@ -140,11 +133,8 @@ enum WeightsSource: String, Codable, Sendable {
     init(from decoder: Decoder) throws { self = try Self.lenient(from: decoder, other: .other) }
 }
 
-// MARK: - Loading and querying
-
 extension Manifest {
-    /// The decoded embedded manifest. One that does not decode is a build error
-    /// (Tools/embed validates the JSON), so it traps rather than throwing.
+    /// Traps rather than throws: Tools/embed validates the JSON at build time.
     static let shared: Manifest = {
         do {
             return try JSONDecoder().decode(Manifest.self, from: Data(Embedded.manifest.utf8))
@@ -153,32 +143,26 @@ extension Manifest {
         }
     }()
 
-    /// A model by id, case-insensitive, or nil.
     func model(_ id: String) -> Model? {
         models.first { $0.id == id.lowercased() }
     }
 
-    /// Every model A-Z by id, sorted so no command depends on the manifest's order.
     var byID: [Model] { models.sorted { $0.id < $1.id } }
 }
 
 extension Model {
-    /// The Swift SDK entry, whatever its status.
     var swift: SDK? { sdks["swift"] }
 
-    /// Whether any SDK ships this model, the same test `manifest-docs.mjs` uses.
+    /// The same test `manifest-docs.mjs` uses.
     var ships: Bool { sdks.values.contains { $0.status == .live } }
 
-    /// The platforms the Swift SDK runs on, for display.
     var swiftPlatforms: [Platform] { swift?.platforms ?? [] }
 
-    /// What `search` matches against: every name a person might type.
     var searchHaystack: String {
         ([id, name, tagline, summary, category] + hub.tags).joined(separator: " ").lowercased()
     }
 }
 
 extension Manifest {
-    /// A model's one-line summary, for the verb's help and the home screen.
     static func summary(_ id: String) -> String { shared.model(id)?.summary ?? id }
 }

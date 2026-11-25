@@ -334,7 +334,6 @@ enum ModelSteps {
         ]
     }
 
-    /// The audio or video file a step reads.
     static func audio(_ run: StepRun) throws -> String {
         guard let path = run.inputs["audio"]?.audioPath else {
             throw StepError("\(run.context.step.id) takes audio or video, and got \(run.inputs["audio"]?.kind ?? "nothing").")
@@ -342,8 +341,7 @@ enum ModelSteps {
         return path
     }
 
-    /// Words as voz gives them, each but the first with its leading space back, as
-    /// sentences and captions expect.
+    /// Each word but the first gets its leading space back, as sentences and captions expect.
     static func timedWords(_ value: Value?) -> [TimedWord] {
         (value?.present ?? []).compactMap { w -> (String, Double, Double)? in
             guard let start = w["start"]?.asNumber, let end = w["end"]?.asNumber else { return nil }

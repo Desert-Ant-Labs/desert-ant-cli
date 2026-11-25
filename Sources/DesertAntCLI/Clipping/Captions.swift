@@ -1,10 +1,6 @@
 import Foundation
 import Transcript
 
-// Captions cut the way broadcasters cut them: at most two lines of 42 characters,
-// at most 7s on screen and at least 1s, breaking at the end of a sentence first, then
-// at a comma or clause, then at the widest pause between words.
-
 struct Caption: Encodable, Sendable, Equatable {
     let start: Double
     let end: Double
@@ -33,7 +29,6 @@ enum Captions {
         return settle(cues)
     }
 
-    /// Words as a caption: one line, or two balanced lines.
     static func layout(_ words: [TimedWord], lineLength: Int = lineLength) -> String {
         let text = join(words)
         guard text.count > lineLength else { return text }
@@ -49,7 +44,6 @@ enum Captions {
         return ws[..<best].joined(separator: " ") + "\n" + ws[best...].joined(separator: " ")
     }
 
-    /// A sentence's words in runs that fit a caption, split at the best pause.
     private static func split(_ words: [TimedWord]) -> [[TimedWord]] {
         if fits(words) { return [words] }
         guard words.count > 1 else { return [words] }
@@ -75,7 +69,6 @@ enum Captions {
         words.map { $0.text.trimmingCharacters(in: .whitespaces) }.joined(separator: " ")
     }
 
-    /// No overlaps, short cues held for at least a second, tiny gaps closed.
     private static func settle(_ cues: [Caption]) -> [Caption] {
         var out: [Caption] = []
         for (i, cue) in cues.enumerated() {

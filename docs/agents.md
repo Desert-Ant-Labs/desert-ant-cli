@@ -1,6 +1,8 @@
 # Using desertant from an agent
 
-desertant is a command-line tool a coding agent runs through its shell. There is no server, no API key, and no session: each call is one process that reads its input, runs a model on this machine, and writes one result.
+desertant is a command-line tool a coding agent runs through its shell. There is no server and no session: each call is one process that reads its input, runs a model on this machine, and writes one result.
+
+The user only needs an API key when they use our models in production. Save the key with `desertant auth login`, or set `DAL_API_KEY`.
 
 ## Find out what you can call
 
