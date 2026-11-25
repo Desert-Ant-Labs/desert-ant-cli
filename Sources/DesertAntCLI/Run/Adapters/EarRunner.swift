@@ -1,8 +1,6 @@
 import Ear
 import Foundation
 
-// Ear: the language spoken in a recording.
-
 struct EarRunner: ModelRunner {
     let id = "ear"
     let inputKind = RunInputKind.file

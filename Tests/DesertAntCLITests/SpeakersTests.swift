@@ -3,15 +3,11 @@ import Transcript
 import XCTest
 @testable import DesertAntCLI
 
-// Who's turns shaped for a reader: joined, summed, matched to a transcript, and
-// written as RTTM and speaker-labeled captions.
-
 final class SpeakersTests: XCTestCase {
     private func turn(_ start: Double, _ end: Double, _ speaker: Int) -> SpeakerTurn {
         SpeakerTurn(start: start, end: end, speaker: speaker)
     }
 
-    /// Words at a steady pace, each with its leading space as Voz's transcriber writes them.
     private func words(_ text: String, from start: Double, perWord: Double = 0.4) -> [TimedWord] {
         text.split(separator: " ").enumerated().map { i, w in
             TimedWord(text: " " + w, start: start + Double(i) * perWord, end: start + Double(i + 1) * perWord)
@@ -42,7 +38,6 @@ final class SpeakersTests: XCTestCase {
     }
 
     func testLinesSplitASentenceWhereTheSpeakerChanges() {
-        // "Is it on the phone" is speaker 0, the answer speaker 1, with no period between.
         let w = words("Is it on the phone yes it runs there.", from: 0)
         let turns = [turn(0, 2.0, 0), turn(2.0, 4.0, 1)]
         let lines = Speakers.lines(words: w, turns: turns)

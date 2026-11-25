@@ -1,12 +1,8 @@
 import Foundation
 
-// Where an output file lands. Never on top of the input, and never on top of an
-// existing file unless asked: a taken name steps aside the way the Finder does
-// (`talk_clear-2.mp4`), so a batch never stops and nothing is lost.
+// Never write over the input or an existing file: a taken name steps aside (`talk_clear-2.mp4`), so a batch never stops and nothing is lost.
 
 enum Destination {
-    /// The path to write to. `requested` is the user's `--output`, or nil for the
-    /// command's default. Throws when the result would replace the input.
     static func resolve(requested: String?, default defaultPath: String,
                         input: String, force: Bool) throws -> String {
         let path = requested ?? defaultPath
@@ -17,7 +13,6 @@ enum Destination {
         return firstFreeName(path)
     }
 
-    /// `name.ext` -> `name-2.ext`, the first that does not exist yet.
     static func firstFreeName(_ path: String) -> String {
         let url = URL(fileURLWithPath: path)
         let folder = url.deletingLastPathComponent()
@@ -31,8 +26,6 @@ enum Destination {
         return path
     }
 
-    /// The input's default sibling: `talk.mp4` -> `talk_clear.mp4`, or with another
-    /// extension, `talk.mp4` -> `talk.srt`.
     static func sibling(of input: String, suffix: String, extension ext: String? = nil) -> String {
         let url = URL(fileURLWithPath: input)
         let ext = ext ?? url.pathExtension

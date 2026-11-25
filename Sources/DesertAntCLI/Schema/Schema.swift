@@ -1,10 +1,5 @@
 import ArgumentParser
 
-// `desertant schema`. The tool catalog for a coding agent: every shipping model, its
-// input and options, the global flags, and the exit codes. The Claude, Codex, and Pi
-// adapters under integrations/ point at it. Every fact comes from the manifest or the
-// runners, so the schema cannot drift from what the CLI does.
-
 struct Schema: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "schema",
@@ -35,9 +30,7 @@ struct Schema: ParsableCommand {
         let input: String?
         let runnableHere: Bool
         let options: [Opt]
-        /// The document kind the --json result is, when another command can read it.
         let emits: String?
-        /// Documents this command takes from another, and the option that takes each.
         let accepts: [Accepts]
     }
     struct Opt: Encodable { let name: String; let help: String }
@@ -48,17 +41,14 @@ struct Schema: ParsableCommand {
         let model: String?
         let inputs: [FlowPort]
         let outputs: [FlowPort]
-        /// Each setting and its default; null where it has none.
         let settings: [String: Param]
         let runsHere: Bool
     }
     struct FlowPort: Encodable {
         let id: String
         let type: PortType
-        /// Takes a whole list at once.
         let list: Bool?
         let optional: Bool?
-        /// A list that goes on item by item.
         let each: Bool?
     }
     struct Accepts: Encodable { let kind: String; let option: String }

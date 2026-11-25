@@ -1,5 +1,4 @@
-// The loader is the mark: a plus that blooms into the asterisk and settles again, in
-// sage, on the brand loader's 2.2s cycle (desert-ant-swift, LoaderData). Only glyphs
+// Matches the brand loader's 2.2s cycle (desert-ant-swift, LoaderData). Only glyphs
 // with no emoji presentation, so no terminal swaps in a color emoji.
 
 struct Loader: Sendable {

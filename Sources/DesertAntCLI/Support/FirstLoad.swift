@@ -12,7 +12,6 @@ enum FirstLoad {
         return caches.appendingPathComponent("desertant/loaded/\(id)-\(revision)")
     }
 
-    /// The progress label for loading `id`.
     static func label(_ id: String) -> String {
         #if canImport(CoreML)
         FileManager.default.fileExists(atPath: marker(id).path)
@@ -23,7 +22,6 @@ enum FirstLoad {
         #endif
     }
 
-    /// Record that `id` has loaded once on this machine.
     static func done(_ id: String) {
         let url = marker(id)
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)

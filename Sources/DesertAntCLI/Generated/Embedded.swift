@@ -7,7 +7,7 @@ enum Embedded {
     static let manifest = ###"""
 {
   "schemaVersion": 1,
-  "sdkVersion": "5.0.0",
+  "sdkVersion": "6.0.0",
   "org": {
     "name": "Desert Ant Labs",
     "site": "https://desertant.com",
@@ -22,6 +22,7 @@ enum Embedded {
   },
   "notices": [
     { "kind": "library", "name": "LiteRT", "by": "Google", "license": "Apache-2.0", "source": "https://github.com/google-ai-edge/LiteRT", "copyright": "Copyright 2024 Google LLC", "note": "Runs the models off Apple platforms. Its C headers are in `Sources/CLiteRt`. `libLiteRt.so` ships in the Android library, with its GPU accelerator, and in the Linux Node packages." },
+    { "kind": "library", "name": "LiteRT-LM", "by": "Google", "license": "Apache-2.0", "source": "https://github.com/google-ai-edge/LiteRT-LM", "note": "The C API runtime runs Title on Android. Its upstream dependency notices ship in the Title AAR." },
     { "kind": "library", "name": "ICU", "by": "Unicode, Inc. and others", "license": "Unicode-3.0", "source": "https://github.com/unicode-org/icu", "copyright": "Copyright © 2016 and later Unicode, Inc. and others", "note": "Statically linked with Foundation, through swift-foundation-icu, into the Linux Node packages and the WebAssembly builds." },
     { "kind": "library", "name": "swift-numerics", "by": "Apple", "license": "Apache-2.0", "source": "https://github.com/apple/swift-numerics", "note": "Math functions (`RealModule`), compiled into every build." },
     { "kind": "library", "name": "JavaScriptKit", "by": "Yuta Saito and contributors", "license": "MIT", "source": "https://github.com/swiftwasm/JavaScriptKit", "copyright": "Copyright (c) 2020 Yuta Saito", "note": "Compiled into the WebAssembly builds." },
@@ -553,20 +554,20 @@ enum Embedded {
       "home": "desert-ant-core",
       "sdks": {
         "swift": { "status": "live", "package": "Title", "platforms": ["apple"] },
-        "kotlin": { "status": "none" },
+        "kotlin": { "status": "live", "package": "ai.desertant:title", "platforms": ["android"] },
         "js": { "status": "none" }
       },
       "weights": {
         "source": "hub",
         "repo": "desert-ant-labs/title",
         "url": "https://huggingface.co/desert-ant-labs/title",
-        "revision": "v0.1.0",
+        "revision": "v0.2.0",
         "license": "desert-ant-labs-source-available"
       },
-      "runtime": ["mlx"],
+      "runtime": ["mlx", "litert"],
       "variants": [],
       "hub": {
-        "tags": ["text", "text-generation", "summarization", "on-device", "mlx", "multilingual"],
+        "tags": ["text", "text-generation", "summarization", "on-device", "mlx", "litert", "android", "multilingual"],
         "pipelineTag": "text-generation",
         "libraryName": null
       },
@@ -950,7 +951,9 @@ Start with `desertant schema --json`: it lists every runnable model, its input, 
         (name: "agents", markdown: ###"""
 # Using desertant from an agent
 
-desertant is a command-line tool a coding agent runs through its shell. There is no server, no API key, and no session: each call is one process that reads its input, runs a model on this machine, and writes one result.
+desertant is a command-line tool a coding agent runs through its shell. There is no server and no session: each call is one process that reads its input, runs a model on this machine, and writes one result.
+
+The user only needs an API key when they use our models in production. Save the key with `desertant auth login`, or set `DAL_API_KEY`.
 
 ## Find out what you can call
 
@@ -1541,11 +1544,18 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
   "runnable": ["clear", "clips", "emo", "gist", "redact"],
   "version": "0.1.1", "coreVersion": "3.1.0",
   "latest": "0.1.1", "updateAvailable": false, "updateCommand": "desertant update",
-  "models": 18, "shipping": 12
+  "models": 18, "shipping": 12,
+  "apiKey": true, "apiKeySource": "saved"
 }
 ```
 
-`latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
+`apiKeySource` is `environment` when the key comes from `DAL_API_KEY`, `saved` when `desertant auth login` saved the key, and null when no key is set. `latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
+
+`desertant auth status --json` prints whether an API key is set, where from, and where `auth login` saves the key. `auth login --json` and `auth logout --json` print the same object after they run.
+
+```json
+{ "apiKey": true, "source": "saved", "path": "/Users/you/.config/desertant/api-key" }
+```
 
 ## Weights
 
@@ -2074,7 +2084,7 @@ Who splits a turn wherever a speaker pauses, so `who` joins a speaker's turns ac
         (name: "skill", markdown: ###"""
 ---
 name: desertant
-description: Run Desert Ant Labs on-device models through the desertant CLI, one at a time or chained in a flow. Use when the task needs a local model, transcribing a recording, writing captions, labeling who said what, cleaning up audio, cutting clips with burned-in captions, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, sorting, or cropping photos, picking a video's thumbnail, writing a title, or running several of these on a file in one command, such as meeting notes or podcast clips. Also when the user asks what on-device models are available. Everything runs locally with no API key; add --json for a parseable result.
+description: Run Desert Ant Labs on-device models through the desertant CLI, one at a time or chained in a flow. Use when the task needs a local model, transcribing a recording, writing captions, labeling who said what, cleaning up audio, cutting clips with burned-in captions, finding filler words, naming the spoken language, redacting personal data before text leaves the machine, suggesting emoji, tagging a topic, naming the language of a text, flagging nudity in an image, finding, ranking, sorting, or cropping photos, picking a video's thumbnail, writing a title, or running several of these on a file in one command, such as meeting notes or podcast clips. Also when the user asks what on-device models are available. Everything runs locally; add --json for a parseable result.
 ---
 
 # desertant

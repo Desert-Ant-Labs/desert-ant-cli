@@ -1,6 +1,5 @@
 import Foundation
 
-/// What the command line hands the flow's input step.
 enum Binding: Sendable {
     case paths([String])
     case text(String)
@@ -12,18 +11,13 @@ enum Binding: Sendable {
 
 struct FlowOptions: Sendable {
     var outputDir: String?
-    /// The folder the reader passed as the first input, so what a run saves goes there
-    /// and not into whichever subfolder `--recursive` reached first.
+    /// Outputs go here, not into whichever subfolder `--recursive` reached first.
     var inputFolder: String?
     var force = false
-    /// Lets rename and copy steps touch the files they were given.
     var apply = false
-    /// `--set step.param=value`, by step.
     var sets: [String: Params] = [:]
 }
 
-/// One flow run: the files it wrote and the values it shows, its scratch folder, and
-/// the models it shares with the other runs of the same command.
 final class FlowRun: @unchecked Sendable {
     let flow: Flow
     let binding: Binding?
@@ -47,12 +41,8 @@ final class FlowRun: @unchecked Sendable {
 
     deinit { try? FileManager.default.removeItem(at: temp) }
 
-    /// The input the run is about, for naming what it writes.
     var firstInput: String? { binding?.paths.first }
 
-    /// Where outputs go unless a step names a folder of its own: `--output-dir`, else
-    /// the folder passed as the first input, else beside the first file, else the
-    /// current folder.
     var outputRoot: URL {
         if let dir = options.outputDir { return URL(fileURLWithPath: (dir as NSString).expandingTildeInPath) }
         if let folder = options.inputFolder { return URL(fileURLWithPath: folder) }
@@ -67,7 +57,6 @@ final class FlowRun: @unchecked Sendable {
     var shown: [(step: String, value: Value, text: [String])] { lock.withLock { shownValues } }
 }
 
-/// What a step sees of the run while it works.
 final class StepContext: @unchecked Sendable {
     let run: FlowRun
     let step: FlowStep
@@ -82,7 +71,6 @@ final class StepContext: @unchecked Sendable {
         self.position = position
     }
 
-    /// The command line's paths or text, when this is the flow's input step.
     var bound: Binding? { run.flow.input?.id == step.id ? run.binding : nil }
 
     var note: String? {
@@ -95,13 +83,11 @@ final class StepContext: @unchecked Sendable {
         set { lock.withLock { items = newValue } }
     }
 
-    /// `step 2 of 6, voz: transcribing`.
     func progress(_ label: String? = nil, _ fraction: Double? = nil) {
         let total = run.flow.steps.count
         run.progress.update(fraction, label: "step \(position) of \(total), \(step.id)" + (label.map { ": \($0)" } ?? ""))
     }
 
-    /// A fresh path in the run's scratch folder, keeping `name` as the file's name.
     func scratch(_ name: String) throws -> URL {
         let folder = run.temp.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -130,9 +116,7 @@ struct FlowReport: Encodable {
 }
 
 enum Engine {
-    /// Runs every step in file order, which is an order where each step comes after
-    /// what it uses. A step whose wired input brought nothing is skipped. A step that
-    /// fails leaves its outputs empty, so the steps after it are skipped too.
+    /// Steps run in file order, which puts each step after what it uses.
     static func run(_ run: FlowRun, name: String) async -> FlowReport {
         var produced: [String: [String: Value]] = [:]
         var reports: [FlowReport.Step] = []
@@ -169,9 +153,6 @@ enum Engine {
             files: run.files)
     }
 
-    /// A stream arriving at an input that takes one value runs the step once per item.
-    /// Other stream inputs of the same length are read at the same index, and a hole
-    /// stays a hole. One item that fails leaves a hole; the step fails when all do.
     static func runOne(_ def: StepDef, inputs: [String: Value], params: Params, context: StepContext) async throws -> [String: Value] {
         let loop = def.noMap ? nil : def.inputs.first { !$0.list && inputs[$0.id]?.isStream == true }
         guard let loop, case .stream(let items) = inputs[loop.id] else {
@@ -209,7 +190,6 @@ enum Engine {
         return outputs
     }
 
-    /// A list output marked `each` goes on item by item.
     static func spread(_ def: StepDef, _ outputs: [String: Value]) -> [String: Value] {
         var out = outputs
         for port in def.outputs where port.each {
@@ -224,7 +204,6 @@ enum Engine {
     }
 }
 
-/// The models a command loads, each once, shared by every run and every item.
 actor FlowModels {
     private var loaded: [String: any Sendable] = [:]
 

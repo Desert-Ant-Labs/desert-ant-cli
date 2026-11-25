@@ -74,6 +74,16 @@ On Linux, desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, 
 sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
 ```
 
+## API key
+
+You only need an API key when you use our models in production. Create a free API key and save the key:
+
+```sh
+desertant auth login
+```
+
+In CI or a pipeline, set `DAL_API_KEY` instead.
+
 ## Coding agents
 
 `desertant setup` adds desertant's instructions to the coding agents you have installed, in the current project. Claude Code and Pi get a skill file, and Codex gets a section in `AGENTS.md`.

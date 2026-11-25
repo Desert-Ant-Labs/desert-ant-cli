@@ -30,5 +30,6 @@ which is licensed under the Desert Ant Labs Source-Available License:
 https://license.desertant.com/. A distributed binary carries those terms.
 
 The models `desertant` downloads and runs are licensed under the same Desert Ant
-Labs Source-Available License. Free for most apps; a commercial license is required
-at scale. Licensing: licensing@desertant.com.
+Labs Source-Available License. Free up to 100,000 monthly licenses, then paid per
+license. Questions about licensing? Contact us at
+https://desertant.com/contact/?topic=licensing.

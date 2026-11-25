@@ -1,16 +1,9 @@
 import Foundation
 
-// A file or image verb takes one path, several, or a folder. Expansion happens once,
-// here, so every runner still sees one file at a time and the shell keeps doing the
-// globbing. A folder is filtered by what the model reads; the rest is reported once.
-
 enum Inputs {
     struct Expanded {
-        /// The files to run, in the order given; a folder's files A-Z by name.
         let files: [String]
-        /// Files inside a folder the model does not read, for one note.
         let skipped: [String]
-        /// Whether the result is a list: more than one path, or any folder.
         let isBatch: Bool
     }
 
@@ -18,7 +11,6 @@ enum Inputs {
         try expand(paths, extensions: kind.extensions, noun: kind.noun, recursive: recursive)
     }
 
-    /// `extensions` nil takes every file in a folder.
     static func expand(_ paths: [String], extensions: Set<String>?, noun: String, recursive: Bool) throws -> Expanded {
         let fm = FileManager.default
         var files: [String] = []
@@ -51,8 +43,6 @@ enum Inputs {
         return Expanded(files: files, skipped: skipped, isBatch: isBatch)
     }
 
-    /// Visible files under `dir` as relative names, A-Z. Hidden entries and, without
-    /// `recursive`, folders are left out; `passedFolders` says whether any were.
     private static func list(_ dir: URL, recursive: Bool) throws -> (names: [String], passedFolders: Bool) {
         let fm = FileManager.default
         var names: [String] = []

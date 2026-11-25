@@ -1,35 +1,24 @@
 import Foundation
 import Transcript
 
-// Writing a clip out of the source media: AVFoundation on Apple platforms, ffmpeg
-// elsewhere.
-
-/// What a media file holds, read before any model is fetched or run.
 struct MediaInfo: Sendable {
     let hasVideo: Bool
     let hasAudio: Bool
     let durationSec: Double
-    /// The picture as it plays, turned the way the file says to show it.
     var width = 0
     var height = 0
 }
 
 protocol MediaCutter: Sendable {
-    /// The tracks and length of `source`.
     func probe(_ source: URL) async throws -> MediaInfo
-    /// Lay `ranges` of `source` end to end and write them to `destination`.
     func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws
-    /// The ranges with `captions` drawn into the picture, which re-encodes the video.
     func cut(_ source: URL, ranges: [TimeRange], burning captions: BurnedCaptions, frame: CaptionFrame, to destination: URL) async throws
-    /// `video`'s picture with `audio` as its sound, written to `destination`.
     func replaceAudio(of video: URL, with audio: URL, to destination: URL) async throws
 }
 
 #if canImport(AVFoundation)
 import AVFoundation
 
-/// A composition of the kept ranges, exported at the highest quality preset for
-/// video and as M4A for audio. Modeled on the Clipper app's cutter.
 struct AVFoundationCutter: MediaCutter {
     func probe(_ source: URL) async throws -> MediaInfo {
         let asset = AVURLAsset(url: source)
@@ -50,9 +39,7 @@ struct AVFoundationCutter: MediaCutter {
         )
     }
 
-    /// Cuts are passthrough: the tracks are copied, not re-encoded, and the output
-    /// keeps the container the destination's extension names. Video cuts land on
-    /// keyframes.
+    /// Passthrough copies the tracks without re-encoding, so video cuts land on keyframes.
     func cut(_ source: URL, ranges: [TimeRange], to destination: URL) async throws {
         let asset = AVURLAsset(url: source)
         let composition = try await Self.composition(of: asset, keeping: ranges)

@@ -1,23 +1,13 @@
 import Foundation
 import Transcript
 
-// A timed transcript, from a recognizer behind the `Transcriber` protocol or from a
-// file, which works on every platform with no model at all.
-
-/// Turns a media file into timed words.
 protocol Transcriber: Sendable {
-    /// The model's name for a progress line, e.g. "voz".
     var name: String { get }
-    /// Whether the weights are on disk already.
     func isDownloaded() -> Bool
-    /// Fetch the weights, reporting 0...1. A no-op when they are present.
     func prepare(progress: @escaping @Sendable (Double) -> Void) async throws
-    /// Words with times, in order. `progress` is 0...1.
     func transcribe(_ media: URL, progress: @escaping @Sendable (Double) -> Void) async throws -> [TimedWord]
 }
 
-/// A transcript read from a file: SRT or VTT, JSON as `[{"start", "end", "text"}]`,
-/// or the document `desertant voz --json` writes (its `sentences`).
 enum TranscriptFile {
     static func load(_ url: URL) throws -> [Sentence] {
         let text = try String(contentsOf: url, encoding: .utf8)
@@ -32,21 +22,18 @@ enum TranscriptFile {
                                                  start: $0.element.start, end: $0.element.end) }
     }
 
-    /// Captions as SRT: an index, `00:00:01,000 --> 00:00:04,500`, the text.
     static func srt(_ cues: [Caption]) -> String {
         cues.enumerated()
             .map { i, c in "\(i + 1)\n\(stamp(c.start, ",")) --> \(stamp(c.end, ","))\n\(c.text)\n" }
             .joined(separator: "\n")
     }
 
-    /// Captions as WebVTT: the header, then cues with a period before the milliseconds.
     static func vtt(_ cues: [Caption]) -> String {
         "WEBVTT\n\n" + cues
             .map { "\(stamp($0.start, ".")) --> \(stamp($0.end, "."))\n\($0.text)\n" }
             .joined(separator: "\n")
     }
 
-    /// The transcript as text, one sentence per line.
     static func text(_ sentences: [Sentence]) -> String {
         sentences.map(\.text).joined(separator: "\n") + "\n"
     }
@@ -90,8 +77,6 @@ enum TranscriptFile {
         throw RunError("transcript JSON must be an array of {start, end, text} in seconds, or the document `desertant voz --json` writes")
     }
 
-    /// Blocks separated by blank lines: an optional index, a `00:00:01,000 --> 00:00:04,000`
-    /// line, then the text. VTT uses a period for the millisecond separator; both parse.
     private static func srt(_ text: String) -> [(Double, Double, String)] {
         text.replacingOccurrences(of: "\r\n", with: "\n")
             .components(separatedBy: "\n\n")

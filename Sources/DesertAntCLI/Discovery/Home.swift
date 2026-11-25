@@ -1,8 +1,5 @@
 import ArgumentParser
 
-// `desertant` on its own: what you can do on this machine, built from the registry
-// and each verb's own help so the screen cannot drift from the commands.
-
 struct Home: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "home",
@@ -18,7 +15,6 @@ struct Home: AsyncParsableCommand {
         let does: String
     }
 
-    /// The verbs with a runner on this machine, in the order the root lists them.
     static func verbs() -> [Entry] {
         DesertAnt.configuration.subcommands.compactMap { type in
             let c = type.configuration
@@ -49,7 +45,6 @@ struct Home: AsyncParsableCommand {
         let width = min(Terminal.columns, 110) - 2
         let indent = "  "
 
-        // Verbs grouped by what they take.
         let groups: [(String, [RunInputKind])] = [("Text", [.text]), ("Recordings", [.file]), ("Photos and video", [.image, .visual])]
         for (label, kinds) in groups {
             let members = verbs.filter { entry in kinds.contains { $0.placeholder == entry.input } }

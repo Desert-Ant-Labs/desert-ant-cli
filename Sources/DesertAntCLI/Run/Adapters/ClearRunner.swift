@@ -1,8 +1,6 @@
 import Clear
 import Foundation
 
-// Clear: denoise and dereverb an audio or video file, written beside the input.
-
 struct ClearRunner: ModelRunner {
     let id = "clear"
     let inputKind = RunInputKind.file

@@ -1,8 +1,5 @@
 import Tongue
 
-// Tongue: the language a short text is written in. The model ships inside the SDK,
-// so there is nothing to download.
-
 struct TongueRunner: ModelRunner {
     let id = "tongue"
     let inputKind = RunInputKind.text

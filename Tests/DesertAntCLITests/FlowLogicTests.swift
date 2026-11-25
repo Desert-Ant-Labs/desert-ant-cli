@@ -86,8 +86,6 @@ final class FlowLogicTests: XCTestCase {
         }
     }
 
-    // MARK: Files
-
     private func touch(_ name: String, _ contents: String = "x") throws -> String {
         let path = folder.appendingPathComponent(name).path
         try FileManager.default.createDirectory(atPath: (path as NSString).deletingLastPathComponent, withIntermediateDirectories: true)
@@ -132,8 +130,6 @@ final class FlowLogicTests: XCTestCase {
         XCTAssertEqual(moved, [folder.appendingPathComponent("moved/z.txt").path])
         XCTAssertFalse(FileManager.default.fileExists(atPath: a))
     }
-
-    // MARK: Eye fields
 
     func testEyeSubjectAndReason() {
         XCTAssertEqual(EyeFields.subject(["Dog": 0.9, "Beach": 0.8, "Drawing": 0.95, "Sky": 0.6]), ["Dog", "Beach"])

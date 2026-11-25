@@ -1,10 +1,6 @@
 import ArgumentParser
 import Foundation
 
-// `desertant setup [agent]`. Writes the adapter each coding agent reads, from the
-// copies inside the binary: a skill for Claude Code and Pi, a marked section in
-// AGENTS.md for Codex. With no agent named, every agent found on this machine.
-
 struct Setup: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "setup",
@@ -15,7 +11,6 @@ struct Setup: ParsableCommand {
     enum Agent: String, CaseIterable, ExpressibleByArgument {
         case claude, codex, pi
 
-        /// Whether the agent seems to be on this machine.
         var isPresent: Bool {
             let home = NSHomeDirectory()
             switch self {
@@ -25,7 +20,6 @@ struct Setup: ParsableCommand {
             }
         }
 
-        /// Where the adapter goes, in a project or for the user.
         func destination(global: Bool) -> String {
             let root = global ? NSHomeDirectory() : FileManager.default.currentDirectoryPath
             switch self {
@@ -58,7 +52,6 @@ struct Setup: ParsableCommand {
     static let markerStart = "<!-- desertant start -->"
     static let markerEnd = "<!-- desertant end -->"
 
-    /// `text` with the desertant section replaced, or appended when there is none.
     static func withSection(_ text: String, body: String) -> String {
         let section = "\(markerStart)\n\(body.trimmingCharacters(in: .newlines))\n\(markerEnd)\n"
         if let start = text.range(of: markerStart), let end = text.range(of: markerEnd) {

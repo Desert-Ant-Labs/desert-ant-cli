@@ -1,9 +1,6 @@
 import ArgumentParser
 import Foundation
 
-// `desertant update`. A script install runs the installer again; Homebrew, mise, and
-// source builds own their binaries, so those get the one command to run instead.
-
 struct Update: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "update",
@@ -75,8 +72,7 @@ struct Update: AsyncParsableCommand {
         newer ? "Run \(source.updateCommand)." : "Up to date."
     }
 
-    /// Run the install script again for the same bin directory. Replacing a running
-    /// binary is safe on macOS and Linux: `install` writes a new file.
+    /// Replacing a running binary is safe on macOS and Linux: `install` writes a new file.
     private func runInstaller(binDir: String) async throws {
         let sh = Process()
         sh.executableURL = URL(fileURLWithPath: "/bin/sh")

@@ -3,8 +3,7 @@ import Foundation
 enum LogicSteps {
     static let all: [StepDef] = [ifElse, merge, list, best, template, join, convert]
 
-    /// Sends each item down `yes` or `no`. A stream splits item by item, with holes on
-    /// the side an item did not take, so the two sides stay aligned.
+    /// A stream splits item by item, with holes on the side an item did not take, so the two sides stay aligned.
     static let ifElse = StepDef(
         type: "if", summary: "Sends each value down yes or no, by a check on it or on another value.", category: .logic,
         inputs: [Port(id: "value", type: .any), Port(id: "test", type: .any, optional: true)],
@@ -34,7 +33,6 @@ enum LogicSteps {
         return op.test(test, operand) ? ["yes": value] : ["no": value]
     }
 
-    /// Joins the two sides of an if back together, item by item.
     static let merge = StepDef(
         type: "merge", summary: "Joins the yes and no of an if back together, item by item.", category: .logic,
         inputs: [Port(id: "a", type: .any, optional: true), Port(id: "b", type: .any, optional: true)],
@@ -128,7 +126,6 @@ enum LogicSteps {
     }
 }
 
-/// The checks an if step makes.
 enum Condition: String, CaseIterable, Sendable {
     case equals, notEquals, oneOf, contains, above, below, truthy, falsy, empty
 
@@ -159,7 +156,6 @@ enum Condition: String, CaseIterable, Sendable {
     }
 }
 
-/// What a list step does to a list. The sorts keep the whole list unless given `n`.
 enum ListOp: String, CaseIterable, Sendable {
     case desc, asc, most, firstN, lastN, item, count, unique, sort, reverse, compact
 
@@ -202,7 +198,6 @@ enum ListOp: String, CaseIterable, Sendable {
     }
 }
 
-/// Numbers by value, everything else by its words.
 func compare(_ a: Value?, _ b: Value?) -> Int {
     if let x = a?.asNumber, let y = b?.asNumber, x.isFinite, y.isFinite { return x < y ? -1 : x > y ? 1 : 0 }
     switch a.asText.localizedStandardCompare(b.asText) {
@@ -212,9 +207,7 @@ func compare(_ a: Value?, _ b: Value?) -> Int {
     }
 }
 
-/// The `{{...}}` placeholders that templates and file names fill in. A date reads
-/// 2026-10-14 and a time 14.05.30, so text made from a pattern also makes a good file
-/// name. `{{b|lang}}` gives a language code's English name.
+/// A time reads 14.05.30, without colons, so text made from a pattern also makes a good file name.
 enum Placeholders {
     static func stamp(_ part: String, _ date: Date) -> String {
         let f = DateFormatter()
@@ -224,9 +217,6 @@ enum Placeholders {
         return f.string(from: date)
     }
 
-    /// `pattern` with `{{date}}` and `{{time}}` from `moment`, asked for only when the
-    /// pattern uses them, and every other placeholder from `value`. A placeholder
-    /// `value` does not know stays as written.
     static func fill(_ pattern: String, at moment: () -> Date = { Date() }, _ value: (String) -> String?) -> String {
         var date: Date?
         return pattern.replacing(#/\{\{\s*(\w+)(\|lang)?\s*\}\}/#) { m in
@@ -240,7 +230,6 @@ enum Placeholders {
         }
     }
 
-    /// Placeholders numbered by kind, the same data always getting the same one.
     struct Numbering {
         private var tags: [String: String] = [:]
         private var counts: [String: Int] = [:]
@@ -255,14 +244,12 @@ enum Placeholders {
         }
     }
 
-    /// "fr" as "French".
     static func languageName(_ code: String) -> String {
         guard !code.isEmpty else { return "Unknown" }
         return Locale(identifier: "en").localizedString(forLanguageCode: code) ?? code
     }
 }
 
-/// The formats the convert step writes, by what they hold.
 enum FileFormat: String, CaseIterable, Sendable {
     case jpeg, png, heic, tiff, m4a, wav, aiff, caf, txt, md, csv, json
 
@@ -290,7 +277,6 @@ enum FileFormat: String, CaseIterable, Sendable {
         }
     }
 
-    /// The formats this machine writes for a group.
     static func of(_ group: Group) -> [FileFormat] {
         allCases.filter { f in
             guard f.group == group else { return false }

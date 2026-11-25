@@ -91,11 +91,18 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
   "runnable": ["clear", "clips", "emo", "gist", "redact"],
   "version": "0.1.1", "coreVersion": "3.1.0",
   "latest": "0.1.1", "updateAvailable": false, "updateCommand": "desertant update",
-  "models": 18, "shipping": 12
+  "models": 18, "shipping": 12,
+  "apiKey": true, "apiKeySource": "saved"
 }
 ```
 
-`latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
+`apiKeySource` is `environment` when the key comes from `DAL_API_KEY`, `saved` when `desertant auth login` saved the key, and null when no key is set. `latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
+
+`desertant auth status --json` prints whether an API key is set, where from, and where `auth login` saves the key. `auth login --json` and `auth logout --json` print the same object after they run.
+
+```json
+{ "apiKey": true, "source": "saved", "path": "/Users/you/.config/desertant/api-key" }
+```
 
 ## Weights
 

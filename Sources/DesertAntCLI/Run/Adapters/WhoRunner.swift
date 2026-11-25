@@ -2,8 +2,6 @@ import Foundation
 import Transcript
 import Who
 
-// Who: who spoke when in a recording, and with a transcript, who said each line.
-
 struct WhoRunner: ModelRunner {
     let id = "who"
     let inputKind = RunInputKind.file
@@ -34,7 +32,6 @@ struct WhoRunner: ModelRunner {
         let speakerCount: Int
         let speakers: [SpeakerSummary]
         let turns: [SpeakerTurn]
-        /// With --transcript only.
         let lines: [SpokenLine]?
         let files: [String: String]
     }
@@ -171,8 +168,7 @@ struct WhoRunner: ModelRunner {
 }
 
 extension Who {
-    /// Who spoke when in an audio or video file. The CLI decodes the file, so ffmpeg reads
-    /// what core's WAV reader cannot off Apple platforms.
+    /// The CLI decodes the file, so ffmpeg reads what core's WAV reader cannot off Apple platforms.
     func labels(of input: String) async throws -> Diarization {
         let samples: [Float]
         do {

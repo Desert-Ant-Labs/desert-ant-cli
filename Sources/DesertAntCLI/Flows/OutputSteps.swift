@@ -35,7 +35,6 @@ enum OutputSteps {
         return [:]
     }
 
-    /// Lines up lists item by item, a column each.
     static let table = StepDef(
         type: "table", summary: "Prints lists side by side, a row per item and a column per input.", category: .output,
         inputs: ["a", "b", "c"].map { Port(id: $0, type: .any, optional: true) },
@@ -52,7 +51,6 @@ enum OutputSteps {
         var rows: [[Value?]]
         let only = keys.count == 1 ? run.inputs[keys[0]]!.items : []
         if !only.isEmpty, only.allSatisfy({ if case .record? = $0 { true } else { $0 == nil } }) {
-            // One list of records: a column per field.
             headers = []
             for case .record(let fields)? in only {
                 for (k, _) in fields where !headers.contains(k) { headers.append(k) }
@@ -72,7 +70,6 @@ enum OutputSteps {
         return [:]
     }
 
-    /// A value as terminal lines: a list one item per line, a record as JSON.
     static func lines(_ value: Value) -> [String] {
         switch value {
         case .list, .stream: return value.items.map { cell($0) }
@@ -90,7 +87,6 @@ enum OutputSteps {
         return value.asText.replacingOccurrences(of: "\n", with: " ")
     }
 
-    /// Columns padded to their widest cell, two spaces apart.
     static func align(_ rows: [[String]]) -> [String] {
         let widths = (0..<(rows.map(\.count).max() ?? 0)).map { c in rows.map { c < $0.count ? displayWidth($0[c]) : 0 }.max() ?? 0 }
         return rows.map { row in
@@ -101,9 +97,7 @@ enum OutputSteps {
     }
 }
 
-/// Writes values as files: text as .txt, .md, .srt, or .vtt by what it holds, a table
-/// as .csv, media as its own files, anything else as .json. Nothing replaces a file
-/// unless --force says to: a taken name steps aside to `name-2.txt`.
+/// Nothing replaces a file unless --force says to: a taken name steps aside to `name-2.txt`.
 enum FolderWriter {
     /// `inputs` are never replaced, even with `force`.
     static func write(_ value: Value, to folder: URL, name: String, force: Bool, inputs: [String] = []) throws -> [String] {
@@ -149,8 +143,6 @@ enum FolderWriter {
         return written
     }
 
-    /// Media in the run's scratch folder, copied beside the input or into --output-dir
-    /// under its own name. Anything else as it was.
     static func keep(_ value: Value, _ run: FlowRun) throws -> Value {
         func one(_ v: Value?) throws -> Value? {
             guard let v, let path = v.path, path.hasPrefix(run.temp.path) else { return v }
@@ -170,7 +162,6 @@ enum FolderWriter {
         }
     }
 
-    /// The folder a setting names: a path as written, or a bare name inside `root`.
     static func resolve(_ setting: String, root: URL) -> URL {
         let trimmed = setting.trimmingCharacters(in: .whitespaces)
         if trimmed.isEmpty { return root }
@@ -180,8 +171,6 @@ enum FolderWriter {
         return root.appendingPathComponent(trimmed)
     }
 
-    /// A file name from a pattern: `{{a}}` from the value given, `{{name}}` the first
-    /// input's name without its extension, the date and time, and no slashes or colons.
     static func fileName(_ pattern: String, a: Value?, input: String?) -> String {
         Placeholders.fill(pattern) { key in
             switch key {
@@ -195,7 +184,6 @@ enum FolderWriter {
         .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Captions keep their format, and text with Markdown in it is .md.
     static func textExtension(_ text: String) -> String {
         let head = text.drop { $0.isWhitespace }
         if head.hasPrefix("WEBVTT") { return "vtt" }
@@ -209,8 +197,6 @@ enum FolderWriter {
     }
 }
 
-/// Records as a spreadsheet: a row each, their fields as columns in the order first
-/// seen.
 enum CSV {
     static func text(_ rows: [Value]) -> String {
         var keys: [String] = []

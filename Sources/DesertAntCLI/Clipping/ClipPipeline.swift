@@ -2,10 +2,6 @@ import Clips
 import Foundation
 import Transcript
 
-// The clips pipeline: transcribe, select, cut. Each step sits behind its own type so
-// a platform can swap one.
-
-/// One chosen moment, with where it landed on disk.
 struct Pick: Encodable, Sendable {
     let id: Int
     let start: Double
@@ -14,11 +10,9 @@ struct Pick: Encodable, Sendable {
     let text: String
     let score: Double
     var file: String?
-    /// The .srt file beside the clip, with `--captions srt`.
     var captions: String?
 }
 
-/// Everything the run produced, as the JSON result and the source for the summary.
 struct ClipReport: Encodable, Sendable {
     let input: String
     let transcript: String?
@@ -28,15 +22,11 @@ struct ClipReport: Encodable, Sendable {
     let selectSec: Double
     let cutSec: Double
     let clips: [Pick]
-    /// What changed from what was asked, as captions written as .srt for audio.
     var notes: [String]?
 }
 
-/// Where a run has got to, for a progress line.
 enum ClipPhase: Sendable {
     case downloading(model: String, Double)
-    /// Weights on disk, loading. The first load also specializes the model for the
-    /// Neural Engine, which takes a while.
     case loading(model: String)
     case transcribing(Double)
     case selecting
@@ -64,16 +54,11 @@ struct ClipPipeline {
 
     struct Request {
         let media: URL
-        /// A transcript file instead of running the recognizer.
         var transcript: URL?
-        /// How many clips to look for; nil lets the model size it to the material.
         var count: Int?
-        /// Where the clip files go, or nil for beside the input.
         var outputDirectory: URL?
-        /// Report the moments without writing files.
         var selectOnly = false
         var force = false
-        /// Words already transcribed, instead of running the recognizer.
         var words: [TimedWord]?
         var captions = CaptionMode.off
         var style = CaptionStyle()

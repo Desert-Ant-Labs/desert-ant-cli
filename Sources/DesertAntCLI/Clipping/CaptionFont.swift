@@ -3,12 +3,10 @@ import Foundation
 import CoreText
 #endif
 
-/// A font file and the numbers both renderers size text by. libass scales a font so
-/// that its Windows ascent and descent together fill the line height, and Core Text
-/// is given the same em size, so a line of text is the same size on macOS and Linux.
+/// libass scales a font so its Windows ascent and descent together fill the line height;
+/// Core Text gets the same em size, so a line of text is the same size on macOS and Linux.
 struct CaptionFont: Sendable, Equatable {
     let file: URL
-    /// The face within a collection.
     let index: Int
     let family: String
     let weight: Int
@@ -16,13 +14,10 @@ struct CaptionFont: Sendable, Equatable {
     let ascent: Double
     let descent: Double
 
-    /// The em size that makes a line `lineHeight` pixels tall.
     func emSize(lineHeight: Double) -> Double { lineHeight * unitsPerEm / (ascent + descent) }
 
-    /// The baseline's distance below the top of a line.
     func baseline(lineHeight: Double) -> Double { lineHeight * ascent / (ascent + descent) }
 
-    /// The font desertant ships, beside the binary in `fonts/`.
     static let bundledName = "Inclusive Sans"
 
     static func resolve(_ name: String?, weight: Int) throws -> CaptionFont {
@@ -44,7 +39,6 @@ struct CaptionFont: Sendable, Equatable {
         return try read(folder.appendingPathComponent(file), index: 0)
     }
 
-    /// `fonts/` beside the binary, or in a folder above it for a build in the repo.
     static var fontsFolder: URL? {
         guard var dir = Bundle.main.executableURL?.resolvingSymlinksInPath().deletingLastPathComponent() else { return nil }
         for _ in 0..<6 {
@@ -57,8 +51,6 @@ struct CaptionFont: Sendable, Equatable {
         return nil
     }
 
-    /// A family installed on this machine: Core Text finds it on a Mac, fontconfig on
-    /// Linux.
     static func system(_ family: String, weight: Int) throws -> CaptionFont {
         #if canImport(CoreText)
         let traits = [kCTFontWeightTrait: weightTrait(weight)] as CFDictionary
@@ -96,7 +88,7 @@ struct CaptionFont: Sendable, Equatable {
     }
 
     #if canImport(CoreText)
-    /// Core Text's weight scale, -1 to 1, for a CSS weight.
+    /// Core Text's weight scale runs -1 to 1.
     private static func weightTrait(_ w: Int) -> Double {
         switch w {
         case ..<200: -0.8
@@ -123,7 +115,6 @@ struct CaptionFont: Sendable, Equatable {
     }
     #endif
 
-    /// The family, weight, and metrics from a TrueType or OpenType file's own tables.
     static func read(_ url: URL, index: Int) throws -> CaptionFont {
         guard let data = try? Data(contentsOf: url), data.count > 12 else { throw RunError("could not read the font \(url.path).") }
         let bytes = [UInt8](data)

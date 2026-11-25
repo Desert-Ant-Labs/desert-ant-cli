@@ -1,9 +1,6 @@
 import XCTest
 @testable import DesertAntCLI
 
-// The media layer Linux runs on: ffmpeg's probe and decode, EXIF orientation, and
-// WAV in pure Swift. The ffmpeg tests make their own media and skip without ffmpeg.
-
 final class MediaTests: XCTestCase {
     private var dir: URL!
 
@@ -31,8 +28,6 @@ final class MediaTests: XCTestCase {
         try FFmpeg.run(try tools().ffmpeg, ["-v", "error", "-nostdin", "-y"] + arguments + [path], file: path, writing: true)
         return path
     }
-
-    // MARK: - Pure
 
     func testProbeParsesStreamsAndDuration() throws {
         let json = """
@@ -85,7 +80,6 @@ final class MediaTests: XCTestCase {
         XCTAssertEqual(FFmpeg.locate(path: "/nowhere:\(bin.path)")?.ffprobe, ffprobe)
     }
 
-    /// A 3x2 image whose pixel at (x, y) is (x, y, 7).
     private let image: [UInt8] = (0..<2).flatMap { y in (0..<3).flatMap { x in [UInt8(x), UInt8(y), 7] } }
 
     private func pixel(_ rgb: [UInt8], width: Int, _ x: Int, _ y: Int) -> [UInt8] {
@@ -93,9 +87,8 @@ final class MediaTests: XCTestCase {
     }
 
     func testUprightTurnsEachOrientation() {
-        // Where the stored top-left pixel ends up, upright.
         let cases: [(Int, Int, Int, Int, Int)] = [
-            // orientation, width, height, x, y
+            // orientation, width, height, and where the stored top-left pixel lands upright (x, y)
             (1, 3, 2, 0, 0), (2, 3, 2, 2, 0), (3, 3, 2, 2, 1), (4, 3, 2, 0, 1),
             (5, 2, 3, 0, 0), (6, 2, 3, 1, 0), (7, 2, 3, 1, 2), (8, 2, 3, 0, 2),
         ]
@@ -107,7 +100,6 @@ final class MediaTests: XCTestCase {
         }
     }
 
-    /// A JPEG header with an EXIF orientation tag, in either byte order.
     private func jpegHeader(orientation: Int, littleEndian: Bool) -> [UInt8] {
         func u16(_ v: Int) -> [UInt8] { littleEndian ? [UInt8(v & 0xFF), UInt8(v >> 8)] : [UInt8(v >> 8), UInt8(v & 0xFF)] }
         func u32(_ v: Int) -> [UInt8] { littleEndian ? u16(v & 0xFFFF) + u16(v >> 16) : u16(v >> 16) + u16(v & 0xFFFF) }
@@ -174,8 +166,6 @@ final class MediaTests: XCTestCase {
         XCTAssertFalse(Media.isWAV(dir.appendingPathComponent("missing.wav").path))
     }
 
-    // MARK: - With ffmpeg
-
     func testDecodesCompressedAudio() async throws {
         let tools = try requireFFmpeg()
         let mp3 = try make("tone.m4a", ["-f", "lavfi", "-i", "sine=frequency=440:duration=2:sample_rate=44100", "-ac", "2"])
@@ -218,7 +208,6 @@ final class MediaTests: XCTestCase {
         _ = try requireFFmpeg()
         let jpeg = try make("wide.jpg", ["-f", "lavfi", "-i", "testsrc=size=64x32", "-frames:v", "1"])
         var bytes = [UInt8](try Data(contentsOf: URL(fileURLWithPath: jpeg)))
-        // Stand an EXIF segment with orientation 6 (turn right) after the SOI marker.
         let exif = jpegHeader(orientation: 6, littleEndian: false)
         bytes.insert(contentsOf: exif[2..<(exif.count - 4)], at: 2)
         let rotated = dir.appendingPathComponent("rotated.jpg")

@@ -1,6 +1,5 @@
 import Foundation
 
-/// The pieces a text splits into.
 enum Segment {
     case lines, sentences, paragraphs
 
@@ -18,9 +17,7 @@ enum Segment {
         return pieces.filter { !$0.isEmpty }
     }
 
-    /// The same rule on every platform, so a flow splits a text the same way on macOS
-    /// and Linux: a sentence ends at a period, question mark, or exclamation mark, with
-    /// any closing quotes, before a space and a capital or a digit, or a line break.
+    /// The same rule on every platform, so a flow splits a text the same way on macOS and Linux.
     static func sentences(_ text: String) -> [Substring] {
         var out: [Substring] = []
         var start = text.startIndex
@@ -36,11 +33,8 @@ enum Segment {
 enum InputSteps {
     static let all: [StepDef] = [text, textlist, audio, image, photos, files, watch]
 
-    /// The file names a text input reads from a folder.
     static let textExtensions: Set<String> = ["txt", "md", "markdown", "text"]
 
-    /// The files the command line's paths are filtered by when a folder is given,
-    /// or nil to take every file.
     static func extensions(for type: String) -> Set<String>? {
         switch type {
         case "audio": RunInputKind.file.extensions
@@ -50,7 +44,6 @@ enum InputSteps {
         }
     }
 
-    /// Whether the step takes every path in one run. The others run once per path.
     static func takesList(_ type: String) -> Bool {
         ["photos", "files", "watch", "textlist"].contains(type)
     }
@@ -124,8 +117,6 @@ enum InputSteps {
         return paths.isEmpty ? [:] : ["photos": .list(paths.map { .image($0) })]
     }
 
-    /// Photos come out as photos, so Eye and Moderator can read them, and any other
-    /// file as itself.
     static let files = StepDef(
         type: "files", summary: "Files, or every file in some folders, as a list.", category: .input,
         outputs: [Port(id: "files", type: .any, each: true)],
@@ -136,7 +127,6 @@ enum InputSteps {
         return paths.isEmpty ? [:] : ["files": .list(paths.map(asFile))]
     }
 
-    /// Runs as a files input: the paths on the command line, or the folder it watches.
     static let watch = StepDef(
         type: "watch", summary: "The files in a folder, as photos, recordings, texts, and files.", category: .input,
         outputs: [Port(id: "files", type: .any, each: true), Port(id: "photos", type: .image, each: true),
@@ -164,8 +154,7 @@ enum InputSteps {
         return out
     }
 
-    /// A path from the flow file, with `~` expanded. A `/samples/` path is a
-    /// placeholder for a file the person passes, so it counts as no path.
+    /// A `/samples/` path is a placeholder for a file the person passes, so it counts as no path.
     static func given(_ param: Param?) -> String? {
         guard let path = param?.string?.trimmingCharacters(in: .whitespaces), !path.isEmpty,
               !path.hasPrefix("/samples/") else { return nil }
@@ -177,7 +166,6 @@ enum InputSteps {
         return folders + (params["files"]?.strings ?? []).compactMap { given(.string($0)) }
     }
 
-    /// The visible files in a folder, A to Z.
     static func contents(of folder: String) throws -> [String] {
         try Inputs.expand([folder], extensions: nil, noun: "", recursive: false).files
     }

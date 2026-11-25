@@ -22,15 +22,12 @@ final class FlowStepTests: XCTestCase {
         return (await Engine.run(run, name: "test"), run)
     }
 
-    /// The context of step `index` of a flow, to run one step on its own.
     private func context(_ yaml: String, step index: Int) throws -> StepContext {
         let flow = try FlowFile.read(yaml)
         let progress = Progress(palette: Palette.resolve(noColor: true, json: true), quiet: true)
         let run = try FlowRun(flow: flow, binding: nil, options: FlowOptions(), models: FlowModels(), progress: progress)
         return StepContext(run: run, step: flow.steps[index], position: index + 1)
     }
-
-    // MARK: Placeholders
 
     func testTemplatesFillValuesDatesAndLanguageNames() {
         let moment = Date(timeIntervalSince1970: 1_800_000_000)
@@ -70,8 +67,6 @@ final class FlowStepTests: XCTestCase {
             XCTAssertTrue("\(error)".contains("not tab"))
         }
     }
-
-    // MARK: Saving
 
     func testFileNamesFillTheInputNameAndLoseSlashes() {
         XCTAssertEqual(FolderWriter.fileName("{{name}}_notes", a: nil, input: "/work/talk.final.mp4"), "talk.final_notes")
@@ -128,11 +123,8 @@ final class FlowStepTests: XCTestCase {
         try Data([1, 2, 3]).write(to: source)
         let written = try FolderWriter.write(.audio(source.path), to: folder, name: "ignored", force: false)
         XCTAssertEqual(written, [folder.appendingPathComponent("talk_clear.wav").path])
-        // A file already where it would go is not copied onto itself.
         XCTAssertEqual(try FolderWriter.write(.audio(source.path), to: source.deletingLastPathComponent(), name: "", force: false), [])
     }
-
-    // MARK: Tables and captions
 
     func testATableOfRecordsHasAColumnPerField() async throws {
         let (_, run) = try await run("""

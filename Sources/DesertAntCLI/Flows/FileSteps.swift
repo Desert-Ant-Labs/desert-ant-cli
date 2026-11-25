@@ -1,7 +1,5 @@
 import Foundation
 
-/// Steps that copy, move, or rename a person's own files. They change nothing without
-/// `--apply`; until then they print what they would do.
 enum FileSteps {
     static let all: [StepDef] = [rename, copy]
 
@@ -69,14 +67,11 @@ enum FileSteps {
     }
 }
 
-/// Naming, copying, and moving files.
 enum FileOps {
     enum Action: String, Sendable {
         case copy, move
     }
 
-    /// With `--apply`, copies or moves the files and lists the new paths; without it,
-    /// shows what it would do and changes nothing.
     static func carry(_ paths: [String], to targets: [String], _ action: Action, _ context: StepContext) throws {
         let run = context.run
         let verb = action == .copy ? "copy" : context.step.type == "rename" ? "rename" : "move"
@@ -90,10 +85,6 @@ enum FileOps {
         for path in try apply(paths, to: targets, action) { run.wrote(path) }
     }
 
-    /// A new name for every file, from a pattern. `{{name}}` is the old name, `{{n}}`
-    /// the number padded to the size of the batch, `{{date}}` and `{{time}}` when the
-    /// file was made, and `{{a}}` the value given for that file. The extension stays,
-    /// and a slash makes a folder.
     static func names(for paths: [String], pattern: String, a: [Value?] = []) -> [String] {
         let width = String(paths.count).count
         var taken = Set<String>()
@@ -110,7 +101,6 @@ enum FileOps {
         }
     }
 
-    /// The pattern filled in for one file, each part of a path cleaned for a file name.
     static func fill(_ pattern: String, path: String, number: Int = 1, width: Int = 1, a: Value? = nil) -> String {
         let filled = Placeholders.fill(pattern, at: { date(of: path) }) { key in
             switch key {
@@ -123,14 +113,12 @@ enum FileOps {
         return filled.split(separator: "/").map(clean).filter { !$0.isEmpty }.joined(separator: "/")
     }
 
-    /// When a file was made: a photo's capture date, else the file's own dates.
     static func date(of path: String) -> Date {
         if let taken = Pictures.captureDate(path) { return Date(timeIntervalSince1970: taken) }
         let attributes = try? FileManager.default.attributesOfItem(atPath: path)
         return attributes?[.creationDate] as? Date ?? attributes?[.modificationDate] as? Date ?? Date()
     }
 
-    /// No colons, control characters, or leading dots.
     private static func clean(_ part: Substring) -> String {
         let bad = CharacterSet(charactersIn: ":\\").union(.controlCharacters).union(.newlines)
         return String(String.UnicodeScalarView(part.unicodeScalars.map { bad.contains($0) ? "-" : $0 }))
@@ -138,9 +126,7 @@ enum FileOps {
             .trimmingCharacters(in: CharacterSet(charactersIn: "."))
     }
 
-    /// Copies or moves each file to its target. A different file already there stays,
-    /// and the new one takes the next free name. A copy that is already there is not
-    /// made again.
+    /// A different file already at the target stays; the new one takes the next free name.
     static func apply(_ paths: [String], to targets: [String], _ action: Action) throws -> [String] {
         let fm = FileManager.default
         var done: [String] = []
@@ -176,8 +162,7 @@ enum FileOps {
         return done
     }
 
-    /// Whether two paths name one file, as `a.JPG` and `a.jpg` do on a disk that
-    /// ignores case. Two files that differ only in case on a disk that keeps both are not.
+    /// `a.JPG` and `a.jpg` name one file on a case-insensitive disk, two on a case-sensitive one.
     static func sameFile(_ a: String, _ b: String) -> Bool {
         let fm = FileManager.default
         guard let x = try? fm.attributesOfItem(atPath: a), let y = try? fm.attributesOfItem(atPath: b),

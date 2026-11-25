@@ -1,8 +1,6 @@
 import Face
 import Foundation
 
-// Face: the faces in a photo, and across photos (--people, --find), who is who.
-
 struct FaceRunner: SetRunner {
     let id = "face"
     let inputKind = RunInputKind.image

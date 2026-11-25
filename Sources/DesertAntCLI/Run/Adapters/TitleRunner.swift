@@ -2,8 +2,7 @@
 import Foundation
 import Title
 
-// Title: a short title and description for a passage of text. Runs on MLX, so Apple
-// silicon only, in a build made with DESERTANT_MLX=1 (the Tools scripts set it on macOS).
+// Runs on MLX, so Apple silicon only, in a build made with DESERTANT_MLX=1 (the Tools scripts set it on macOS).
 
 struct TitleRunner: ModelRunner {
     let id = "title"

@@ -1,9 +1,7 @@
 import XCTest
 @testable import DesertAntCLI
 
-/// Every flow file either reads as runnable, or names each step that cannot run. The
-/// fixtures are in the repo; `DESERTANT_FLOW_EXAMPLES` adds a folder of flow files
-/// of your own.
+/// `DESERTANT_FLOW_EXAMPLES` adds a folder of flow files of your own to the fixtures.
 final class FlowExamplesTests: XCTestCase {
     private static let fixtures = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures/flows")
@@ -45,7 +43,6 @@ final class FlowExamplesTests: XCTestCase {
             #else
             XCTAssertTrue(flow.problems.allSatisfy { $0.message.contains("macOS only") }, t.name)
             #endif
-            // What `flow new` writes reads back the same.
             let again = try FlowFile.read(FlowFile.write(flow))
             XCTAssertEqual(again.steps.map(\.id), flow.steps.map(\.id), t.name)
             XCTAssertEqual(again.steps.map(\.uses), flow.steps.map(\.uses), t.name)

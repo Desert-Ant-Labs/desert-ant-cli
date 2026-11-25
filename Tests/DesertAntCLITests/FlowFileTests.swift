@@ -106,8 +106,6 @@ final class FlowFileTests: XCTestCase {
         XCTAssertEqual(flow.steps.count, 1)
     }
 
-    // MARK: Implied wiring
-
     func testAnInputWiresToTheNearestOutputOfTheSameName() throws {
         let flow = try read("""
         flow: 1
@@ -123,7 +121,6 @@ final class FlowFileTests: XCTestCase {
     }
 
     func testFailingAName_AnInputWiresByTypeToThePrimaryOutput() throws {
-        // A view's value matches no output by name, and text's outputs are all text.
         let flow = try read("flow: 1\nsteps:\n  - type: text\n  - type: view")
         XCTAssertEqual(flow.step("view")?.uses["value"], Wire(step: "text", port: "text"))
     }
@@ -153,8 +150,6 @@ final class FlowFileTests: XCTestCase {
                        .ambiguous([Wire(step: "p", port: "one"), Wire(step: "p", port: "two")]))
     }
 
-    // MARK: Writing
-
     func testWritingNamesEveryStepAndWire() throws {
         let flow = try read("flow: 1\ntitle: Echo\nsummary: \"Say: it back\"\nsteps:\n  - type: text\n  - type: view")
         let yaml = FlowFile.write(flow)
@@ -175,8 +170,6 @@ final class FlowFileTests: XCTestCase {
         XCTAssertTrue(yaml.contains("keep: \"0.5\""), yaml)
         XCTAssertTrue(yaml.contains("n: 3"), yaml)
     }
-
-    // MARK: Settings from the command line
 
     func testSetParsesNumbersFlagsAndText() throws {
         XCTAssertEqual(Param.parse("3"), .number(3))

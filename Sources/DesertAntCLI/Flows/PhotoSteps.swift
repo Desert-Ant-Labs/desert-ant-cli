@@ -6,8 +6,6 @@ import ImageIO
 import Vision
 #endif
 
-/// Eye's readings of a run's photos by path, so a later step asks about a photo
-/// without running Eye on it again.
 actor EyeReadings {
     private var byPath: [String: Analysis] = [:]
 
@@ -73,7 +71,6 @@ enum PhotoSteps {
         return ["safe": .bool(!result.nsfw), "score": .number(result.score), "image": .image(path)]
     }
 
-    /// Groups near-duplicates and keeps the best of each group, as `da eye --duplicates`.
     static let duplicates = StepDef(
         type: "duplicates", summary: "Finds near-duplicate photos, and splits the photos to keep from the rest.",
         category: .logic, model: "eye",
@@ -132,7 +129,6 @@ enum PhotoSteps {
     #endif
 }
 
-/// One photo as Eye read it, with the raw outputs behind the tags.
 struct EyeReading {
     let analysis: Analysis
     let input: String
@@ -145,13 +141,11 @@ struct EyeReading {
     var photo: Photo? { analysis.details?.photo }
     var layout: Details.Layout? { analysis.details?.layout }
 
-    /// Detections that are confident enough and big enough to be real rather than noise.
     var people: [Detection] { (layout?.people ?? []).filter { $0.confidence >= 0.25 && $0.box.width * $0.box.height >= 0.003 } }
     var pets: [Detection] { (layout?.pets ?? []).filter { $0.confidence >= 0.25 && $0.box.width * $0.box.height >= 0.003 } }
     var faces: [FaceDetails] { (analysis.details?.faces ?? []).filter { $0.confidence >= 0.25 && $0.box.width * $0.box.height >= 0.003 } }
 }
 
-/// The fields the eye step gives, by the names a flow file uses.
 enum EyeFields {
     struct Field: Sendable {
         let id: String
@@ -168,12 +162,10 @@ enum EyeFields {
 
     private static func score(_ v: Double?) -> Value? { v.map { .number(($0 * 1000).rounded() / 1000) } }
 
-    /// Builds the document `da eye --json` writes, for the `detail` field.
     private static let runner = EyeRunner()
 
     private static let animals = ["Animal", "Pet", "Cat", "Dog", "Bird", "Horse", "Mammal", "Kitten", "Puppy", "Fish", "Reptile"]
 
-    /// Scene tags that say how a picture was made rather than what is in it.
     private static let style: Set<String> = ["Drawing", "Painting", "Handwriting", "Art", "Cartoon", "Sketch", "Illustration", "Child art", "Whiteboard", "Black-and-white"]
 
     private static let why = [
@@ -182,16 +174,13 @@ enum EyeFields {
         "reference_photo": "saved for reference", "low_content": "nothing in it",
     ]
 
-    /// What a photo shows: the top scene, and up to two more within 0.15 of it.
     static func subject(_ scenes: [String: Double]) -> [String] {
         let list = ranked(scenes, limit: 40).filter { !style.contains($0.label) }
         let best = list.first?.score ?? 0
         return list.prefix(3).filter { $0.score >= best - 0.15 }.map(\.label)
     }
 
-    /// Eye scores every reason to drop a photo on its own, and good photos often score
-    /// 0.8 on one. A photo is dropped when a reason beats Eye's own keeper score by a
-    /// wide margin.
+    /// Good photos often score 0.8 on one drop reason, so a photo is dropped only when a reason beats the keeper score by a wide margin.
     static func reason(_ reject: [String: Double], blur: [String: Double]) -> String {
         guard let (reason, value) = reject.filter({ $0.key != "keeper" }).max(by: { $0.value < $1.value }),
               value >= 0.8, value - (reject["keeper"] ?? 0) >= 0.45 else { return "keeper" }

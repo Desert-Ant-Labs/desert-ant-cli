@@ -1,7 +1,6 @@
 import Foundation
 import Yams
 
-/// An output of an earlier step, as `uses` names it: `voz.words`.
 struct Wire: Hashable, Sendable {
     let step: String
     let port: String
@@ -12,22 +11,16 @@ struct Wire: Hashable, Sendable {
 struct FlowStep: Sendable {
     let id: String
     let type: String
-    /// The id was written in the file, not taken from the type.
     let named: Bool
-    /// The settings as written.
     var with: Params
-    /// Every input's source, by input port.
     var uses: [String: Wire]
-    /// The inputs wired by the reader rather than by the file.
     var implied: Set<String>
 
     var def: StepDef? { Steps.byType[type] }
 
-    /// The settings with the step's defaults under them.
     var params: Params { (def?.defaults ?? [:]).merging(with) { _, given in given } }
 }
 
-/// Something that keeps a flow from running here, by step.
 struct FlowProblem: Sendable, Equatable {
     let step: String?
     let message: String
@@ -42,7 +35,6 @@ struct Flow: Sendable {
 
     func step(_ id: String) -> FlowStep? { steps.first { $0.id == id } }
 
-    /// The step that takes the paths on the command line: the first input step.
     var input: FlowStep? { steps.first { $0.def?.category == .input } }
 }
 
@@ -105,7 +97,6 @@ enum FlowFile {
             raws.append(Raw(index: i + 1, id: id, type: type, with: with, uses: uses))
         }
 
-        // A step without an id takes its type, while that type is the only one unnamed.
         let unnamed = Dictionary(grouping: raws.filter { $0.id == nil }, by: \.type)
         for (type, group) in unnamed.sorted(by: { $0.key < $1.key }) where group.count > 1 {
             let positions = group.map { String($0.index) }
@@ -174,10 +165,6 @@ enum FlowFile {
         case none
     }
 
-    /// The source of an input the file leaves unwired: the nearest earlier step with an
-    /// output of the same name, else for a required input the nearest with an output of
-    /// the same type. A step with several outputs of that type gives its first output,
-    /// when that is one of them.
     static func implied(_ port: Port, before earlier: [FlowStep], defs: [String: StepDef] = Steps.byType) -> Implied {
         for step in earlier.reversed() {
             guard let def = defs[step.type], let out = def.outputs.first(where: { $0.id == port.id }), out.type.fits(port.type) else { continue }
@@ -197,8 +184,6 @@ enum FlowFile {
         return .none
     }
 
-    /// How many values a YAML tree holds, each use of a repeated part counted again.
-    /// Stops once past `limit`.
     private static func count(_ tree: Yams.Node, upTo limit: Int) -> Int {
         var count = 0
         var stack = [tree]
@@ -213,7 +198,6 @@ enum FlowFile {
         return count
     }
 
-    /// The flow as YAML with every id and wire written out, so any reader opens it.
     static func write(_ flow: Flow) -> String {
         var root: [(Yams.Node, Yams.Node)] = [(Yams.Node("flow"), Yams.Node("1", Tag(.int)))]
         if !flow.title.isEmpty { root.append((Yams.Node("title"), string(flow.title))) }
@@ -258,7 +242,6 @@ enum FlowFile {
 }
 
 extension DefaultStringInterpolation {
-    /// "1, 2, and 3", or with `or`, "1, 2, or 3".
     mutating func appendInterpolation(list items: [String], or: Bool = false) {
         let last = or ? "or" : "and"
         switch items.count {

@@ -4,8 +4,7 @@ import Foundation
 import AVFoundation
 #endif
 
-// Audio for the file models. Off Apple, core reads and writes WAV only, so every
-// other format goes through ffmpeg.
+// Off Apple, core reads and writes WAV only, so every other format goes through ffmpeg.
 
 enum Media {
     static func decodeMono(_ path: String, sampleRate: Double) async throws -> [Float] {
@@ -28,7 +27,6 @@ enum Media {
         #endif
     }
 
-    /// Writes the container the extension names: WAV directly, anything else through ffmpeg.
     static func write(_ channels: [[Float]], sampleRate: Double, to path: String) throws {
         let wav = Data(AudioIO.encodeWAV(Resample.interleave(channels), sampleRate: Int(sampleRate),
                                          channels: channels.count))
@@ -44,8 +42,6 @@ enum Media {
         try FFmpeg.encode(wav: scratch.path, to: path, tools: tools)
     }
 
-    /// The audio of `input` in the container `output`'s extension names, at 48kHz.
-    /// A Mac writes it with AVFoundation; elsewhere anything but WAV needs ffmpeg.
     static func convertAudio(_ input: String, to output: String) async throws {
         let channels = try await decodeChannels(input, sampleRate: 48_000)
         #if canImport(AVFoundation)
@@ -71,7 +67,6 @@ enum Media {
         #endif
     }
 
-    /// Fails before any work when `path` needs ffmpeg and there is none.
     static func requireWriter(for path: String) throws {
         let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
         guard ext != "wav", ext != "wave", FFmpeg.tools == nil else { return }

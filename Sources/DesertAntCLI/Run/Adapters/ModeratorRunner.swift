@@ -1,9 +1,6 @@
 import Foundation
 import Moderator
 
-// Moderator: whether an image shows nudity or sexual activity. ImageIO decodes the
-// file on Apple platforms and ffmpeg elsewhere.
-
 struct ModeratorRunner: ModelRunner {
     let id = "moderator"
     let inputKind = RunInputKind.image
@@ -80,7 +77,6 @@ struct ModeratorRunner: ModelRunner {
 
         let r = result.regions
         if out.isJSON {
-            // The path as typed, like every other file model.
             out.emit(Document(
                 input: input,
                 nsfw: result.isNSFW, score: result.score, threshold: opts.threshold,
@@ -97,7 +93,6 @@ struct ModeratorRunner: ModelRunner {
         out.line(p.dim(detail.map { "\($0.0) \(String(format: "%.2f", $0.1))" }.joined(separator: "  ")))
     }
 
-    /// Whether a photo is flagged at `threshold`, and its score, for the flow step.
     static func check(_ path: String, threshold: Double, with model: Moderator) async throws -> (nsfw: Bool, score: Double) {
         var options = Options()
         options.threshold = threshold

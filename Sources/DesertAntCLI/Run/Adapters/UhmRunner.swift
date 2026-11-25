@@ -1,8 +1,6 @@
 import Foundation
 import Uhm
 
-// Uhm: the "uh", "um", and "hmm" in a recording, with frame-precise spans.
-
 struct UhmRunner: ModelRunner {
     let id = "uhm"
     let inputKind = RunInputKind.file

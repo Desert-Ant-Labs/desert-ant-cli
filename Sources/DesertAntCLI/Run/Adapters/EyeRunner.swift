@@ -1,9 +1,6 @@
 import Eye
 import Foundation
 
-// Eye: a photo's kind, scores, tags, and crop. A filter or a question (--duplicates,
-// --best, --similar-to, --sort) is about the photos together. A video is sampled into frames.
-
 struct EyeRunner: SetRunner {
     let id = "eye"
     let inputKind = RunInputKind.visual
@@ -37,7 +34,6 @@ struct EyeRunner: SetRunner {
 
     struct Photo: Encodable {
         let input: String
-        /// A video frame's time in seconds; nil for a photo.
         let time: Double?
         let model: String
         let width: Int
@@ -70,10 +66,8 @@ struct EyeRunner: SetRunner {
         let durationSec: Double
         let every: Double
         let kind: String?
-        /// Each tag that holds in a frame, and the share of frames it holds in.
         let tags: [String: Double]
         let thumbnail: Thumbnail?
-        /// With --has or --not, the stretches where every frame matches.
         let matches: [Span]?
         let frames: [Photo]
     }
@@ -269,7 +263,6 @@ struct EyeRunner: SetRunner {
         progress.finish()
         guard !seen.isEmpty else { throw RunError("could not read a frame of \(input).") }
 
-        // The best cover among frames with no blur and nobody's eyes closed.
         let clean = seen.filter { !$0.analysis.has(.eyesClosed) && !$0.analysis.has(.blurry) }
         let pick = (clean.isEmpty ? seen : clean).max { ($0.analysis.scores?.cover ?? 0) < ($1.analysis.scores?.cover ?? 0) }!
         let box = s.crop.flatMap { cropBox(pick.analysis, aspect: $0.aspect) }
@@ -310,7 +303,6 @@ struct EyeRunner: SetRunner {
             return
         }
         out.line(p.bold(kind.map { name($0) } ?? "video") + p.dim("  \(Format.spoken(frames.durationSec)), \(seen.count) frames"))
-        // On screen, the tags in at least a quarter of the frames.
         let common = shares.filter { $0.value >= 0.25 && $0.key != kind }
             .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }.prefix(s.shown).map { name($0.key) }
         if !common.isEmpty { out.line(common.joined(separator: ", ")) }
@@ -319,7 +311,6 @@ struct EyeRunner: SetRunner {
         if let file { out.line(p.dim(file)) }
     }
 
-    /// Runs of matching frames as time spans, each frame standing for the step around it.
     func spans(_ frames: [(time: Double, match: Bool)], every: Double, duration: Double) -> [Span] {
         var out: [Span] = []
         var start: Double?
@@ -341,7 +332,6 @@ struct EyeRunner: SetRunner {
         let s = try settings(arguments)
         var photos = inputs.filter { !RunInputKind.isVideo($0) }
         let videos = inputs.filter(RunInputKind.isVideo)
-        // One video with a filter is that video's document, its matches inside.
         if !batch, photos.isEmpty, videos.count == 1, s.question == nil {
             try await video(videos[0], s, out: out)
             return
@@ -378,7 +368,6 @@ struct EyeRunner: SetRunner {
         }
     }
 
-    /// The answer about the photos that pass the filters, `total` the photos read.
     private func answer(_ kept: [(input: String, analysis: Analysis)], of total: Int, videos: [String],
                         reference: Analysis?, _ s: Settings, out: Output) async throws {
         let p = out.palette
@@ -465,7 +454,6 @@ struct EyeRunner: SetRunner {
         for r in ranked { out.line("\(out.palette.dim(String(format: "%.2f", r.score)))  \(r.input)") }
     }
 
-    /// A score by name, or a tag's confidence; nil when the part behind it did not run.
     private func score(_ a: Analysis, _ key: String) throws -> Double? {
         switch key {
         case "aesthetic": return a.scores?.aesthetic
@@ -496,8 +484,7 @@ struct EyeRunner: SetRunner {
         return Crop(aspect: crop.text, box: box, file: path)
     }
 
-    /// Crops of the photos an answer names, by input. The paths go to stderr, so stdout
-    /// stays the answer.
+    /// The paths go to stderr, so stdout stays the answer.
     @discardableResult
     private func writeCrops(_ photos: [(input: String, analysis: Analysis)], _ s: Settings, out: Output) throws -> [String: Crop] {
         guard s.crop != nil else { return [:] }
@@ -511,7 +498,6 @@ struct EyeRunner: SetRunner {
         return crops
     }
 
-    /// Eye's best crop at `aspect`, trimmed to exactly that aspect.
     private func cropBox(_ a: Analysis, aspect: Double) -> Box? {
         a.bestCrop(aspect: aspect).map { Pictures.exact($0, aspect: aspect, width: a.width, height: a.height) }
     }
@@ -538,7 +524,6 @@ struct EyeRunner: SetRunner {
             people: a.people, pets: a.pets, crop: crop, embedding: s.embedding ? a.embedding : nil)
     }
 
-    /// A tag as a reader writes it: `group_shot` -> `group shot`.
     private func name(_ tag: Tag) -> String { tag.rawValue.replacingOccurrences(of: "_", with: " ") }
 
     private func canonical(_ path: String) -> String {

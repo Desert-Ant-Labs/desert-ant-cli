@@ -1,8 +1,5 @@
 import Foundation
 
-// Clips: short clips from a talk, a podcast, or a meeting recording. The pipeline
-// lives in Clipping/; this maps it onto the command line.
-
 struct ClipsRunner: ModelRunner {
     let id = "clips"
     let inputKind = RunInputKind.file
@@ -27,7 +24,6 @@ struct ClipsRunner: ModelRunner {
         RunOption(name: "quality", help: "The video quality of a clip with burned captions: high, medium, or low. Default high. Every level keeps the source's size and frame rate."),
     ]
 
-    /// The caption settings from the options, checked.
     static func captions(_ arguments: RunArguments) throws -> (CaptionMode, CaptionStyle) {
         let name = arguments["captions"]?.lowercased() ?? "off"
         guard let mode = CaptionMode(rawValue: name) else { throw RunError("captions is burn, srt, or off, not \(name).") }
@@ -52,7 +48,6 @@ struct ClipsRunner: ModelRunner {
     func run(_ input: String, arguments: RunArguments, out: Output) async throws {
         guard FileManager.default.fileExists(atPath: input) else { throw RunError("no file at \(input).") }
         var request = ClipPipeline.Request(media: URL(fileURLWithPath: input))
-        // `-` reads the transcript from stdin, as `desertant voz --json` or an SRT.
         request.transcript = try arguments["transcript"].map(TranscriptFile.url(option:))
         request.count = arguments.int("count")
         request.outputDirectory = arguments["output-dir"].map { URL(fileURLWithPath: $0) }

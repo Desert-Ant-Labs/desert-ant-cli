@@ -1,8 +1,6 @@
 import Foundation
 import Redact
 
-// Redact: personal data replaced with restorable placeholders.
-
 struct RedactRunner: ModelRunner {
     let id = "redact"
     let inputKind = RunInputKind.text

@@ -1,9 +1,5 @@
 import ArgumentParser
 
-// `desertant models` (alias `ls`). The models this CLI runs on this machine, one
-// paragraph each. `--all` adds the rest of the catalog with a tag saying why each is
-// out of the list.
-
 struct Models: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "models",
@@ -19,7 +15,6 @@ struct Models: ParsableCommand {
 
     @OptionGroup var options: GlobalOptions
 
-    /// A model row as it leaves the process under --json.
     struct Row: Encodable {
         let id: String
         let name: String
@@ -34,7 +29,6 @@ struct Models: ParsableCommand {
         let runnableHere: Bool
     }
 
-    /// Why a model is out of the default list, or nil when it runs on this machine.
     private func tag(_ m: Model) -> String? {
         if Runners.runner(for: m.id) != nil { return nil }
         if !m.ships { return "closed beta" }
@@ -69,7 +63,6 @@ struct Models: ParsableCommand {
         let idWidth = models.map(\.id.count).max() ?? 0
         let width = min(Terminal.columns, 100)
 
-        // A model that does not run on this machine is set in dim, its reason last.
         for m in models {
             let tag = tag(m)
             let lines = column(m.id, keyWidth: idWidth, text: m.summary, width: width, tag: tag,

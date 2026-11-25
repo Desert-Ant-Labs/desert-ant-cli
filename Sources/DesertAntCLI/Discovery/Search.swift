@@ -1,8 +1,5 @@
 import ArgumentParser
 
-// `desertant search <query>`. Matches a query against id, name, tagline, summary,
-// category, and Hub tags.
-
 struct Search: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "search",
