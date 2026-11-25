@@ -297,4 +297,4 @@ Under `--json` the result is an array with one entry per file. A file that fails
 
 ## License
 
-MIT for the CLI. The models desertant runs are under the [Desert Ant Labs source-available license](https://license.desertant.com/1.0).
+MIT for the CLI. The models desertant runs are under the [Desert Ant Labs source-available license](https://license.desertant.com/).

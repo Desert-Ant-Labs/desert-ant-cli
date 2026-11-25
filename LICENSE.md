@@ -27,7 +27,7 @@ outside that license:
 
 The `desertant` binary built from this repository statically links desert-ant-core,
 which is licensed under the Desert Ant Labs Source-Available License:
-https://license.desertant.com/1.0. A distributed binary carries those terms.
+https://license.desertant.com/. A distributed binary carries those terms.
 
 The models `desertant` downloads and runs are licensed under the same Desert Ant
 Labs Source-Available License. Free for most apps; a commercial license is required
