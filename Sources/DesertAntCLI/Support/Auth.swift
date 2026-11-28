@@ -4,6 +4,8 @@ import Foundation
 import Glibc
 #elseif canImport(Darwin)
 import Darwin
+#elseif os(Windows)
+import WinSDK
 #endif
 
 enum APIKey {
@@ -91,7 +93,7 @@ struct Auth: ParsableCommand {
         func run() throws {
             let out = Output(options: options)
             let key: String
-            if withKey || isatty(STDIN_FILENO) == 0 {
+            if withKey || !Terminal.isTTY(STDIN_FILENO) {
                 key = (readLine(strippingNewline: true) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             } else {
                 out.line("Create a free API key at \(APIKey.platformURL)")
@@ -118,20 +120,22 @@ struct Auth: ParsableCommand {
         }
 
         private func openInBrowser(_ url: String) {
+            #if os(Windows)
+            _ = url.withCString(encodedAs: UTF16.self) { ShellExecuteW(nil, nil, $0, nil, nil, SW_SHOWNORMAL) }
+            #else
             #if os(macOS)
             let tool = "/usr/bin/open"
-            #elseif os(Linux)
-            let tool = "/usr/bin/xdg-open"
             #else
-            let tool = ""
+            let tool = "/usr/bin/xdg-open"
             #endif
-            guard !tool.isEmpty, FileManager.default.isExecutableFile(atPath: tool) else { return }
+            guard FileManager.default.isExecutableFile(atPath: tool) else { return }
             let process = Process()
             process.executableURL = URL(fileURLWithPath: tool)
             process.arguments = [url]
             process.standardOutput = FileHandle.nullDevice
             process.standardError = FileHandle.nullDevice
             try? process.run()
+            #endif
         }
     }
 
