@@ -153,11 +153,7 @@ enum HEIF {
 
     /// Quality 92 moves Eye's scores by under 0.02 and is a fifth the size of a PNG. The caller removes the file.
     static func convert(_ path: String) throws -> String {
-        let search = (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":")
-        guard let tool = ["heif-dec", "heif-convert"].lazy.compactMap({ name in
-            search.lazy.map { (String($0) as NSString).appendingPathComponent(name) }
-                .first { FileManager.default.isExecutableFile(atPath: $0) }
-        }).first else {
+        guard let tool = ["heif-dec", "heif-convert"].lazy.compactMap({ SearchPath.find($0) }).first else {
             throw RunError("reading \((path as NSString).lastPathComponent) needs libheif, which is not installed. Install libheif's tools with \(installHint), or convert the photo to JPEG.")
         }
         let jpeg = FileManager.default.temporaryDirectory.appendingPathComponent("desertant-\(UUID().uuidString).jpg").path

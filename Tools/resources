@@ -11,7 +11,7 @@ dest="${2:?usage: Tools/resources <products-dir> <destination>}"
 
 shopt -s nullglob
 found=0
-# .bundle on macOS, .resources on Linux. MLX's bundle only carries the metallib,
+# .bundle on macOS and Windows, .resources on Linux. MLX's bundle only carries the metallib,
 # which goes beside the binary as mlx.metallib instead.
 for bundle in "$products"/*.bundle "$products"/*.resources; do
   [[ "$(basename "$bundle")" == mlx-swift_Cmlx.bundle ]] && continue

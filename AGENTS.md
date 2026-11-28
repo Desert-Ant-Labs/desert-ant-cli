@@ -50,14 +50,19 @@ change that page in the same commit, and never change an existing key's meaning 
 type within a major version. `docs/pipelines.md` marks what ships and what is
 planned; move a section when it lands.
 
-## Two build rules
+## Build rules
 
 Title runs on MLX behind core's `MLX` package trait. A trait request in a manifest
 is unconditional, so `Package.swift` turns it on from `DESERTANT_MLX=1` at manifest
 time; `Tools/check`, `Tools/install`, and `Tools/package` set it on macOS, Linux
-never does, and the Title code is compiled behind `#if TITLE`. A plain `swift build`
-without the variable resolves a different graph and rebuilds the world, so on a Mac
-use the tools.
+and Windows never do, and the Title code is compiled behind `#if TITLE`. A plain
+`swift build` without the variable resolves a different graph and rebuilds the
+world, so on a Mac use the tools.
+
+Write to stderr with `Terminal.writeError`, never `FileHandle.standardError`. On
+Windows, core's LiteRT log capture closes the stderr handle that `FileHandle` keeps
+from its first use, and the next write crashes. `RELEASING.md` covers the Windows
+package, installer, and tools.
 
 Core's `Tools/dal.sh` moves to core's root when sourced. Only ever source it inside a
 subshell that hands back a value (see how `Tools/check` finds LiteRT); sourcing

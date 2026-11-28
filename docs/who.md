@@ -17,7 +17,7 @@ Speaker 2      12s   26%
 Who labeled 46 seconds in 0.03s, 1377x realtime.
 ```
 
-Who numbers the speakers in the order they first speak. Who labels voices and doesn't know the people, so `--names "Sam,Dan"` names them in that order. The share is each speaker's time against the whole recording, so silence and music make the shares add up to less than 100%. Who takes audio or video, and labeled a 15-minute recording in 1.5s on an M4 Max. On Linux, ffmpeg reads any file that isn't WAV.
+Who numbers the speakers in the order they first speak. Who labels voices and doesn't know the people, so `--names "Sam,Dan"` names them in that order. The share is each speaker's time against the whole recording, so silence and music make the shares add up to less than 100%. Who takes audio or video, and labeled a 15-minute recording in 1.5s on an M4 Max. On Linux and Windows, ffmpeg reads any file that isn't WAV.
 
 ## Who said what
 

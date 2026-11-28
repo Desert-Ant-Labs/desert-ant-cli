@@ -1,16 +1,16 @@
 # Third-party notices
 
-The Linux release of desertant ships `libLiteRt.so` beside the binary. Every release links a few open source Swift packages into the binary and ships a font in `fonts/` for burned-in captions. This file names each one, its license, and where its source lives. desert-ant-core is covered in [LICENSE.md](LICENSE.md).
+The Linux release of desertant ships `libLiteRt.so` beside the binary, and the Windows release ships the DLLs named below beside `desertant.exe`. Every release links a few open source Swift packages into the binary and ships a font in `fonts/` for burned-in captions. This file names each one, its license, and where its source lives. desert-ant-core is covered in [LICENSE.md](LICENSE.md).
 
 ## LiteRT
 
-Google's on-device inference runtime, version 2.2.0, shipped as `libLiteRt.so` in the Linux release. Licensed under the Apache License 2.0, printed in full below. Source: https://github.com/google-ai-edge/LiteRT
+Google's on-device inference runtime, version 2.3.0, shipped as `libLiteRt.so` in the Linux release and `libLiteRt.dll` in the Windows release. Licensed under the Apache License 2.0, printed in full below. Source: https://github.com/google-ai-edge/LiteRT
 
 ## Swift packages linked into the binary
 
 These are licensed under the Apache License 2.0 with the Runtime Library Exception, which waives the attribution requirement for compiled code. They are listed here for completeness.
 
-- Swift standard library and Foundation: https://github.com/swiftlang
+- Swift standard library, Foundation, and Dispatch, which the Windows release ships as DLLs: https://github.com/swiftlang
 - Swift Argument Parser: https://github.com/apple/swift-argument-parser
 - Swift Numerics: https://github.com/apple/swift-numerics
 
@@ -40,6 +40,88 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+## ONNX Runtime
+
+Microsoft's inference runtime, version 1.23.0 with DirectML, shipped as `onnxruntime.dll` in the Windows release, where Voz runs on it. Licensed under the MIT License. Source: https://onnxruntime.ai, from the `onnxruntime-directml` package: https://pypi.org/project/onnxruntime-directml/1.23.0/
+
+```
+MIT License
+
+Copyright (c) Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## DirectML
+
+Microsoft's machine learning library for DirectX 12, version 1.15.4, shipped as `DirectML.dll` in the Windows release, where ONNX Runtime loads it. Redistributed under the Microsoft DirectML license: https://www.nuget.org/packages/Microsoft.AI.DirectML/1.15.4/License
+
+## Microsoft C++ runtime
+
+`VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`, `VCRUNTIME140_THREADS.dll`, `MSVCP140.dll`, and `MSVCP140_1.dll`, version 14.42, shipped in the Windows release so it runs without the Visual C++ Redistributable installed. These are redistributable files of Microsoft Visual Studio, distributed under its license terms: https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution
+
+## ICU
+
+Unicode support for Foundation, through swift-foundation-icu, linked into the binary in the Linux release and shipped as `_FoundationICU.dll` in the Windows release. Licensed under the Unicode License v3, printed in full below. Source: https://github.com/swiftlang/swift-foundation-icu
+
+```
+UNICODE LICENSE V3
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright © 1991-2023 Unicode, Inc.
+
+NOTICE TO USER: Carefully read the following legal agreement. BY
+DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR
+SOFTWARE, YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE
+TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT
+DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of data files and any associated documentation (the "Data Files") or
+software and any associated documentation (the "Software") to deal in the
+Data Files or Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, and/or sell
+copies of the Data Files or Software, and to permit persons to whom the
+Data Files or Software are furnished to do so, provided that either (a)
+this copyright and permission notice appear with all copies of the Data
+Files or Software, or (b) this copyright and permission notice appear in
+associated Documentation.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+THIRD PARTY RIGHTS.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA
+FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall
+not be used in advertising or otherwise to promote the sale, use or other
+dealings in these Data Files or Software without prior written
+authorization of the copyright holder.
 ```
 
 ## Inclusive Sans

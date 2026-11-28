@@ -1,6 +1,6 @@
 # Run Tools/check and package every target on each push and pull request, with
 # desert-ant-core checked out beside the CLI at the ref CORE_REF names, then hand the
-# tarballs to verify.yml, which installs them into clean systems and runs Tools/smoke.
+# archives to verify.yml, which installs them into clean systems and runs Tools/smoke.
 name: ci
 
 on:
@@ -69,6 +69,46 @@ jobs:
           name: linux-${{ matrix.arch }}
           path: desert-ant-cli/dist/*.tar.gz
 
+  # Git Bash runs the same tools as on macOS and Linux. Core's dal.sh vendors LiteRT
+  # with uv and ONNX Runtime with pip, and makes their import libraries with the Swift
+  # toolchain's llvm-lib.
+  windows:
+    name: windows-x86_64
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: desert-ant-cli
+      - name: Core ref
+        id: core
+        run: echo "ref=$(desert-ant-cli/Tools/core-ref)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: Desert-Ant-Labs/desert-ant-core
+          ref: ${{ steps.core.outputs.ref }}
+          path: desert-ant-core
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - uses: compnerd/gha-setup-swift@v0.4.0
+        with:
+          swift-version: swift-6.4.1-release
+          swift-build: 6.4.1-RELEASE
+      - name: Check
+        working-directory: desert-ant-cli
+        run: Tools/check
+      - name: Package
+        working-directory: desert-ant-cli
+        run: Tools/package windows-x86_64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: desert-ant-cli/dist/*.zip
+
   verify:
-    needs: [darwin, linux]
+    needs: [darwin, linux, windows]
     uses: ./.github/workflows/verify.yml

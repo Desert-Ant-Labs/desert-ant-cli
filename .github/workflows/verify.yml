@@ -1,7 +1,9 @@
-# Install the packaged tarballs from the calling run the way a person would, and run
+# Install the packaged archives from the calling run the way a person would, and run
 # Tools/smoke against them: on Linux in clean images of the common distributions
-# (Tools/linux-matrix), on macOS from the extracted tarball. ci.yml and release.yml
-# both call this, so a pull request and a release pass the same checks.
+# (Tools/linux-matrix), on macOS from the extracted tarball, and on Windows with
+# install.ps1 on a runner with no Swift toolchain, so a DLL the zip lacks fails here.
+# ci.yml and release.yml both call this, so a pull request and a release pass the same
+# checks.
 name: verify
 
 on:
@@ -53,3 +55,41 @@ jobs:
           mkdir -p "$RUNNER_TEMP/da"
           tar -xzf dist/desertant-darwin-arm64.tar.gz -C "$RUNNER_TEMP/da"
           Tools/smoke "$RUNNER_TEMP/da/desertant"
+
+  windows:
+    name: windows-x86_64
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-x86_64
+          path: dist
+      - name: Install
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash -Algorithm SHA256 dist\desertant-windows-x86_64.zip).Hash.ToLower()
+          "$hash  desertant-windows-x86_64.zip" | Set-Content dist\checksums.txt
+          $env:DESERTANT_HOME = "$env:RUNNER_TEMP\da"
+          $env:DESERTANT_BASE_URL = "file:///$($PWD.Path -replace '\\', '/')/dist"
+          ./install.ps1
+      # Core keeps models where Foundation puts caches, which doctor reports.
+      - name: Model cache
+        id: models
+        run: echo "path=$("$RUNNER_TEMP/da/desertant.exe" doctor --json | jq -r .cachePath)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.models.outputs.path }}
+          key: models-windows-x86_64-${{ hashFiles('manifest.json') }}
+          restore-keys: models-windows-x86_64-
+      - name: Smoke, without ffmpeg
+        run: Tools/smoke "$RUNNER_TEMP/da/desertant.exe"
+      - name: ffmpeg
+        run: choco install ffmpeg --no-progress -y
+      - name: Smoke, with ffmpeg
+        run: |
+          export PATH="/c/ProgramData/chocolatey/bin:$PATH"
+          Tools/smoke "$RUNNER_TEMP/da/desertant.exe"

@@ -70,14 +70,20 @@ final class MediaTests: XCTestCase {
     }
 
     func testLocateNeedsBothTools() throws {
+        #if os(Windows)
+        let (separator, suffix) = (";", ".exe")
+        #else
+        let (separator, suffix) = (":", "")
+        #endif
         let bin = dir.appendingPathComponent("bin")
         try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
-        let ffmpeg = bin.appendingPathComponent("ffmpeg").path
+        let path = "/nowhere\(separator)\(bin.path)"
+        let ffmpeg = bin.appendingPathComponent("ffmpeg" + suffix).path
         FileManager.default.createFile(atPath: ffmpeg, contents: Data(), attributes: [.posixPermissions: 0o755])
-        XCTAssertNil(FFmpeg.locate(path: "/nowhere:\(bin.path)"))
-        let ffprobe = bin.appendingPathComponent("ffprobe").path
+        XCTAssertNil(FFmpeg.locate(path: path))
+        let ffprobe = bin.appendingPathComponent("ffprobe" + suffix).path
         FileManager.default.createFile(atPath: ffprobe, contents: Data(), attributes: [.posixPermissions: 0o755])
-        XCTAssertEqual(FFmpeg.locate(path: "/nowhere:\(bin.path)")?.ffprobe, ffprobe)
+        XCTAssertEqual(FFmpeg.locate(path: path)?.ffprobe, ffprobe)
     }
 
     private let image: [UInt8] = (0..<2).flatMap { y in (0..<3).flatMap { x in [UInt8(x), UInt8(y), 7] } }

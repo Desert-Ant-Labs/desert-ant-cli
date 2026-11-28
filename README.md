@@ -2,7 +2,7 @@
 
 # Desert Ant CLI
 
-![Swift](https://img.shields.io/badge/Swift-macOS%20%7C%20Linux-F05138?logo=swift&logoColor=white) ![Release](https://img.shields.io/github/v/release/Desert-Ant-Labs/desert-ant-cli?color=ADB49C&label=release) ![License](https://img.shields.io/badge/license-MIT-ADB49C)
+![Swift](https://img.shields.io/badge/Swift-macOS%20%7C%20Linux%20%7C%20Windows-F05138?logo=swift&logoColor=white) ![Release](https://img.shields.io/github/v/release/Desert-Ant-Labs/desert-ant-cli?color=ADB49C&label=release) ![License](https://img.shields.io/badge/license-MIT-ADB49C)
 
 Transcribe recordings, cut captioned clips, clean up audio, sort photos, and redact personal data from the terminal, with [Desert Ant Labs](https://desertant.com) models running on your own machine. The weights download once, and nothing leaves the device. `da` is short for `desertant`.
 
@@ -52,7 +52,7 @@ Ran 5 steps in 2.6s.
 
 ## Install
 
-desertant runs on Apple silicon Macs with macOS 14 or later, and on Linux on x86_64 and arm64. Install it with the script, Homebrew, or mise:
+desertant runs on Apple silicon Macs with macOS 14 or later, on Linux on x86_64 and arm64, and on Windows 11 on x64. Install it with the script, Homebrew, or mise:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh
@@ -66,12 +66,24 @@ brew install desert-ant-labs/tap/desertant
 mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"
 ```
 
+On Windows, install it from PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.ps1 | iex
+```
+
 Update with `da update`, `brew upgrade desertant`, or `mise upgrade`.
 
 On Linux, desertant needs glibc 2.35 or later, such as Ubuntu 22.04, Debian 12, or Fedora 41, and libcurl. ffmpeg reads compressed audio, video, and images, and libheif reads HEIC photos:
 
 ```sh
 sudo apt install ffmpeg libheif-examples libheif-plugin-libde265
+```
+
+On Windows, ffmpeg reads compressed audio, video, and images:
+
+```powershell
+winget install Gyan.FFmpeg
 ```
 
 ## API key
@@ -136,7 +148,7 @@ Each model has a page on [desertant.com](https://desertant.com/models/) with its
 - **[Title](https://desertant.com/models/title/)** `da title "<text>"`  
   Suggest a short factual title and a one- or two-sentence description for any text.
 
-Redact, Emo, Gist, and Tongue are multilingual, and Toxic reads 35 languages. Title runs on Apple silicon Macs. The rest also run on Linux, and `da models` lists what runs on your machine.
+Redact, Emo, Gist, and Tongue are multilingual, and Toxic reads 35 languages. Title runs on Apple silicon Macs. The rest also run on Linux and Windows, and `da models` lists what runs on your machine.
 
 ## Transcripts and captions
 
@@ -164,7 +176,7 @@ da clips talk.mp4 --captions burn
 da clips talk.mp4 --captions burn --caption-style box --caption-position top --caption-color yellow
 ```
 
-Captions follow the clip's shape: one short line at a time on a vertical clip, two lines on a square or wide one, in white over a soft shadow, in a font that comes with desertant, so a clip looks the same on macOS and Linux.
+Captions follow the clip's shape: one short line at a time on a vertical clip, two lines on a square or wide one, in white over a soft shadow, in a font that comes with desertant, so a clip looks the same on macOS, Linux, and Windows.
 
 `--caption-lines` and `--caption-words` change how much text a caption holds, and `--caption-align`, `--caption-font`, `--caption-size`, and `--caption-weight` set the rest of the look. `--captions srt` writes an `.srt` beside each clip instead. Burning keeps the clip's size and frame rate at the highest quality unless you pass `--quality medium` or `low`. `da docs clips` has every option.
 

@@ -37,6 +37,8 @@ struct Doctor: AsyncParsableCommand {
         "macOS"
         #elseif os(Linux)
         "Linux"
+        #elseif os(Windows)
+        "Windows"
         #else
         "other"
         #endif
@@ -65,7 +67,7 @@ struct Doctor: AsyncParsableCommand {
         #endif
     }()
     private static let hasLiteRT: Bool = {
-        #if os(Linux)
+        #if os(Linux) || os(Windows)
         true
         #else
         false

@@ -1,5 +1,8 @@
 import ArgumentParser
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 struct Update: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -72,18 +75,33 @@ struct Update: AsyncParsableCommand {
         newer ? "Run \(source.updateCommand)." : "Up to date."
     }
 
-    /// Replacing a running binary is safe on macOS and Linux: `install` writes a new file.
+    /// macOS and Linux replace a running binary safely; on Windows install.ps1 moves the running files aside.
     private func runInstaller(binDir: String) async throws {
-        let sh = Process()
-        sh.executableURL = URL(fileURLWithPath: "/bin/sh")
-        sh.arguments = ["-c", "curl -fsSL \(Release.installScript) | sh"]
+        let process = Process()
         var env = ProcessInfo.processInfo.environment
+        #if os(Windows)
+        guard let url = URL(string: Release.windowsInstallScript),
+              let (data, response) = try? await URLSession.shared.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw RunError("could not download \(Release.windowsInstallScript).")
+        }
+        let script = FileManager.default.temporaryDirectory.appendingPathComponent("desertant-install-\(UUID().uuidString).ps1")
+        try data.write(to: script)
+        defer { try? FileManager.default.removeItem(at: script) }
+        process.executableURL = URL(fileURLWithPath: SearchPath.find("powershell")
+            ?? #"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"#)
+        process.arguments = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script.path]
+        env["DESERTANT_HOME"] = binDir
+        #else
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "curl -fsSL \(Release.installScript) | sh"]
         env["DESERTANT_BIN"] = binDir
-        sh.environment = env
-        try sh.run()
-        sh.waitUntilExit()
-        guard sh.terminationStatus == 0 else {
-            throw RunError("the installer exited with status \(sh.terminationStatus).")
+        #endif
+        process.environment = env
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw RunError("the installer exited with status \(process.terminationStatus).")
         }
     }
 }

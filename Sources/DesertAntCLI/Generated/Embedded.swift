@@ -1061,7 +1061,7 @@ The captions come from Voz's time on every word, moved onto the clip's own timel
 | `--caption-words` | The most words in one caption | Set by the clip's shape |
 | `--quality` | How much a clip with burned captions is compressed: `high`, `medium`, or `low` | `high` |
 
-Inclusive Sans ships with desertant in the `fonts` folder beside the binary, so a clip looks the same on macOS and Linux. On macOS, Core Text draws the captions and AVFoundation encodes the clip. On Linux, libass draws them and ffmpeg encodes the clip with H.264, so burning needs an ffmpeg built with libass, as most distributions build it. A family name is found with Core Text on macOS and with fontconfig on Linux. Inclusive Sans has the Latin letters of most European languages and of Vietnamese. Captions in Greek, Cyrillic, and other scripts use a system font for those letters.
+Inclusive Sans ships with desertant in the `fonts` folder beside the binary, so a clip looks the same on macOS, Linux, and Windows. On macOS, Core Text draws the captions and AVFoundation encodes the clip. On Linux and Windows, libass draws them and ffmpeg encodes the clip with H.264, so burning needs an ffmpeg built with libass, as most distributions build it. A family name is found with Core Text on macOS and with fontconfig on Linux. On Windows, pass a font file instead of a family name. Inclusive Sans has the Latin letters of most European languages and of Vietnamese. Captions in Greek, Cyrillic, and other scripts use a system font for those letters.
 
 ## Caption shapes
 
@@ -1081,7 +1081,7 @@ A caption stays up after its last word for the silence that follows, for at most
 
 ## Quality
 
-Every quality keeps the source's size and frame rate. `high`, the default, is as close to the source as a re-encode gets: Apple's highest quality export on macOS, which wrote 10.5Mbps for a 1080p clip at 30fps, and H.264 at CRF 18 on Linux. `medium` and `low` make smaller files. On macOS they write H.264 at 0.05 and 0.025 bits a pixel, 3.1Mbps and 1.6Mbps for 1080p at 30fps, and on Linux at CRF 23 and CRF 28.
+Every quality keeps the source's size and frame rate. `high`, the default, is as close to the source as a re-encode gets: Apple's highest quality export on macOS, which wrote 10.5Mbps for a 1080p clip at 30fps, and H.264 at CRF 18 on Linux and Windows. `medium` and `low` make smaller files. On macOS they write H.264 at 0.05 and 0.025 bits a pixel, 3.1Mbps and 1.6Mbps for 1080p at 30fps, and on Linux and Windows at CRF 23 and CRF 28.
 
 ## Audio
 
@@ -1093,7 +1093,7 @@ Clips needs at least three sentences of speech. A recording with no audio track 
 
 ## Pipeline
 
-The pipeline is in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the three steps and writes the report. `Transcriber` and `MediaCutter` are the seams: Voz behind the first everywhere, and AVFoundation behind the second on Apple platforms and ffmpeg on Linux. `Burn.swift` holds the caption shapes, timing, and both renderers.
+The pipeline is in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the three steps and writes the report. `Transcriber` and `MediaCutter` are the seams: Voz behind the first everywhere, and AVFoundation behind the second on Apple platforms and ffmpeg on Linux and Windows. `Burn.swift` holds the caption shapes, timing, and both renderers.
 """###),
         (name: "eye", markdown: ###"""
 # Photos and video
@@ -1119,7 +1119,7 @@ The first line names the kind of image (photo, selfie, screenshot, photo of scre
 
 Keeper, aesthetic, and cover are percentiles: an aesthetic of 0.76 scores higher than 76% of the photos Eye was calibrated on. The second line holds the tags that reach a confidence of 0.5, most confident first, and the third counts faces, closed eyes, and pets, and says when a photo is turned on its side.
 
-Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG.
+Eye reads JPEG, HEIC, PNG, TIFF, and the other formats macOS opens, upright by their EXIF orientation. On Linux and Windows, ffmpeg reads the photos and video, libheif reads HEIC, and a crop of a HEIC photo is written as a JPEG.
 
 ## Filters
 
@@ -1444,11 +1444,11 @@ A file a step makes along the way, as clear's clean audio, is kept only when a `
 ## Limits
 
 - Steps run one after another, in file order. Each model loads once per command.
-- A text splits into sentences at a period, question mark, or exclamation mark before a capital, a digit, or a line break, the same way on macOS and Linux. An abbreviation such as "Dr." before a name ends a sentence.
+- A text splits into sentences at a period, question mark, or exclamation mark before a capital, a digit, or a line break, the same way on macOS, Linux, and Windows. An abbreviation such as "Dr." before a name ends a sentence.
 - A flow file holds at most 8MB and a million values.
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.
-- `readtext` runs on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
+- `readtext` runs on macOS only. On Linux and Windows, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
 """###),
         (name: "json", markdown: ###"""
 # JSON contracts
@@ -1549,7 +1549,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
 }
 ```
 
-`apiKeySource` is `environment` when the key comes from `DAL_API_KEY`, `saved` when `desertant auth login` saved the key, and null when no key is set. `latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
+`apiKeySource` is `environment` when the key comes from `DAL_API_KEY`, `saved` when `desertant auth login` saved the key, and null when no key is set. `latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux and Windows, ffmpeg reads audio other than WAV, video, and images.
 
 `desertant auth status --json` prints whether an API key is set, where from, and where `auth login` saves the key. `auth login --json` and `auth logout --json` print the same object after they run.
 
@@ -1628,7 +1628,7 @@ A text that is empty or only spaces is an error, exit code 1, like no text at al
 
 `desertant title "<text>" --json` prints `{"title", "description"}`, on Apple silicon builds.
 
-`desertant moderator <image> --json` prints the nudity score. On Linux, reading the image needs ffmpeg.
+`desertant moderator <image> --json` prints the nudity score. On Linux and Windows, reading the image needs ffmpeg.
 
 ```json
 {
@@ -1644,7 +1644,7 @@ A text that is empty or only spaces is an error, exit code 1, like no text at al
 
 `score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores from 0 to 1, not calibrated probabilities.
 
-`desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux, reading the photo needs ffmpeg.
+`desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux and Windows, reading the photo needs ffmpeg.
 
 ```json
 {
@@ -1688,7 +1688,7 @@ With `--has` or `--not` and several photos, the result is an array of the photo 
 - `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
 - `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
 
-`desertant face <photo> --json` prints the faces in the photo. On Linux, reading the photo needs ffmpeg.
+`desertant face <photo> --json` prints the faces in the photo. On Linux and Windows, reading the photo needs ffmpeg.
 
 ```json
 {
@@ -1739,7 +1739,7 @@ With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order
 }
 ```
 
-`type` is `uh`, `um`, `hmm`, `and`, or `other` on macOS. On Linux, Uhm finds each span but not which filler it is, and `type` is left out.
+`type` is `uh`, `um`, `hmm`, `and`, or `other` on macOS. On Linux and Windows, Uhm finds each span but not which filler it is, and `type` is left out.
 
 `desertant ear <file> --json` prints the language spoken.
 
@@ -1950,7 +1950,7 @@ da voz talk.mp4
 
 Prints the transcript, one sentence per line, and ends with the measured line:
 "Voz loaded in 1.1s. Transcribed 2 minutes of audio in 0.5s, 270x realtime". The first figure is
-the model coming up, once per run; the realtime factor is the recognizer alone. Voz runs on Apple silicon and on Linux, in 25 languages.
+the model coming up, once per run; the realtime factor is the recognizer alone. Voz runs on Apple silicon, Linux, and Windows, in 25 languages.
 
 ## Timestamps
 
@@ -2024,7 +2024,7 @@ Speaker 2      12s   26%
 Who labeled 46 seconds in 0.03s, 1377x realtime.
 ```
 
-Who numbers the speakers in the order they first speak. Who labels voices and doesn't know the people, so `--names "Sam,Dan"` names them in that order. The share is each speaker's time against the whole recording, so silence and music make the shares add up to less than 100%. Who takes audio or video, and labeled a 15-minute recording in 1.5s on an M4 Max. On Linux, ffmpeg reads any file that isn't WAV.
+Who numbers the speakers in the order they first speak. Who labels voices and doesn't know the people, so `--names "Sam,Dan"` names them in that order. The share is each speaker's time against the whole recording, so silence and music make the shares add up to less than 100%. Who takes audio or video, and labeled a 15-minute recording in 1.5s on an M4 Max. On Linux and Windows, ffmpeg reads any file that isn't WAV.
 
 ## Who said what
 

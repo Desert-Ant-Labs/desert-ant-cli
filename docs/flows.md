@@ -157,8 +157,8 @@ A file a step makes along the way, as clear's clean audio, is kept only when a `
 ## Limits
 
 - Steps run one after another, in file order. Each model loads once per command.
-- A text splits into sentences at a period, question mark, or exclamation mark before a capital, a digit, or a line break, the same way on macOS and Linux. An abbreviation such as "Dr." before a name ends a sentence.
+- A text splits into sentences at a period, question mark, or exclamation mark before a capital, a digit, or a line break, the same way on macOS, Linux, and Windows. An abbreviation such as "Dr." before a name ends a sentence.
 - A flow file holds at most 8MB and a million values.
 - `da flow check` names any step type desertant doesn't have, and `da flow run` refuses a file that uses one.
 - `watch` reads the files in its folder once, and doesn't wait for new ones.
-- `readtext` runs on macOS only. On Linux, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.
+- `readtext` runs on macOS only. On Linux and Windows, every step that reads audio other than WAV, video, or photos needs ffmpeg, and burned-in captions need an ffmpeg built with libass.

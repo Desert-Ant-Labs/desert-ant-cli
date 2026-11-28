@@ -34,7 +34,7 @@ final class Progress: @unchecked Sendable {
         ticker?.cancel()
         ticker = nil
         guard live else { return }
-        FileHandle.standardError.write(Data("\r\u{1B}[2K".utf8))
+        Terminal.writeError("\r\u{1B}[2K")
     }
 
     private func draw() {
@@ -44,6 +44,6 @@ final class Progress: @unchecked Sendable {
         let loader = Loader().frame(at: Date().timeIntervalSince(started), palette: palette)
         let pct = fraction.map { "  \(Int((max(0, min(1, $0)) * 100).rounded()))%" } ?? ""
         // The trailing space keeps a block cursor off the last letter.
-        FileHandle.standardError.write(Data("\r\u{1B}[2K\(loader)  \(palette.dim(label + pct)) ".utf8))
+        Terminal.writeError("\r\u{1B}[2K\(loader)  \(palette.dim(label + pct)) ")
     }
 }

@@ -51,6 +51,7 @@ check() {
 cp "$fixtures"/talk.wav "$fixtures"/talk.srt "$work/"
 cd "$work"
 os="$(uname -s)"
+case "$os" in MINGW* | MSYS*) os=Windows ;; esac
 has_ffmpeg=0; command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null && has_ffmpeg=1
 echo "desertant: $da"
 echo "platform:  $os $(uname -m), ffmpeg $([[ $has_ffmpeg == 1 ]] && echo found || echo missing)"
@@ -66,7 +67,7 @@ check "docs" 0 "." "$da" docs agents
 check "info" 0 "redact" "$da" info redact
 check "unknown model" 1 "no model named nope" "$da" run nope --input hi
 
-if [[ "$os" == Linux ]]; then
+if [[ "$os" == Linux || "$os" == Windows ]]; then
   for id in redact emo gist tongue toxic ear clear moderator who voz eye face uhm; do
     check "runs $id here" 0 "\"$id\"" "$da" doctor --json
   done
@@ -145,12 +146,12 @@ if [[ $has_ffmpeg == 1 ]]; then
   check "clips cuts audio" 0 'talk_clip-1\.m4a' "$da" clips talk.m4a --transcript talk.srt --output-dir cuts
   check "clips into an existing name" 0 'talk_clip-1-2\.mp4' "$da" clips talk.mp4 --transcript talk.srt --count 1
   check "clips writes srt captions" 0 'talk_clip-1\.srt' "$da" clips talk.mp4 --transcript talk.srt --count 1 --captions srt --output-dir sidecar
-  # A Mac burns captions with Core Text; Linux needs an ffmpeg built with libass.
+  # A Mac burns captions with Core Text; Linux and Windows need an ffmpeg built with libass.
   if [[ "$os" == Darwin ]] || ffmpeg -hide_banner -filters 2>/dev/null | grep -q " subtitles "; then
     check "clips burns captions" 0 '"file" : ".*burned/talk_clip-1\.mp4"' "$da" clips talk.mp4 --transcript talk.srt --count 1 --captions burn --caption-style box --output-dir burned --json
     [[ -s burned/talk_clip-1.mp4 ]] && ok "burned clip written" || fail "burned clip written"
   fi
-elif [[ "$os" == Linux ]]; then
+elif [[ "$os" != Darwin ]]; then
   printf 'not really audio' > talk.m4a
   check "clips asks for ffmpeg to cut" 1 "cutting clips needs ffmpeg" "$da" clips talk.wav --transcript talk.srt
   check "ear asks for ffmpeg" 1 "reading talk.m4a needs ffmpeg, which is not installed" "$da" ear talk.m4a

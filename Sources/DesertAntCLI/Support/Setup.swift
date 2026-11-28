@@ -44,10 +44,7 @@ struct Setup: ParsableCommand {
         let action: String
     }
 
-    static func onPath(_ name: String) -> Bool {
-        (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":")
-            .contains { FileManager.default.isExecutableFile(atPath: "\($0)/\(name)") }
-    }
+    static func onPath(_ name: String) -> Bool { SearchPath.find(name) != nil }
 
     static let markerStart = "<!-- desertant start -->"
     static let markerEnd = "<!-- desertant end -->"

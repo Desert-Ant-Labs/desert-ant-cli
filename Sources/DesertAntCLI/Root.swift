@@ -63,6 +63,11 @@ struct DesertAnt: AsyncParsableCommand {
 
     /// A process that exits under a license request in flight can crash.
     static func main() async {
+        Terminal.prepareConsole()
+        // A runtime's notes on the accelerators it looked for are noise in a terminal.
+        if ProcessInfo.processInfo.environment["DAL_LOG_LEVEL"] == nil {
+            Usage.DesertAnt.logLevel = .error
+        }
         if let key = APIKey.current?.key {
             Usage.DesertAnt.configure(apiKey: key)
         }

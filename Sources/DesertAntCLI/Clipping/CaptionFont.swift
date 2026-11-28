@@ -64,6 +64,8 @@ struct CaptionFont: Sendable, Equatable {
         let faces = (CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor]) ?? []
         let index = faces.firstIndex { (CTFontDescriptorCopyAttribute($0, kCTFontNameAttribute) as? String) == postscript } ?? 0
         return try read(url, index: index)
+        #elseif os(Windows)
+        throw RunError("desertant finds a font by name on macOS and Linux. On Windows, pass a .ttf or .otf file, such as C:\\Windows\\Fonts\\arial.ttf.")
         #else
         let fc = ["/usr/bin/fc-match", "/bin/fc-match", "/usr/local/bin/fc-match"].first { FileManager.default.isExecutableFile(atPath: $0) }
         guard let fc else {
