@@ -42,7 +42,7 @@ The captions come from Voz's time on every word, moved onto the clip's own timel
 | `--caption-words` | The most words in one caption | Set by the clip's shape |
 | `--quality` | How much a clip with burned captions is compressed: `high`, `medium`, or `low` | `high` |
 
-Inclusive Sans ships with desertant in the `fonts` folder beside the binary, so a clip looks the same on macOS and Linux. On macOS, Core Text draws the captions and AVFoundation encodes the clip. On Linux, libass draws them and ffmpeg encodes the clip with H.264, so burning needs an ffmpeg built with libass, as most distributions build it. A family name is found with Core Text on macOS and with fontconfig on Linux. Inclusive Sans has the Latin letters of most European languages and of Vietnamese. Captions in Greek, Cyrillic, and other scripts use a system font for those letters.
+Inclusive Sans ships with desertant in the `fonts` folder beside the binary, so a clip looks the same on macOS, Linux, and Windows. On macOS, Core Text draws the captions and AVFoundation encodes the clip. On Linux and Windows, libass draws them and ffmpeg encodes the clip with H.264, so burning needs an ffmpeg built with libass, as most distributions build it. A family name is found with Core Text on macOS and with fontconfig on Linux. On Windows, pass a font file instead of a family name. Inclusive Sans has the Latin letters of most European languages and of Vietnamese. Captions in Greek, Cyrillic, and other scripts use a system font for those letters.
 
 ## Caption shapes
 
@@ -62,7 +62,7 @@ A caption stays up after its last word for the silence that follows, for at most
 
 ## Quality
 
-Every quality keeps the source's size and frame rate. `high`, the default, is as close to the source as a re-encode gets: Apple's highest quality export on macOS, which wrote 10.5Mbps for a 1080p clip at 30fps, and H.264 at CRF 18 on Linux. `medium` and `low` make smaller files. On macOS they write H.264 at 0.05 and 0.025 bits a pixel, 3.1Mbps and 1.6Mbps for 1080p at 30fps, and on Linux at CRF 23 and CRF 28.
+Every quality keeps the source's size and frame rate. `high`, the default, is as close to the source as a re-encode gets: Apple's highest quality export on macOS, which wrote 10.5Mbps for a 1080p clip at 30fps, and H.264 at CRF 18 on Linux and Windows. `medium` and `low` make smaller files. On macOS they write H.264 at 0.05 and 0.025 bits a pixel, 3.1Mbps and 1.6Mbps for 1080p at 30fps, and on Linux and Windows at CRF 23 and CRF 28.
 
 ## Audio
 
@@ -74,4 +74,4 @@ Clips needs at least three sentences of speech. A recording with no audio track 
 
 ## Pipeline
 
-The pipeline is in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the three steps and writes the report. `Transcriber` and `MediaCutter` are the seams: Voz behind the first everywhere, and AVFoundation behind the second on Apple platforms and ffmpeg on Linux. `Burn.swift` holds the caption shapes, timing, and both renderers.
+The pipeline is in `Sources/DesertAntCLI/Clipping/`. `ClipPipeline` orders the three steps and writes the report. `Transcriber` and `MediaCutter` are the seams: Voz behind the first everywhere, and AVFoundation behind the second on Apple platforms and ffmpeg on Linux and Windows. `Burn.swift` holds the caption shapes, timing, and both renderers.

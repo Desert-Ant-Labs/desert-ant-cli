@@ -96,7 +96,7 @@ What every command writes to stdout under `--json`. Keys are stable within a maj
 }
 ```
 
-`apiKeySource` is `environment` when the key comes from `DAL_API_KEY`, `saved` when `desertant auth login` saved the key, and null when no key is set. `latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux, ffmpeg reads audio other than WAV, video, and images.
+`apiKeySource` is `environment` when the key comes from `DAL_API_KEY`, `saved` when `desertant auth login` saved the key, and null when no key is set. `latest` is null when GitHub couldn't be reached. `ffmpeg` says whether ffmpeg is on PATH; on Linux and Windows, ffmpeg reads audio other than WAV, video, and images.
 
 `desertant auth status --json` prints whether an API key is set, where from, and where `auth login` saves the key. `auth login --json` and `auth logout --json` print the same object after they run.
 
@@ -175,7 +175,7 @@ A text that is empty or only spaces is an error, exit code 1, like no text at al
 
 `desertant title "<text>" --json` prints `{"title", "description"}`, on Apple silicon builds.
 
-`desertant moderator <image> --json` prints the nudity score. On Linux, reading the image needs ffmpeg.
+`desertant moderator <image> --json` prints the nudity score. On Linux and Windows, reading the image needs ffmpeg.
 
 ```json
 {
@@ -191,7 +191,7 @@ A text that is empty or only spaces is an error, exit code 1, like no text at al
 
 `score` is the highest region the policy counts, and `nsfw` is whether that score reaches `threshold`. Under `allow-topless` a bare chest alone does not count. Regions are decision scores from 0 to 1, not calibrated probabilities.
 
-`desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux, reading the photo needs ffmpeg.
+`desertant eye <photo> --json` prints what the photo is, its scores, and what is in it. On Linux and Windows, reading the photo needs ffmpeg.
 
 ```json
 {
@@ -235,7 +235,7 @@ With `--has` or `--not` and several photos, the result is an array of the photo 
 - `--best`: `{"best": "burst/IMG_0146.jpg", "photos": 5}`.
 - `--sort` and `--similar-to`: an array of `{"input", "score"}`, highest first.
 
-`desertant face <photo> --json` prints the faces in the photo. On Linux, reading the photo needs ffmpeg.
+`desertant face <photo> --json` prints the faces in the photo. On Linux and Windows, reading the photo needs ffmpeg.
 
 ```json
 {
@@ -286,7 +286,7 @@ With `--speakers`, each sentence carries `speaker`, numbered from 0 in the order
 }
 ```
 
-`type` is `uh`, `um`, `hmm`, `and`, or `other` on macOS. On Linux, Uhm finds each span but not which filler it is, and `type` is left out.
+`type` is `uh`, `um`, `hmm`, `and`, or `other` on macOS. On Linux and Windows, Uhm finds each span but not which filler it is, and `type` is left out.
 
 `desertant ear <file> --json` prints the language spoken.
 

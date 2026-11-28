@@ -11,13 +11,14 @@ Tools/publish-formula      # once the release workflow is green
 
 `release-notes/<version>.md` is the GitHub release body, and `Tools/release` refuses to tag without it. The first line names the desert-ant-core version the release follows, since the CLI keeps its own version numbers. Then list what changed for someone running the CLI, one line each, and end with how to update. Follow `brand/VOICE.md`.
 
-`Tools/release` syncs the manifest from the sibling `desert-ant-core` checkout, writes the version to `VERSION` and the formula, re-embeds, runs `Tools/check` (build, tests, manifest in sync, voice), commits, and tags `v0.2.0`. The push triggers `.github/workflows/release.yml`, which builds `desertant` for macOS arm64 and Linux x86_64 and arm64, installs each tarball into clean systems and runs `Tools/smoke` against it (`verify.yml`), and only then attaches the tarballs and a `checksums.txt` to the GitHub release and renders `Formula/desertant.rb` with the real checksums.
+`Tools/release` syncs the manifest from the sibling `desert-ant-core` checkout, writes the version to `VERSION` and the formula, re-embeds, runs `Tools/check` (build, tests, manifest in sync, voice), commits, and tags `v0.2.0`. The push triggers `.github/workflows/release.yml`, which builds `desertant` for macOS arm64, Linux x86_64 and arm64, and Windows x64, installs each archive into clean systems and runs `Tools/smoke` against it (`verify.yml`), and only then attaches the archives and a `checksums.txt` to the GitHub release and renders `Formula/desertant.rb` with the real checksums.
 
 ## How people install and update
 
 Every path below pulls the same release assets, so there's one thing to publish.
 
 - The script: `curl -fsSL https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.sh | sh`. Updates with `desertant update`, which runs the script again.
+- On Windows, the PowerShell script: `irm https://raw.githubusercontent.com/Desert-Ant-Labs/desert-ant-cli/main/install.ps1 | iex`. `desertant update` downloads the script and runs it again.
 - Homebrew: `brew install desert-ant-labs/tap/desertant`, updates with `brew upgrade`. The formula lives in `Desert-Ant-Labs/homebrew-tap`, beside the Clipper cask. After the release workflow is green, `Tools/publish-formula` downloads the rendered formula from the release and pushes it to the tap from your machine, the way the cask is published.
 - mise: `mise use -g "ubi:Desert-Ant-Labs/desert-ant-cli[extract_all=true]"`, updates with `mise upgrade`. `extract_all` keeps the whole tarball together; without it mise installs the executable alone, and Tongue, Title, and every Linux model stop working.
 
@@ -27,9 +28,9 @@ Every path below pulls the same release assets, so there's one thing to publish.
 
 Discovery reads the bundled manifest, so a new model becomes visible in the CLI with the next release: `Tools/release` syncs the manifest as its first step. Running the model needs an adapter (see `AGENTS.md`), which can ship in the same release or a later one; until then `info` says the model has no runner on this platform.
 
-## What a release tarball holds
+## What a release archive holds
 
-`desertant` and what the binary needs beside it: the SwiftPM resource bundles (Tongue's weights among them), `fonts/` with the caption font and its license, `THIRD_PARTY_NOTICES.md`, `mlx.metallib` on macOS (Title runs on MLX, which looks for it next to the binary), and `libLiteRt.so` on Linux. The script and the formula keep them together in a private directory (`~/.local/share/desertant`, Homebrew's `libexec`) and symlink `desertant` and `da` into `bin`.
+`desertant` and what the binary needs beside it: the SwiftPM resource bundles (Tongue's weights among them), `fonts/` with the caption font and its license, `THIRD_PARTY_NOTICES.md`, `mlx.metallib` on macOS (Title runs on MLX, which looks for it next to the binary), `libLiteRt.so` on Linux, and the DLLs on Windows. The script and the formula keep them together in a private directory (`~/.local/share/desertant`, Homebrew's `libexec`) and symlink `desertant` and `da` into `bin`.
 
 ## Linux
 
@@ -53,4 +54,23 @@ Tools/smoke path/to/desertant              # one binary, end to end
 
 `--arch x86_64` builds and tests the other architecture, under emulation on Apple silicon. `Tools/smoke` runs every model the platform supports, the file handling, and the errors a person sees. `Tools/smoke` fails on any log line on stderr except TFLite's "Created TensorFlow Lite XNNPACK delegate", which LiteRT has no setting to turn off. CI and the release workflow run the same scripts through `verify.yml`.
 
-A Windows build is not set up. The starting point is a `windows-latest` job modeled on core's, which vendors LiteRT from the win_amd64 wheel.
+## Windows
+
+The Windows release is a zip, `desertant-windows-x86_64.zip`, with `desertant.exe` and every DLL it loads that Windows doesn't ship: the Swift runtime and Foundation, LiteRT, ONNX Runtime with DirectML for Voz, and the Microsoft C++ runtime. `Tools/package` finds them by reading the import table of each file it ships, so a new dependency needs no list to update. A machine needs no Swift toolchain and no Visual C++ install.
+
+Windows searches the folder of the program before System32, so Voz loads the `onnxruntime.dll` beside `desertant.exe` and not the older one Windows ML puts in System32.
+
+`install.ps1` installs into `%LOCALAPPDATA%\Programs\desertant`, adds `da.exe` as a hard link to `desertant.exe`, and puts the folder on the user's PATH. Windows doesn't let a running `.exe` or a loaded DLL be overwritten, so `desertant update` renames them, and the next install removes the renamed copies.
+
+The tools run in Git Bash, as in core's Windows CI. Core's `Tools/dal.sh` vendors LiteRT with uv and ONNX Runtime with pip, and builds their import libraries with the Swift toolchain's `llvm-lib`, so a Windows machine needs Python 3.12, uv, and Swift on PATH. CI uses the same.
+
+```
+Tools/check                        # the commit gate
+Tools/package windows-x86_64       # dist/desertant-windows-x86_64.zip
+Tools/install                      # package, then install the zip with install.ps1
+Tools/smoke path/to/desertant.exe  # one binary, end to end
+```
+
+`verify.yml` installs the zip with `install.ps1` on a runner without Swift, so a DLL the zip lacks fails the run there.
+
+Core keeps downloaded models in Foundation's caches folder, which is the temp folder (`%TEMP%`) on Windows. `desertant doctor` prints the folder.
