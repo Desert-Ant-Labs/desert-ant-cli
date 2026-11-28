@@ -3,7 +3,7 @@
 # binary and its companions in DESERTANT_HOME (~/.local/share/desertant), symlinks
 # in ~/.local/bin or the directory passed. It installs the same tarball
 # Tools/package makes for a release, so a local install and a released one hold
-# the same files.
+# the same files. On Windows, in Git Bash, install.ps1 installs the zip.
 #
 #   Tools/install [bin-directory]
 set -euo pipefail
@@ -12,10 +12,17 @@ here="$(cd "$(dirname "$0")/.." && pwd)"
 bindir="${1:-$HOME/.local/bin}"
 home="${DESERTANT_HOME:-$HOME/.local/share/desertant}"
 
-case "$(uname -s)" in Darwin) os=darwin ;; Linux) os=linux ;; *) echo "No build for $(uname -s)." >&2; exit 1 ;; esac
+case "$(uname -s)" in Darwin) os=darwin ;; Linux) os=linux ;; MINGW*) os=windows ;; *) echo "No build for $(uname -s)." >&2; exit 1 ;; esac
 case "$(uname -m)" in arm64 | aarch64) arch=arm64 ;; x86_64 | amd64) arch=x86_64 ;; *) echo "No build for $(uname -m)." >&2; exit 1 ;; esac
 
 tarball="$("$here/Tools/package" "$os-$arch" | tail -1)"
+
+if [[ "$os" == windows ]]; then
+  (cd "$here/dist" && sha256sum "$(basename "$tarball")" > checksums.txt)
+  DESERTANT_BASE_URL="file:///$(cygpath -m "$here/dist")" \
+    powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$here/install.ps1")"
+  exit
+fi
 
 mkdir -p "$home" "$bindir"
 tar -xzf "$here/$tarball" -C "$home"

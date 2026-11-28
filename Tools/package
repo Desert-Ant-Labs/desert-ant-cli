@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Build a release binary on this machine and tar it as a release asset,
-# dist/desertant-<target>.tar.gz: `desertant`, the resource bundles, the caption fonts,
-# the notices, and mlx.metallib on macOS or libLiteRt.so on Linux. The release workflow
-# runs this on each platform.
+# Build a release binary on this machine and archive it as a release asset,
+# dist/desertant-<target>.tar.gz, or .zip on Windows: `desertant`, the resource bundles,
+# the caption fonts, the notices, and mlx.metallib on macOS, libLiteRt.so on Linux, or
+# the DLLs on Windows. The release workflow runs this on each platform, on Windows in
+# Git Bash.
 #
-#   Tools/package <darwin-arm64|linux-x86_64|linux-arm64>
+#   Tools/package <darwin-arm64|linux-x86_64|linux-arm64|windows-x86_64>
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$here"
-target="${1:?usage: Tools/package <darwin-arm64|linux-x86_64|linux-arm64>}"
+target="${1:?usage: Tools/package <darwin-arm64|linux-x86_64|linux-arm64|windows-x86_64>}"
 core="${DESERT_ANT_CORE:-$here/../desert-ant-core}"
 
 linker=()
@@ -28,16 +29,23 @@ if [[ "$(uname -s)" == "Linux" ]]; then
   fi
   linker+=(-Xlinker -L/opt/curl-link/lib)
 fi
+exe=""
+vendor=""
+if [[ "$(uname -s)" == MINGW* ]]; then
+  # Package.swift links the import libraries in core's Vendor; their DLLs ship beside the binary.
+  vendor="$(cd "$core" && source Tools/dal.sh && dal_vendor_litert >&2 && dal_vendor_onnxruntime >&2 && echo "$core/Vendor")"
+  exe=".exe"
+fi
 # Title (MLX) is part of the macOS build; see Package.swift.
 [[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
 
 [[ "$(uname -s)" == "Darwin" ]] && linker+=(--build-system swiftbuild --arch arm64)
 swift build -c release ${linker[@]+"${linker[@]}"}
-binary="$(swift build -c release --show-bin-path ${linker[@]+"${linker[@]}"})/desertant"
+binary="$(swift build -c release --show-bin-path ${linker[@]+"${linker[@]}"})/desertant$exe"
 
 stage="dist/stage-$target"
 rm -rf "$stage" && mkdir -p "$stage" dist
-install -m 755 "$binary" "$stage/desertant"
+install -m 755 "$binary" "$stage/desertant$exe"
 install -m 644 THIRD_PARTY_NOTICES.md "$stage/THIRD_PARTY_NOTICES.md"
 # Burned-in captions look for fonts/ beside the binary.
 mkdir -p "$stage/fonts"
@@ -55,8 +63,42 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   # MLX looks for mlx.metallib next to the binary.
   install -m 644 "$(dirname "$binary")/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$stage/mlx.metallib"
 fi
+if [[ -n "$vendor" ]]; then
+  # Every DLL the binary loads that Windows does not ship: the Swift runtime, LiteRT,
+  # ONNX Runtime with DirectML, and the MSVC runtime, which a fresh Windows can lack.
+  swift_runtime="$(IFS=:; for dir in $PATH; do [[ -f "$dir/swiftCore.dll" ]] && echo "$dir" && break; done)"
+  if [[ -z "$swift_runtime" ]]; then
+    echo "No swiftCore.dll on PATH. Put the Swift runtime's usr/bin on PATH." >&2
+    exit 1
+  fi
+  search=("$vendor/litert/lib/windows-x64" "$vendor/onnxruntime/lib/windows-x64" "$swift_runtime")
+  queue=("$stage/desertant.exe")
+  while [[ ${#queue[@]} -gt 0 ]]; do
+    file="${queue[0]}"; queue=("${queue[@]:1}")
+    for dll in $(llvm-readobj --coff-imports "$file" | tr -d '\r' | sed -n 's/^ *Name: //p'); do
+      [[ -e "$stage/$dll" ]] && continue
+      found=""
+      for dir in "${search[@]}"; do [[ -f "$dir/$dll" ]] && found="$dir/$dll" && break; done
+      if [[ -z "$found" ]]; then
+        case "$(tr 'A-Z' 'a-z' <<<"$dll")" in
+          vcruntime140* | msvcp140*) echo "No $dll beside the Swift runtime to ship." >&2; exit 1 ;;
+        esac
+        continue
+      fi
+      install -m 755 "$found" "$stage/$dll"
+      queue+=("$stage/$dll")
+    done
+  done
+fi
 Tools/resources "$(dirname "$binary")" "$stage"
 
+if [[ -n "$vendor" ]]; then
+  # Windows' own bsdtar writes a zip, which Expand-Archive and Explorer open.
+  (cd "$stage" && "$(cygpath -u "$SYSTEMROOT")/System32/tar.exe" -a -cf "../desertant-$target.zip" *)
+  rm -rf "$stage"
+  echo "dist/desertant-$target.zip"
+  exit 0
+fi
 tar -czf "dist/desertant-$target.tar.gz" -C "$stage" .
 rm -rf "$stage"
 echo "dist/desertant-$target.tar.gz"

@@ -28,11 +28,23 @@ if [[ "$(uname -s)" == "Linux" ]]; then
   linker=(-Xlinker "-L$litert")
   export LD_LIBRARY_PATH="$litert${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
+# Package.swift links the import libraries in core's Vendor. The tests load LiteRT from
+# PATH, and ONNX Runtime from beside them, since System32's older copy outranks PATH.
+windows=0
+if [[ "$(uname -s)" == MINGW* ]]; then
+  windows=1
+  vendor="$(cd "$core" && source Tools/dal.sh && dal_vendor_litert >&2 && dal_vendor_onnxruntime >&2 && echo "$core/Vendor")"
+  export PATH="$vendor/litert/lib/windows-x64:$PATH"
+fi
 # Title (MLX) is part of the macOS build; see Package.swift.
 [[ "$(uname -s)" == "Darwin" ]] && export DESERTANT_MLX=1
 
 echo "Building."
 swift build ${linker[@]+"${linker[@]}"} 2>&1 | grep -E "error:|Build complete" || true
+if [[ $windows == 1 ]]; then
+  products="$(cygpath -u "$(swift build --show-bin-path)")"
+  (cd "$core" && source Tools/dal.sh && dal_stage_onnxruntime "$products")
+fi
 
 # Only this package's tests: core's need core's own setup.
 echo "Testing."
@@ -47,7 +59,7 @@ if [[ -f "$core/manifest.json" ]]; then
   fi
 fi
 
-if grep -rnI $'—\|–' Sources README.md AGENTS.md RELEASING.md llms.txt docs templates integrations install.sh release-notes 2>/dev/null; then
+if grep -rnI $'—\|–' Sources README.md AGENTS.md RELEASING.md llms.txt docs templates integrations install.sh install.ps1 release-notes 2>/dev/null; then
   echo "An em or en dash was found above. Use a comma, colon, or period." >&2
   fail=1
 else
