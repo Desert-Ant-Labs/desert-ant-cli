@@ -6,15 +6,11 @@ enum FFmpeg {
         let ffprobe: String
     }
 
-    static let tools: Tools? = locate(path: ProcessInfo.processInfo.environment["PATH"] ?? "")
+    static let tools: Tools? = locate(path: SearchPath.current)
 
     static func locate(path: String) -> Tools? {
-        func find(_ name: String) -> String? {
-            path.split(separator: ":").lazy
-                .map { (String($0) as NSString).appendingPathComponent(name) }
-                .first { FileManager.default.isExecutableFile(atPath: $0) }
-        }
-        guard let ffmpeg = find("ffmpeg"), let ffprobe = find("ffprobe") else { return nil }
+        guard let ffmpeg = SearchPath.find("ffmpeg", in: path),
+              let ffprobe = SearchPath.find("ffprobe", in: path) else { return nil }
         return Tools(ffmpeg: ffmpeg, ffprobe: ffprobe)
     }
 
@@ -27,6 +23,8 @@ enum FFmpeg {
     static var installHint: String {
         #if os(macOS)
         return "`brew install ffmpeg`"
+        #elseif os(Windows)
+        return "`winget install Gyan.FFmpeg`"
         #else
         return installHint(osRelease: (try? String(contentsOfFile: "/etc/os-release", encoding: .utf8)) ?? "")
         #endif
