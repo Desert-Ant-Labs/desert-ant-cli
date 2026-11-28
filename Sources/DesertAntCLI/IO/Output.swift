@@ -37,7 +37,7 @@ struct Output {
 
     /// Printed under --quiet too, since an error is not a note.
     func warn(_ s: String) {
-        FileHandle.standardError.write(Data((s + "\n").utf8))
+        Terminal.writeError(s + "\n")
     }
 
     func space() {
@@ -64,7 +64,7 @@ struct Output {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         guard let data = try? encoder.encode(value), let text = String(data: data, encoding: .utf8) else {
-            FileHandle.standardError.write(Data("could not encode the result\n".utf8))
+            Terminal.writeError("could not encode the result\n")
             return
         }
         print(text)
